@@ -13,6 +13,7 @@
                 <option value="lastName">نام خانوادگی</option>
                 <option value="name">نام</option>
                 <option value="createdAt">تاریخ ایجاد</option>
+                <option value="group">گروه</option>
                 </select>
 
             <label for="sortOrder">ترتیب:</label>
@@ -34,6 +35,7 @@
 
           <p v-if="contact.title">سمت: {{ contact.title }}</p>
           <p v-if="contact.gender">جنسیت: {{ displayGender(contact.gender) }}</p>
+          <p v-if="contact.group">گروه: {{ contact.group }}</p>
           <p v-if="contact.notes">یادداشت: {{ contact.notes }}</p>
 
           <div v-if="contact.additionalPhones && contact.additionalPhones.length > 0">
@@ -64,9 +66,11 @@
   
   <script setup>
   import { useContactStore } from '../store/contacts';
+  import { useGroupStore } from '../store/groups';
   import persianDate from 'persian-date';
   
   const contactStore = useContactStore();
+  const groupStore = useGroupStore();
   
   const confirmDelete = async (contactId) => {
       if (confirm('مطمئنی می‌خوای این مخاطب رو حذف کنی؟')) {

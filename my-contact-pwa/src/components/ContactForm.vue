@@ -30,7 +30,15 @@
           <option value="not_specified">ترجیح میدهم نگویم</option>
         </select>
       </div>
-  
+      <div>
+        <label for="group">گروه:</label>
+        <select id="group" v-model="contactGroup">
+            <option value="">بدون گروه</option>
+            <option v-for="group in groupStore.sortedGroups" :key="group.id" :value="group.name">
+                {{ group.name }}
+            </option>
+            </select>
+    </div>
       <div class="additional-phones-section">
         <label>شماره‌های اضافی:</label>
         <div v-for="(phone, index) in additionalPhones" :key="phone.id" class="additional-phone-input">
@@ -71,9 +79,10 @@
   <script setup>
   import { ref, watch } from 'vue';
   import { useContactStore } from '../store/contacts';
+  import { useGroupStore } from '../store/groups';
   
   const contactStore = useContactStore();
-  
+  const groupStore = useGroupStore();
   // ساخت متغیرهای واکنشی برای نگهداری مقادیر فیلدهای فرم
   const name = ref('');
   const lastName = ref('');
@@ -83,7 +92,8 @@
   const notes = ref('');
   // متغیر واکنشی برای شماره‌های اضافی (حالا آرایه‌ای از اشیاء { id, type, number })
 const additionalPhones = ref([]);
-let phoneIdCounter = 0;
+  let phoneIdCounter = 0;
+  const contactGroup = ref(''); 
 
   
   // تابع برای تولید ID منحصر به فرد برای فیلدهای موقت فرم
@@ -117,6 +127,7 @@ const addAdditionalPhone = () => {
     notes.value = '';
     additionalPhones.value = []; // پاک کردن شماره‌های اضافی
     phoneIdCounter = 0; // ریست کردن کانتر
+    contactGroup.value = ''; 
   };
   
   // استفاده از watch برای واکنش نشان دادن به تغییرات contactStore.contactToEdit
@@ -140,6 +151,7 @@ const addAdditionalPhone = () => {
             number: item.number || '' // مقدار number
         }))
         : []; // اگر additionalPhones وجود نداشت یا خالی بود، آرایه خالی بذار
+     contactGroup.value = newContactToEdit.group || ''; 
 
 
   } else {
@@ -170,6 +182,7 @@ const addAdditionalPhone = () => {
       gender: gender.value,
       notes: notes.value,
       additionalPhones: phoneEntries, // اضافه کردن آرایه جدید اشیاء { type, number }
+      group: contactGroup.value,
     // فیلدهای دیگه رو هم اینجا اضافه می‌کنیم
     };
   
