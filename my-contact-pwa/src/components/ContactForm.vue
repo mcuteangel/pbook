@@ -37,8 +37,13 @@
             <option v-for="group in groupStore.sortedGroups" :key="group.id" :value="group.name">
                 {{ group.name }}
             </option>
-            </select>
-    </div>
+            <option value="__CREATE_NEW__">--- ایجاد گروه جدید ... ---</option>
+        </select>
+        <div v-if="isCreatingNewGroup" class="new-group-input">
+            <label for="newGroupName">نام گروه جدید:</label>
+            <input type="text" id="newGroupName" v-model="newGroupName" placeholder="مثلاً: خانواده">
+        </div>
+      </div>
       <div class="additional-phones-section">
         <label>شماره‌های اضافی:</label>
         <div v-for="(phone, index) in additionalPhones" :key="phone.id" class="additional-phone-input">
@@ -64,15 +69,17 @@
       </div>
   
   
-      <button type="submit" :disabled="contactStore.loading">
-        {{ contactStore.loading ? 'در حال پردازش...' : (contactStore.contactToEdit ? 'به‌روزرسانی مخاطب' : 'ذخیره مخاطب') }}
-      </button>
-  
-      <button v-if="contactStore.contactToEdit" type="button" @click="contactStore.clearContactToEdit()">
-        انصراف
-      </button>
-  
-      <p v-if="contactStore.error" style="color: red;">{{ contactStore.error }}</p>
+      <button type="submit" :disabled="contactStore.loading || groupStore.loading">
+      {{ contactStore.loading || groupStore.loading ? 'در حال پردازش...' : (contactStore.contactToEdit ? 'به‌روزرسانی مخاطب' : 'ذخیره مخاطب') }}
+    </button>
+
+    <button v-if="contactStore.contactToEdit" type="button" @click="contactStore.clearContactToEdit()">
+      انصراف
+    </button>
+
+    <p v-if="contactStore.error" style="color: red;">{{ contactStore.error }}</p>
+    <p v-if="groupStore.error" style="color: red;">{{ groupStore.error }}</p>
+
     </form>
   </template>
   
@@ -94,7 +101,8 @@
 const additionalPhones = ref([]);
   let phoneIdCounter = 0;
   const contactGroup = ref(''); 
-
+  const isCreatingNewGroup = ref(false); // آیا در حال ایجاد گروه جدید هستیم؟
+  const newGroupName = ref(''); // اسم گروه جدید که کاربر وارد می‌کنه
   
   // تابع برای تولید ID منحصر به فرد برای فیلدهای موقت فرم
   const generateUniquePhoneId = () => {
@@ -127,9 +135,11 @@ const addAdditionalPhone = () => {
     notes.value = '';
     additionalPhones.value = []; // پاک کردن شماره‌های اضافی
     phoneIdCounter = 0; // ریست کردن کانتر
-    contactGroup.value = ''; 
+    contactGroup.value = '';
+    isCreatingNewGroup.value = false; // <-- ریست وضعیت
+    newGroupName.value = ''; // <-- ریست اسم گروه جدید
   };
-  
+
   // استفاده از watch برای واکنش نشان دادن به تغییرات contactStore.contactToEdit
   watch(() => contactStore.contactToEdit, (newContactToEdit) => {
     if (newContactToEdit) {
@@ -152,63 +162,99 @@ const addAdditionalPhone = () => {
         }))
         : []; // اگر additionalPhones وجود نداشت یا خالی بود، آرایه خالی بذار
      contactGroup.value = newContactToEdit.group || ''; 
-
-
-  } else {
-    // اگر contactToEdit null شد (یعنی از حالت ویرایش خارج شدیم)
-    // فرم رو پاک می‌کنیم
-    clearForm();
+     isCreatingNewGroup.value = false; // در حالت ویرایش همیشه فرض می‌کنیم در حال ایجاد گروه جدید نیستیم
+        newGroupName.value = '';
+    } else {
+        clearForm();
     }
-  }, { immediate: true });
-  
+}, { immediate: true });
+watch(contactGroup, (newValue) => {
+    if (newValue === '__CREATE_NEW__') {
+        isCreatingNewGroup.value = true; // گزینه "ایجاد گروه جدید" انتخاب شده، input رو نمایش بده
+        newGroupName.value = ''; // اسم گروه جدید رو برای ورودی کاربر خالی کن
+        // نیازی نیست contactGroup رو اینجا تغییر بدی، v-model این کار رو کرده
+    } else {
+        isCreatingNewGroup.value = false; // یه گروه موجود یا "بدون گروه" انتخاب شده، input رو پنهان کن
+        newGroupName.value = ''; // اسم گروه جدید رو پاک کن
+        groupStore.error = null; // خطای گروه رو پاک کن
+    }
+});
   // تابعی که هنگام ارسال فرم اجرا میشه (حالا هم برای افزودن هم ویرایش)
   const handleSubmit = async () => {
-  
-     // استخراج شماره‌ها و نوع‌ها از آرایه additionalPhones.value برای ذخیره در DB
-    // فقط آیتم‌هایی رو نگه می‌داریم که شماره تلفن خالی نباشه
-    const phoneEntries = additionalPhones.value
-        .map(item => ({ // هر آیتم فرم { id, type, number } هست، به { type, number } تبدیل می‌کنیم
-            type: item.type || '', // مطمئن میشیم type هم هست (حتی اگه خالیه)
-            number: item.number.trim() // شماره رو trim می‌کنیم
-        }))
-        .filter(item => item.number); // فقط آیتم‌هایی که فیلد numberشون خالی نیست رو نگه می‌داریم
+      let finalContactGroup = contactGroup.value; // اسم گروه نهایی که توی مخاطب ذخیره میشه، پیش‌فرض همون گروه انتخابی توی Select
 
-  
-    const contactData = {
-      name: name.value,
-      lastName: lastName.value,
-      phone: phone.value,
-      title: title.value,
-      gender: gender.value,
-      notes: notes.value,
-      additionalPhones: phoneEntries, // اضافه کردن آرایه جدید اشیاء { type, number }
-      group: contactGroup.value,
-    // فیلدهای دیگه رو هم اینجا اضافه می‌کنیم
-    };
-  
-    if (contactStore.contactToEdit) {
-      // اگر در حالت ویرایش هستیم
-      const contactId = contactStore.contactToEdit.id;
-      contactData.updatedAt = new Date().toISOString(); // به‌روزرسانی تاریخ ویرایش
-  
-      await contactStore.updateContact(contactId, contactData);
-  
-      if (!contactStore.error) {
-           alert('مخاطب با موفقیت به‌روزرسانی شد!');
-           contactStore.clearContactToEdit();
+      // مرحله 1: مدیریت ایجاد گروه جدید (اگر لازم بود)
+      if (isCreatingNewGroup.value) {
+          if (newGroupName.value.trim() === '') {
+               groupStore.error = 'لطفاً نام گروه جدید را وارد کنید.';
+               return; // اگه اسم خالیه، متوقف شو
+          }
+          groupStore.error = null; // پاک کردن خطای قبلی
+
+          // گروه جدید رو اضافه کن
+          await groupStore.addGroup(newGroupName.value.trim());
+
+          // اگر اضافه کردن گروه خطا داد، متوقف شو (خطا توی groupStore.error هست)
+          if (groupStore.error) {
+               return;
+          }
+
+          // اگر گروه با موفقیت اضافه شد، اسمش رو برای ذخیره در مخاطب نهایی کن
+          finalContactGroup = newGroupName.value.trim();
+          // نیازی به به‌روزرسانی contactGroup.value اینجا نیست، clearForm بعد از ذخیره مخاطب این کار رو می‌کنه.
       }
-  
-    } else {
-      // اگر در حالت افزودن هستیم
-      contactData.createdAt = new Date().toISOString();
-      contactData.updatedAt = new Date().toISOString();
-  
-      await contactStore.addContact(contactData);
-  
-      if (!contactStore.error) {
-          alert('مخاطب با موفقیت اضافه شد!');
-          clearForm();
-      }
+      // !!! توجه: اگه isCreatingNewGroup.value === false بود، کد از این بلوک if میپره و ادامه پیدا می‌کنه. !!!
+
+
+      // مرحله 2: آماده‌سازی داده‌های مخاطب
+      const phoneEntries = additionalPhones.value
+          .map(item => ({ type: item.type || '', number: item.number.trim() }))
+          .filter(item => item.number);
+
+
+      const contactData = {
+        name: name.value,
+        lastName: lastName.value,
+        phone: phone.value,
+        title: title.value,
+        gender: gender.value,
+        notes: notes.value,
+        additionalPhones: phoneEntries,
+        group: finalContactGroup, // <-- استفاده از اسم گروه نهایی شده
+        // ... فیلدهای دیگه ...
+      };
+
+       // پاک کردن خطای گروه اگر در حالت ایجاد گروه جدید نبودیم و خطا وجود داشت
+       // (این خطا ممکنه از تلاش برای ایجاد گروه تکراری در گذشته مونده باشه)
+       if (groupStore.error && !isCreatingNewGroup.value) {
+            groupStore.error = null;
+       }
+
+
+      // مرحله 3: اضافه یا به‌روزرسانی مخاطب
+      if (contactStore.contactToEdit) {
+        // اگر در حالت ویرایش هستیم
+        const contactId = contactStore.contactToEdit.id;
+        contactData.updatedAt = new Date().toISOString();
+
+        await contactStore.updateContact(contactId, contactData);
+
+        if (!contactStore.error) {
+             alert('مخاطب با موفقیت به‌روزرسانی شد!');
+             contactStore.clearContactToEdit(); // این تابع وضعیت ایجاد گروه جدید رو هم ریست می‌کنه
+        }
+
+      } else {
+        // اگر در حالت افزودن هستیم
+        contactData.createdAt = new Date().toISOString();
+        contactData.updatedAt = new Date().toISOString();
+
+        await contactStore.addContact(contactData);
+
+        if (!contactStore.error) {
+            alert('مخاطب با موفقیت اضافه شد!');
+            clearForm(); // این تابع وضعیت ایجاد گروه جدید رو هم ریست می‌کنه
+        }
     }
   };
   </script>
@@ -343,6 +389,24 @@ button[type="button"] {
 
 button[type="button"]:hover:not(:disabled) {
     background-color: #5a6268;
+}
+/* استایل برای فیلد ورودی اسم گروه جدید */
+.new-group-input {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.new-group-input label {
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 0.9em; /* کوچکتر از label اصلی */
+}
+
+.new-group-input input[type="text"] {
+     padding: 8px;
+     border: 1px solid #ccc;
+     border-radius: 4px;
 }
 
 
