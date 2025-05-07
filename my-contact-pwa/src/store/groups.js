@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { db } from '../db'; // نمونه دیتابیس Dexie مون رو وارد می‌کنیم
-
+import { useContactStore } from './contacts'; // <-- Store مخاطبین رو وارد می‌کنیم
 // تعریف یک Store جدید با اسم منحصر به فرد 'groupStore'
 export const useGroupStore = defineStore('groupStore', {
   // ---------- State: وضعیت گروه‌ها ----------
@@ -81,7 +81,70 @@ export const useGroupStore = defineStore('groupStore', {
     },
 
     // اکشن‌های دیگه برای حذف، ویرایش گروه (بعداً پیاده‌سازی میشن)
-    async deleteGroup(groupId) { /* ... */ },
+// اکشن جدید: حذف گروه و به‌روزرسانی مخاطبین مرتبط
+async deleteGroup(groupId) {
+  this.loading = true;
+  this.error = null;
+
+  // برای دسترسی به Storeهای دیگه در Pinia، داخل Actions می‌تونیم از متد this.$डून() استفاده کنیم
+  // این متد Store مورد نظر رو برمی‌گردونه
+  const contactStore = useContactStore(); // <-- دسترسی به Store مخاطبین
+
+  try {
+      // گام 1: پیدا کردن و به‌روزرسانی مخاطبین مرتبط با این گروه
+      // از Dexie برای پیدا کردن همه مخاطبینی که فیلد groupشون برابر اسم این گروهه استفاده می‌کنیم
+      // اول اسم گروه رو پیدا می‌کنیم چون مخاطبین اسم گروه رو ذخیره می‌کنن نه ID
+      const groupToDelete = this.groups.find(group => group.id === groupId);
+      if (!groupToDelete) {
+           this.error = 'گروه مورد نظر برای حذف یافت نشد.';
+           return;
+      }
+      const groupName = groupToDelete.name;
+
+      // پیدا کردن همه مخاطبین با این اسم گروه در دیتابیس
+      const contactsInGroup = await db.contacts.where('group').equals(groupName).toArray();
+      console.log(`پیدا شد ${contactsInGroup.length} مخاطب در گروه "${groupName}"`);
+
+      // به‌روزرسانی فیلد group این مخاطبین به null یا رشته خالی
+      // از Dexie bulkPut یا transaction برای به‌روزرسانی بهینه استفاده می‌کنیم
+      const updates = contactsInGroup.map(contact => ({
+           ...contact, // کپی بقیه اطلاعات مخاطب
+           group: null // فیلد گروه رو خالی می‌کنیم
+      }));
+
+      if (updates.length > 0) {
+           // با استفاده از transaction و bulkPut به صورت اتمیک و سریع به‌روز می‌کنیم
+           await db.transaction('rw', db.contacts, async () => {
+               await db.contacts.bulkPut(updates);
+               console.log(`${updates.length} مخاطب مرتبط با گروه "${groupName}" به‌روزرسانی شدند.`);
+
+               // همچنین باید State مخاطبین رو هم توی contactStore به‌روز کنیم
+               // بهترین راه اینه که یا loadContacts رو صدا بزنیم یا آیتم‌های به‌روز شده رو توی آرایه contacts در State پیدا کنیم و تغییر بدیم
+               // صدا زدن loadContacts ساده‌تره فعلاً، مخصوصاً اگه تعداد مخاطبین زیاد نباشه
+               await contactStore.loadContacts(); // <-- لود مجدد لیست مخاطبین برای به‌روزرسانی UI
+
+           });
+      } else {
+          console.log(`هیچ مخاطبی در گروه "${groupName}" یافت نشد.`);
+      }
+
+
+      // گام 2: حذف خود گروه از دیتابیس
+      await db.groups.delete(groupId);
+      console.log(`گروه با موفقیت حذف شد، ID: ${groupId}, Name: "${groupName}"`);
+
+      // گام 3: به‌روزرسانی State گروه‌ها
+      // ساده‌ترین راه اینه که لیست گروه‌ها رو دوباره از دیتابیس لود کنیم
+      await this.loadGroups(); // <-- لود مجدد لیست گروه‌ها برای به‌روزرسانی UI
+
+
+  } catch (error) {
+      console.error('خطا در حذف گروه:', error);
+      this.error = 'امکان حذف گروه وجود ندارد.';
+  } finally {
+      this.loading = false;
+  }
+    },
     async updateGroup(groupId, newName) { /* ... */ },
   }
 });

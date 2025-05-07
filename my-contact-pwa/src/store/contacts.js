@@ -38,9 +38,19 @@ export const useContactStore = defineStore('contactStore', {
            const additionalPhonesMatch = contact.additionalPhones?.some(
                item => item.number?.includes(query) || item.type?.toLowerCase().includes(query) // هم شماره و هم نوع رو چک می‌کنیم
            );
+           // جستجو در آدرس‌ها (آرایه‌ای از اشیاء {type, street, city, ...})
+           const addressesMatch = contact.addresses?.some(
+            item => item.street?.toLowerCase().includes(query) ||
+                    item.city?.toLowerCase().includes(query) ||
+                    item.province?.toLowerCase().includes(query) ||
+                    item.country?.toLowerCase().includes(query) ||
+                    item.postalCode?.includes(query) ||
+                    item.notes?.toLowerCase().includes(query) ||
+                    item.type?.toLowerCase().includes(query) // نوع آدرس رو هم جستجو می‌کنیم
+        );
  
            // اگه حداقل یکی از فیلدها با عبارت جستجو مطابقت داشت، این مخاطب رو توی لیست فیلتر شده نگه دار
-           return nameMatch || lastNameMatch || phoneMatch || titleMatch || notesMatch || additionalPhonesMatch;
+           return nameMatch || lastNameMatch || phoneMatch || titleMatch || notesMatch || additionalPhonesMatch || addressesMatch;
          });
        }
  

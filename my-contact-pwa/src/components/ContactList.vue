@@ -37,6 +37,18 @@
           <p v-if="contact.gender">جنسیت: {{ displayGender(contact.gender) }}</p>
           <p v-if="contact.group">گروه: {{ contact.group }}</p>
           <p v-if="contact.notes">یادداشت: {{ contact.notes }}</p>
+          <div v-if="contact.addresses && contact.addresses.length > 0">
+               <p>آدرس‌ها:</p>
+               <ul> <li v-for="(address, index) in contact.addresses" :key="index"> <strong>{{ displayAddressType(address.type) }}</strong>:
+                       {{ address.street ? address.street + ', ' : '' }}
+                       {{ address.city ? address.city : '' }}
+                       {{ address.province ? ', ' + address.province : '' }}
+                       {{ address.country ? ', ' + address.country : '' }}
+                       {{ address.postalCode ? ' (کد پستی: ' + address.postalCode + ')' : '' }}
+                       <span v-if="address.notes"> (یادداشت: {{ address.notes }})</span>
+                   </li>
+               </ul>
+           </div>
 
           <div v-if="contact.additionalPhones && contact.additionalPhones.length > 0">
               <p>شماره‌های اضافی:</p>
@@ -103,14 +115,24 @@
   };
   const displayPhoneType = (typeValue) => {
     switch (typeValue) {
-        case 'mobile': return 'موبایل';
+      case 'mobile': return 'موبایل';
+      case 'home': return 'منزل';
+      case 'work': return 'محل کار';
+      case 'office': return 'مطب/دفتر';
+      case 'fax': return 'فکس';
+      case 'other': return 'دیگر';
+      default: return 'نامشخص'; // یا می‌تونی '' بذاری که چیزی نمایش نده
+    }
+  };
+    // تابع کمکی جدید برای نمایش بهتر نوع آدرس
+    const displayAddressType = (typeValue) => {
+      switch (typeValue) {
         case 'home': return 'منزل';
         case 'work': return 'محل کار';
-        case 'office': return 'مطب/دفتر';
-        case 'fax': return 'فکس';
         case 'other': return 'دیگر';
-        default: return 'نامشخص'; // یا می‌تونی '' بذاری که چیزی نمایش نده
-    }
+        default: return 'نامشخص';
+      }
+    
 };
   
   </script>
@@ -127,7 +149,13 @@
 .contact-info ul li {
     font-size: 0.9em;
     color: #555;
-    margin-bottom: 2px;
+    margin-bottom: 5px; /* فاصله بیشتر بین آدرس‌ها */
+    word-break: break-word; /* برای شکستن خطوط طولانی آدرس */
+}
+
+.contact-info ul li strong { /* استایل برای نوع آدرس */
+    color: #333;
+    margin-right: 5px;
 }
 
 .controls {
