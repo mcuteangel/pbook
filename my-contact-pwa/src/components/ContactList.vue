@@ -41,7 +41,12 @@
         class="contact-item"
       >
         <div class="contact-info">
-          <strong>{{ contact.name }} {{ contact.lastName }}</strong>
+          <router-link
+            :to="{ name: 'contact-detail', params: { id: contact.id } }"
+            class="contact-name-link"
+          >
+            {{ contact.name }} {{ contact.lastName }}
+          </router-link>
           <p>تلفن: {{ contact.phone }}</p>
 
           <p v-if="contact.title">سمت: {{ contact.title }}</p>
@@ -79,10 +84,21 @@
         </div>
 
         <div class="contact-actions">
-          <button class="edit-button" @click="contactStore.setContactToEdit(contact)">
+          <button
+            class="edit-button"
+            @click="startEditingContact(contact)"
+            :disabled="contactStore.loading"
+          >
             ویرایش
           </button>
-          <button class="delete-button" @click="confirmDelete(contact.id)">حذف</button>
+
+          <button
+            class="delete-button"
+            @click="confirmDeleteContact(contact.id)"
+            :disabled="contactStore.loading"
+          >
+            حذف
+          </button>
         </div>
       </li>
     </ul>
@@ -92,10 +108,19 @@
 <script setup>
 import { useContactStore } from '../store/contacts'
 import { useGroupStore } from '../store/groups'
-import moment from 'moment-jalaali'; // <-- این خط رو اضافه کن
+import moment from 'moment-jalaali' // <-- این خط رو اضافه کن
+import { useRouter } from 'vue-router'
 
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
+const router = useRouter()
+
+const startEditingContact = (contact) => {
+  contactStore.setContactToEdit(contact) // گام اول: تنظیم مخاطب در Store
+  // گام دوم: ناوبری به صفحه فرم
+  // از router.push() برای رفتن به Route فرم استفاده می‌کنیم
+  router.push({ name: 'add-contact' }) // <-- ناوبری به Route 'add-contact'
+}
 
 const confirmDelete = async (contactId) => {
   if (confirm('مطمئنی می‌خوای این مخاطب رو حذف کنی؟')) {
@@ -103,28 +128,27 @@ const confirmDelete = async (contactId) => {
   }
 }
 
- // تابع کمکی برای نمایش تاریخ میلادی (ذخیره شده) به صورت شمسی با Moment-Jalaali
- const formatShamsiDate = (gregorianDateString) => {
-      if (!gregorianDateString) return '';
-      try {
-          // استفاده از moment() برای ساخت شیء Moment از رشته میلادی
-          const momentObj = moment(gregorianDateString); // Moment خودش میتونه رشته‌های تاریخ استاندارد رو بفهمه
+// تابع کمکی برای نمایش تاریخ میلادی (ذخیره شده) به صورت شمسی با Moment-Jalaali
+const formatShamsiDate = (gregorianDateString) => {
+  if (!gregorianDateString) return ''
+  try {
+    // استفاده از moment() برای ساخت شیء Moment از رشته میلادی
+    const momentObj = moment(gregorianDateString) // Moment خودش میتونه رشته‌های تاریخ استاندارد رو بفهمه
 
-          // چک می‌کنیم شیء Moment معتبر باشه
-          if (momentObj.isValid()) { // استفاده از متد isValid() Moment
-               // تبدیل به رشته شمسی با فرمت jYYYY/jMM/jDD
-               return momentObj.format('jYYYY/jMM/jDD'); // <-- برگردوندن رشته شمسی فرمت شده
-
-          } else {
-               console.error("Moment-Jalaali could not parse Gregorian date string:", gregorianDateString); // اگه رشته ورودی معتبر نبود
-               return 'تاریخ نامعتبر';
-          }
-      } catch (e) {
-          console.error("Error in formatShamsiDate (Moment-Jalaali):", e); // خطاهای کلی‌تر
-          return 'خطا در نمایش تاریخ';
-      }
-  };
-
+    // چک می‌کنیم شیء Moment معتبر باشه
+    if (momentObj.isValid()) {
+      // استفاده از متد isValid() Moment
+      // تبدیل به رشته شمسی با فرمت jYYYY/jMM/jDD
+      return momentObj.format('jYYYY/jMM/jDD') // <-- برگردوندن رشته شمسی فرمت شده
+    } else {
+      console.error('Moment-Jalaali could not parse Gregorian date string:', gregorianDateString) // اگه رشته ورودی معتبر نبود
+      return 'تاریخ نامعتبر'
+    }
+  } catch (e) {
+    console.error('Error in formatShamsiDate (Moment-Jalaali):', e) // خطاهای کلی‌تر
+    return 'خطا در نمایش تاریخ'
+  }
+}
 
 // تابع کمکی برای نمایش بهتر مقدار جنسیت
 const displayGender = (genderValue) => {
@@ -316,5 +340,15 @@ const displayAddressType = (typeValue) => {
   margin: 3px 0;
   font-size: 0.9em; /* فونت کوچکتر برای تاریخ‌ها */
   color: #555;
+}
+.contact-name-link {
+  color: #007bff; /* رنگ آبی لینک */
+  text-decoration: none; /* بدون خط زیر */
+  font-weight: bold; /* ضخیم‌تر */
+  cursor: pointer; /* نشانگر ماوس به شکل دست */
+}
+
+.contact-name-link:hover {
+  text-decoration: underline; /* زیر خط دار شدن موقع هاور */
 }
 </style>

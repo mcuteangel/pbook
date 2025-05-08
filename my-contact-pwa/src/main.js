@@ -1,10 +1,16 @@
-
 import { createApp } from 'vue'
-import { createPinia } from 'pinia'
 import App from './App.vue'
+// Router رو import کن
+import router from './router' // <-- این خط رو اضافه کن
+import { createPinia } from 'pinia'    // <-- این را اضافه کنید
+
 
 const app = createApp(App)
 
-app.use(createPinia())
+const pinia = createPinia()
+app.use(pinia)
+// Router رو به برنامه Vue اضافه کن
+app.use(router) // <-- این خط رو اضافه کن
 
-app.mount('#app')
+
+app.mount('#app') // برنامه رو به المنت #app در index.html وصل کن

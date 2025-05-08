@@ -1,88 +1,61 @@
 <template>
   <div>
     <h1>برنامه مدیریت مخاطبین</h1>
-    <div class="view-switcher">
-        <button @click="currentView = 'contacts'" :disabled="currentView === 'contacts'">مدیریت مخاطبین</button>
-        <button @click="currentView = 'groups'" :disabled="currentView === 'groups'">مدیریت گروه‌ها</button>
-    </div>
+    <nav>
+      <router-link :to="{ name: 'contact-list' }" active-class="active-link">لیست مخاطبین</router-link>
+      <router-link :to="{ name: 'group-manager' }" active-class="active-link">مدیریت گروه‌ها</router-link>
+      <router-link :to="{ name: 'add-contact' }" active-class="active-link">افزودن مخاطب جدید</router-link>
+    </nav>
     <hr>
 
-    <div v-if="currentView === 'contacts'">
-        <ContactForm />
-        <hr>
-        <ContactList />
-    </div>
+    <router-view></router-view>
 
-    <div v-else-if="currentView === 'groups'">
-        <GroupManager />
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import ContactForm from './components/ContactForm.vue';
-import ContactList from './components/ContactList.vue';
-import GroupManager from './components/GroupManager.vue'; // کامپوننت جدید رو وارد می‌کنیم
+import { onMounted } from 'vue';
 import { useContactStore } from './store/contacts';
-import { useGroupStore } from './store/groups'; // Store گروه‌ها رو وارد می‌کنیم
-
+import { useGroupStore } from './store/groups';
+// دیگه لازم نیست کامپوننت‌های ContactList, ContactForm, GroupManager رو اینجا import کنی
+// چون Router اونها رو لود می‌کنه
 
 const contactStore = useContactStore();
-const groupStore = useGroupStore(); // نمونه از Store گروه‌ها می‌سازیم
+const groupStore = useGroupStore();
 
-// متغیر واکنشی برای نگهداری وضعیت صفحه فعلی ('contacts' یا 'groups')
-const currentView = ref('contacts'); // پیش‌فرض، صفحه مدیریت مخاطبین
+// منطق دستی نمایش کامپوننت‌ها و متغیر currentView رو حذف می‌کنیم
 
-// وقتی کامپوننت App به DOM اضافه شد، مخاطبین و گروه‌ها رو لود کن
+// اکشن‌های لود اولیه اطلاعات در زمان mount شدن برنامه رو نگه می‌داریم
 onMounted(async () => {
   console.log('App mounted, loading data...');
-  await contactStore.loadContacts(); // لود کردن مخاطبین
-  await groupStore.loadGroups(); // <-- لود کردن گروه‌ها
+  await contactStore.loadContacts();
+  await groupStore.loadGroups();
   console.log('Loading finished.');
 });
-
 </script>
 
 <style scoped>
-/* استایل‌های کلی اینجا اضافه میشن */
-h1 {
+/* استایل‌های ساده برای ناوبری */
+nav {
+  margin-bottom: 20px;
+  padding: 0 20px;
   text-align: center;
+}
+
+nav a {
+  margin: 0 10px;
+  text-decoration: none;
   color: #333;
+  font-weight: bold;
+  padding-bottom: 2px; /* برای فضای خط زیر فعال */
 }
 
-hr {
-  margin: 30px auto;
-  width: 80%;
-  border: none;
-  border-top: 1px solid #eee;
-}
-.view-switcher {
-    margin: 20px auto;
-    max-width: 600px; /* تنظیم عرض بر اساس نیاز */
-    text-align: center;
+nav a:hover {
+  color: #007bff;
 }
 
-.view-switcher button {
-     padding: 10px 15px;
-     margin: 0 10px;
-     cursor: pointer;
-     border: 1px solid #007bff;
-     border-radius: 4px;
-     background-color: #fff;
-     color: #007bff;
-     transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.view-switcher button:hover:not(:disabled) {
-    background-color: #007bff;
-    color: white;
-}
-
-.view-switcher button:disabled {
-     background-color: #007bff;
-     color: white;
-     cursor: default;
-     opacity: 0.7;
+.active-link {
+    color: #007bff; /* هایلایت کردن لینک فعال */
+    border-bottom: 2px solid #007bff; /* خط زیر برای لینک فعال */
 }
 </style>
