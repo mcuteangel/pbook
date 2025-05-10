@@ -108,8 +108,13 @@
 <script setup>
 import { useContactStore } from '../store/contacts'
 import { useGroupStore } from '../store/groups'
-import moment from 'moment-jalaali' // <-- این خط رو اضافه کن
 import { useRouter } from 'vue-router'
+import { 
+  formatShamsiDate, 
+  displayGender, 
+  displayPhoneType, 
+  displayAddressType 
+} from '../utils/formatters'; // مسیر صحیح رو چک کن
 
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
@@ -128,74 +133,6 @@ const confirmDelete = async (contactId) => {
   }
 }
 
-// تابع کمکی برای نمایش تاریخ میلادی (ذخیره شده) به صورت شمسی با Moment-Jalaali
-const formatShamsiDate = (gregorianDateString) => {
-  if (!gregorianDateString) return ''
-  try {
-    // استفاده از moment() برای ساخت شیء Moment از رشته میلادی
-    const momentObj = moment(gregorianDateString) // Moment خودش میتونه رشته‌های تاریخ استاندارد رو بفهمه
-
-    // چک می‌کنیم شیء Moment معتبر باشه
-    if (momentObj.isValid()) {
-      // استفاده از متد isValid() Moment
-      // تبدیل به رشته شمسی با فرمت jYYYY/jMM/jDD
-      return momentObj.format('jYYYY/jMM/jDD') // <-- برگردوندن رشته شمسی فرمت شده
-    } else {
-      console.error('Moment-Jalaali could not parse Gregorian date string:', gregorianDateString) // اگه رشته ورودی معتبر نبود
-      return 'تاریخ نامعتبر'
-    }
-  } catch (e) {
-    console.error('Error in formatShamsiDate (Moment-Jalaali):', e) // خطاهای کلی‌تر
-    return 'خطا در نمایش تاریخ'
-  }
-}
-
-// تابع کمکی برای نمایش بهتر مقدار جنسیت
-const displayGender = (genderValue) => {
-  switch (genderValue) {
-    case 'male':
-      return 'آقا'
-    case 'female':
-      return 'خانم'
-    case 'other':
-      return 'غیره'
-    case 'not_specified':
-      return 'نامشخص'
-    default:
-      return '' // اگر مقدار غیرمنتظره بود
-  }
-}
-const displayPhoneType = (typeValue) => {
-  switch (typeValue) {
-    case 'mobile':
-      return 'موبایل'
-    case 'home':
-      return 'منزل'
-    case 'work':
-      return 'محل کار'
-    case 'office':
-      return 'مطب/دفتر'
-    case 'fax':
-      return 'فکس'
-    case 'other':
-      return 'دیگر'
-    default:
-      return 'نامشخص' // یا می‌تونی '' بذاری که چیزی نمایش نده
-  }
-}
-// تابع کمکی جدید برای نمایش بهتر نوع آدرس
-const displayAddressType = (typeValue) => {
-  switch (typeValue) {
-    case 'home':
-      return 'منزل'
-    case 'work':
-      return 'محل کار'
-    case 'other':
-      return 'دیگر'
-    default:
-      return 'نامشخص'
-  }
-}
 </script>
 
 <style scoped>
