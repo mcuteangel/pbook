@@ -1,26 +1,24 @@
 <template>
-  <form @submit.prevent="handleSubmit">
+ <form @submit.prevent="handleSubmit" class="contact-form">
     <h2>{{ contactStore.contactToEdit ? 'ویرایش مخاطب' : 'افزودن مخاطب جدید' }}</h2>
 
-    <div>
+    <div class="form-group">
       <label for="name">نام:</label>
       <input type="text" id="name" v-model="name" required />
     </div>
-    <div>
+    <div class="form-group">
       <label for="lastName">نام خانوادگی:</label>
       <input type="text" id="lastName" v-model="lastName" required />
     </div>
-    <div>
+    <div class="form-group">
       <label for="phone">تلفن اصلی:</label>
-      <input type="text" id="phone" v-model="phone" required />
+      <input type="text" id="phone" v-model="phone" />
     </div>
-
-    <div>
+    <div class="form-group">
       <label for="title">سمت/تخصص:</label>
       <input type="text" id="title" v-model="title" />
     </div>
-
-    <div>
+    <div class="form-group">
       <label for="gender">جنسیت:</label>
       <select id="gender" v-model="gender">
         <option value="">انتخاب کنید</option>
@@ -30,145 +28,202 @@
         <option value="not_specified">ترجیح میدهم نگویم</option>
       </select>
     </div>
-
-    <div>
+    <div class="form-group">
       <label for="group">گروه:</label>
       <select id="group" v-model="contactGroup">
         <option value="">بدون گروه</option>
-        <option v-for="group in groupStore.sortedGroups" :key="group.id" :value="group.name">
-          {{ group.name }}
-        </option>
-        <option value="__CREATE_NEW__">--- ایجاد گروه جدید ... ---</option>
+        <option v-for="g in groupStore.sortedGroups" :key="g.id" :value="g.name">{{ g.name }}</option>
+        <option value="__CREATE_NEW__">--- ایجاد گروه جدید ---</option>
       </select>
-
       <div v-if="isCreatingNewGroup" class="new-group-input">
         <label for="newGroupName">نام گروه جدید:</label>
-        <input type="text" id="newGroupName" v-model="newGroupName" placeholder="مثلاً: خانواده" />
+        <input type="text" id="newGroupName" v-model="newGroupName" placeholder="مثلاً: دوستان" />
       </div>
-    </div>
-    <div class="addresses-section">
-      <label>آدرس‌ها:</label>
-      <div
-        v-for="(address, index) in contactAddresses"
-        :key="address.id"
-        class="address-input-block"
-      >
-        <div class="address-inputs">
-          <select v-model="address.type">
-            <option value="">نوع</option>
-            <option value="home">منزل</option>
-            <option value="work">محل کار</option>
-            <option value="other">دیگر</option>
-          </select>
-          <input type="text" v-model="address.street" placeholder="خیابان/کوچه" />
-          <input type="text" v-model="address.city" placeholder="شهر" />
-          <input type="text" v-model="address.province" placeholder="استان" />
-          <input type="text" v-model="address.country" placeholder="کشور" />
-          <input type="text" v-model="address.postalCode" placeholder="کد پستی" />
-          <textarea v-model="address.notes" placeholder="یادداشت آدرس"></textarea>
-        </div>
-        <button type="button" class="remove-address-button" @click="removeAddress(address.id)">
-          X
-        </button>
-      </div>
-      <button type="button" class="add-address-button" @click="addAddress">
-        + افزودن آدرس دیگر
-      </button>
     </div>
 
-    <div class="additional-phones-section">
-      <label>شماره‌های اضافی:</label>
-      <div
-        v-for="(phone, index) in additionalPhones"
-        :key="phone.id"
-        class="additional-phone-input"
-      >
-        <select v-model="phone.type">
-          <option value="">نوع</option>
-          <option value="mobile">موبایل</option>
-          <option value="home">منزل</option>
-          <option value="work">محل کار</option>
-          <option value="office">مطب/دفتر</option>
-          <option value="fax">فکس</option>
-          <option value="other">دیگر</option>
-        </select>
-        <input type="text" v-model="phone.number" :placeholder="'شماره ' + (index + 1)" />
-        <button type="button" class="remove-phone-button" @click="removeAdditionalPhone(phone.id)">
-          X
-        </button>
-      </div>
-      <button type="button" class="add-phone-button" @click="addAdditionalPhone">
-        + افزودن شماره دیگر
-      </button>
-    </div>
-
-    <div>
+    <div class="form-group">
       <label for="birthDate">تاریخ تولد:</label>
       <date-picker
         v-model="birthDate"
+        id="birthDate"
         type="date"
-        placeholder="انتخاب تاریخ تولد"
-        locale="fa"
-        calendar="persian"
-        auto-submit
-        no-input
-      >
-        <template #trigger>
-          <input type="text" :value="birthDate" readonly placeholder="انتخاب تاریخ تولد" />
-        </template>
-      </date-picker>
+        format="jYYYY/jMM/jDD"
+        display-format="jYYYY/jMM/jDD"
+        placeholder="تاریخ تولد را انتخاب کنید"
+        clearable
+      ></date-picker>
     </div>
 
-    <div>
+
+    <div v-if="sortedCustomFieldDefinitions.length > 0" class="custom-fields-wrapper">
+      <h3>فیلدهای سفارشی</h3>
+      <div v-for="fieldDef in sortedCustomFieldDefinitions" :key="fieldDef.id" class="form-group custom-field-group">
+        <label :for="'custom-field-' + fieldDef.id">{{ fieldDef.label }}:</label>
+
+        <input
+          v-if="fieldDef.type === 'text'"
+          type="text"
+          :id="'custom-field-' + fieldDef.id"
+          v-model="customFieldValues[fieldDef.id]"
+          class="form-input"
+        />
+        <textarea
+          v-else-if="fieldDef.type === 'textarea'"
+          :id="'custom-field-' + fieldDef.id"
+          v-model="customFieldValues[fieldDef.id]"
+          class="form-textarea"
+          rows="3"
+        ></textarea>
+        <input
+          v-else-if="fieldDef.type === 'number'"
+          type="number"
+          :id="'custom-field-' + fieldDef.id"
+          v-model.number="customFieldValues[fieldDef.id]"
+          class="form-input"
+        />
+        <date-picker
+          v-else-if="fieldDef.type === 'date'"
+          v-model="customFieldValues[fieldDef.id]"
+          :id="'custom-field-' + fieldDef.id"
+          type="date"
+          format="YYYY-MM-DD"   
+          display-format="jYYYY/jMM/jDD" 
+          placeholder="تاریخ را انتخاب کنید"
+          class="form-datepicker"
+          clearable
+        ></date-picker>
+        <div v-else-if="fieldDef.type === 'boolean'" class="checkbox-wrapper">
+          <input
+            type="checkbox"
+            :id="'custom-field-' + fieldDef.id"
+            v-model="customFieldValues[fieldDef.id]"
+            class="form-checkbox"
+          />
+          <label :for="'custom-field-' + fieldDef.id" class="checkbox-label">{{ fieldDef.label }}</label>
+        </div>
+        <select
+          v-else-if="fieldDef.type === 'select'"
+          :id="'custom-field-' + fieldDef.id"
+          v-model="customFieldValues[fieldDef.id]"
+          class="form-select"
+        >
+          <option value="">انتخاب کنید...</option>
+          <option v-for="option in fieldDef.options" :key="option" :value="option">
+            {{ option }}
+          </option>
+        </select>
+        <small v-else class="unsupported-field-type">نوع فیلد "{{ fieldDef.type }}" پشتیبانی نمی‌شود.</small>
+      </div>
+    </div>
+    <div class="form-section additional-items-section">
+        <h4>آدرس‌ها</h4>
+        <div v-for="(address, index) in contactAddresses" :key="address.id" class="item-block">
+            <select v-model="address.type" class="item-select">
+                <option value="">نوع آدرس</option>
+                <option value="home">منزل</option>
+                <option value="work">محل کار</option>
+                <option value="other">دیگر</option>
+            </select>
+            <input type="text" v-model="address.street" placeholder="خیابان" class="item-input">
+            <input type="text" v-model="address.city" placeholder="شهر" class="item-input-sml">
+            <input type="text" v-model="address.province" placeholder="استان" class="item-input-sml">
+            <input type="text" v-model="address.country" placeholder="کشور" class="item-input-sml">
+            <input type="text" v-model="address.postalCode" placeholder="کدپستی" class="item-input-sml">
+            <textarea v-model="address.notes" placeholder="یادداشت آدرس" class="item-textarea" rows="2"></textarea>
+            <button type="button" @click="removeAddress(address.id)" class="remove-item-btn">X</button>
+        </div>
+        <button type="button" @click="addAddress" class="add-item-btn">+ افزودن آدرس</button>
+    </div>
+
+    <div class="form-section additional-items-section">
+        <h4>شماره‌های اضافی</h4>
+        <div v-for="(phoneItem, index) in additionalPhones" :key="phoneItem.id" class="item-block">
+            <select v-model="phoneItem.type" class="item-select">
+                <option value="">نوع شماره</option>
+                <option value="mobile">موبایل</option>
+                <option value="home">منزل</option>
+                <option value="work">محل کار</option>
+                <option value="fax">فکس</option>
+                <option value="other">دیگر</option>
+            </select>
+            <input type="text" v-model="phoneItem.number" placeholder="شماره تلفن" class="item-input">
+            <button type="button" @click="removeAdditionalPhone(phoneItem.id)" class="remove-item-btn">X</button>
+        </div>
+        <button type="button" @click="addAdditionalPhone" class="add-item-btn">+ افزودن شماره</button>
+    </div>
+
+
+    <div class="form-group">
       <label for="notes">یادداشت/توضیحات:</label>
-      <textarea id="notes" v-model="notes"></textarea>
+      <textarea id="notes" v-model="notes" rows="4" class="form-textarea"></textarea>
     </div>
 
-    <button type="submit" :disabled="contactStore.loading || groupStore.loading">
-      {{
-        contactStore.loading || groupStore.loading
-          ? 'در حال پردازش...'
-          : contactStore.contactToEdit
-            ? 'به‌روزرسانی مخاطب'
-            : 'ذخیره مخاطب'
-      }}
-    </button>
+    <div class="form-actions">
+      <button type="submit" :disabled="contactStore.loading || groupStore.loading" class="submit-btn">
+        {{ contactStore.contactToEdit ? 'به‌روزرسانی مخاطب' : 'ذخیره مخاطب' }}
+      </button>
+      <button
+        v-if="contactStore.contactToEdit"
+        type="button"
+        @click="clearForm" 
+        class="cancel-btn"
+      >
+        انصراف (بازگشت به افزودن جدید)
+      </button>
+    </div>
 
-    <button
-      v-if="contactStore.contactToEdit"
-      type="button"
-      @click="contactStore.clearContactToEdit()"
-    >
-      انصراف
-    </button>
-
-    <p v-if="contactStore.error" style="color: red">{{ contactStore.error }}</p>
-    <p v-if="groupStore.error" style="color: red">{{ groupStore.error }}</p>
+    <p v-if="contactStore.error" class="error-message">{{ contactStore.error }}</p>
+    <p v-if="groupStore.error" class="error-message">{{ groupStore.error }}</p>
   </form>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, reactive, onMounted, watch, computed } from 'vue';
+import { useRouter } from 'vue-router'; // برای ناوبری بعد از ذخیره
+import { useCustomFieldStore } from '../store/customFields'; // <-- Store فیلدهای سفارشی
 import { useContactStore } from '../store/contacts'
 import { useGroupStore } from '../store/groups'
 import DatePicker from 'vue3-persian-datetime-picker' // <-- این خط رو اصلاح کن
 import moment from 'moment-jalaali'
+
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
-const contactAddresses = ref([]) // متغیر واکنشی برای آدرس‌ها
-let addressIdCounter = 0 // برای تولید ID موقت آدرس
-const name = ref('')
-const lastName = ref('')
-const phone = ref('')
-const title = ref('')
-const gender = ref('')
-const notes = ref('')
-const additionalPhones = ref([])
-let phoneIdCounter = 0
-const contactGroup = ref('')
-const isCreatingNewGroup = ref(false) // آیا در حال ایجاد گروه جدید هستیم؟
-const newGroupName = ref('') // اسم گروه جدید که کاربر وارد می‌کنه
-const birthDate = ref(null) // <-- متغیر جدید برای تاریخ تولد (null یعنی خالی)
+const customFieldStore = useCustomFieldStore(); // <-- نمونه از Store
+const router = useRouter();
+
+// --- Local State for Form Fields (فیلدهای اصلی مخاطب) ---
+const name = ref('');
+const lastName = ref('');
+const phone = ref('');
+const title = ref('');
+const gender = ref('');
+const notes = ref('');
+const contactGroup = ref('');
+const birthDate = ref(''); // برای تاریخ تولد اصلی - مقدار اولیه رشته خالی یا null
+
+// State برای شماره‌های اضافی
+const additionalPhones = ref([]); // آرایه‌ای از آبجکت‌های { id (برای key در v-for), type, number }
+let phoneIdCounter = 0; // برای تولید ID موقت برای v-for
+
+// State برای آدرس‌ها
+const contactAddresses = ref([]); // آرایه‌ای از آبجکت‌های { id (برای key در v-for), type, street, ... }
+let addressIdCounter = 0; // برای تولید ID موقت برای v-for
+
+// State برای ایجاد گروه جدید
+const isCreatingNewGroup = ref(false);
+const newGroupName = ref('');
+
+// --- Local State for Custom Fields ---
+const customFieldValues = ref({}); // آبجکتی که مقادیر فیلدهای سفارشی رو نگه میداره: { fieldDefId1: value1, fieldDefId2: value2 }
+
+const sortedCustomFieldDefinitions = computed(() => customFieldStore.sortedFieldDefinitions || []);
+
+// --- Helper Functions ---
+const generateUniqueId = () => Date.now() + Math.random().toString(36).substring(2, 9);
+
+// Removed duplicate declaration of addAdditionalPhone
+// Duplicate declaration removed
+
 const generateUniqueAddressId = () => {
   addressIdCounter += 1
   return Date.now() + addressIdCounter
@@ -193,6 +248,35 @@ const removeAddress = (idToRemove) => {
   contactAddresses.value = contactAddresses.value.filter((address) => address.id !== idToRemove)
 }
 
+// مقدار پیش‌فرض برای هر نوع فیلد سفارشی
+const getDefaultValueForCustomFieldType = (type) => {
+  switch (type) {
+    case 'text':
+    case 'textarea':
+    case 'select':
+    case 'date': // برای DatePicker رشته خالی یا null مناسبه
+      return '';
+    case 'number':
+      return null; // یا 0
+    case 'boolean':
+      return false;
+    default:
+      return undefined;
+  }
+};
+
+// ریست کردن مقادیر فیلدهای سفارشی به پیش‌فرض
+const resetCustomFieldValues = () => {
+  const newValues = {};
+  if (sortedCustomFieldDefinitions.value && Array.isArray(sortedCustomFieldDefinitions.value)) {
+    sortedCustomFieldDefinitions.value.forEach(def => {
+      newValues[def.id] = getDefaultValueForCustomFieldType(def.type);
+    });
+  }
+  customFieldValues.value = newValues;
+  console.log('Custom field values reset:', customFieldValues.value);
+};
+
 // تابع برای تولید ID منحصر به فرد برای فیلدهای موقت فرم
 const generateUniquePhoneId = () => {
   phoneIdCounter += 1
@@ -213,117 +297,116 @@ const removeAdditionalPhone = (idToRemove) => {
   additionalPhones.value = additionalPhones.value.filter((phone) => phone.id !== idToRemove)
 }
 
-// تابع برای پاک کردن فرم (به‌روزرسانی شده برای فیلدهای جدید)
+// پاک کردن کل فرم
 const clearForm = () => {
-  name.value = ''
-  lastName.value = ''
-  phone.value = ''
-  title.value = ''
-  gender.value = ''
-  notes.value = ''
-  additionalPhones.value = [] // پاک کردن شماره‌های اضافی
-  phoneIdCounter = 0 // ریست کردن کانتر
-  contactGroup.value = ''
-  isCreatingNewGroup.value = false // <-- ریست وضعیت
-  newGroupName.value = '' // <-- ریست اسم گروه جدید
-  groupStore.error = null
-  contactAddresses.value = [] // <-- پاک کردن آدرس‌ها
-  addressIdCounter = 0 // <-- ریست کردن کانتر
-  birthDate.value = null // <-- پاک کردن فیلد تاریخ تولد
-}
+  name.value = '';
+  lastName.value = '';
+  phone.value = '';
+  title.value = '';
+  gender.value = '';
+  notes.value = '';
+  contactGroup.value = '';
+  birthDate.value = ''; // یا null
+
+  additionalPhones.value = [];
+  contactAddresses.value = [];
+
+  isCreatingNewGroup.value = false;
+  newGroupName.value = '';
+  groupStore.error = null; // پاک کردن خطای گروه
+  contactStore.error = null; // پاک کردن خطای مخاطب
+
+  resetCustomFieldValues(); // <-- ریست کردن فیلدهای سفارشی
+  contactStore.clearContactToEdit(); // <-- پاک کردن مخاطب در حال ویرایش از store
+};
+// --- Watchers & Lifecycle Hooks ---
+onMounted(() => {
+  // اگر در حالت افزودن جدید هستیم و مخاطبی برای ویرایش انتخاب نشده، فرم و فیلدهای سفارشی رو ریست کن
+  if (!contactStore.contactToEdit) {
+    clearForm(); // clearForm شامل resetCustomFieldValues هم میشه
+  }
+  // اگر تعاریف فیلدها هنوز لود نشدن، اینجا می‌تونستی لودشون کنی،
+  // ولی فرض ما اینه که در App.vue لود میشن.
+});
 
 // استفاده از watch برای واکنش نشان دادن به تغییرات contactStore.contactToEdit
+// این watch مهمترین بخش برای مقداردهی فرم در حالت افزودن/ویرایش هست
 watch(
-  () => contactStore.contactToEdit,
-  (newContactToEdit) => {
-    console.log('Watcher triggered. Contact to edit:', newContactToEdit)
-    if (newContactToEdit) {
-      console.log('In edit mode. Loaded birthDate raw:', newContactToEdit.birthDate)
+  () => contactStore.contactToEdit, // مانیتور کردن مخاطبی که برای ویرایش انتخاب شده
+  (contactForEdit) => {
+    console.log('ContactForm: contactToEdit watcher triggered. New contact:', contactForEdit);
+    if (contactForEdit) {
+      // --- حالت ویرایش ---
+      name.value = contactForEdit.name || '';
+      lastName.value = contactForEdit.lastName || '';
+      phone.value = contactForEdit.phone || '';
+      title.value = contactForEdit.title || '';
+      gender.value = contactForEdit.gender || '';
+      notes.value = contactForEdit.notes || '';
+      contactGroup.value = contactForEdit.group || '';
 
-      name.value = newContactToEdit.name || ''
-      lastName.value = newContactToEdit.lastName || ''
-      phone.value = newContactToEdit.phone || ''
-      title.value = newContactToEdit.title || ''
-      gender.value = newContactToEdit.gender || ''
-      notes.value = newContactToEdit.notes || ''
-      additionalPhones.value = newContactToEdit.additionalPhones
-        ? newContactToEdit.additionalPhones.map((item) => ({
-            // هر آیتم حالا { type, number } هست توی DB
-            id: generateUniquePhoneId(), // تولید ID جدید برای فرم
-            type: item.type || '', // مقدار type
-            number: item.number || '', // مقدار number
-          }))
-        : [] // اگر additionalPhones وجود نداشت یا خالی بود، آرایه خالی بذار
-
-      contactGroup.value = newContactToEdit.group || ''
-      isCreatingNewGroup.value = false // در حالت ویرایش همیشه فرض می‌کنیم در حال ایجاد گروه جدید نیستیم
-      newGroupName.value = ''
-      groupStore.error = null
-      contactAddresses.value = newContactToEdit.addresses
-        ? newContactToEdit.addresses.map((item) => ({
-            // هر آیتم حالا { type, street, city, ... } هست توی DB
-            id: generateUniqueAddressId(), // تولید ID جدید برای فرم
-            type: item.type || '',
-            street: item.street || '',
-            city: item.city || '',
-            province: item.province || '',
-            country: item.country || '',
-            postalCode: item.postalCode || '',
-            notes: item.notes || '',
-          }))
-        : [] // اگر addresses وجود نداشت یا خالی بود، آرایه خالی بذار
-      if (newContactToEdit.birthDate) {
-        try {
-          // Attempt to parse the saved Gregorian ISO string with Moment
-          const momentObj = moment(newContactToEdit.birthDate)
-
-          // If parsing results in a valid Moment object
-          if (momentObj.isValid()) {
-            // *** تبدیل به رشته SHAMSI در فرمت 'jYYYY/jMM/jDD' برای v-model پیکر ***
-            const formattedShamsiDate = momentObj.format('jYYYY/jMM/jDD') // <-- تبدیل به رشته شمسی
-            birthDate.value = formattedShamsiDate // <-- تخصیص رشته شمسی به v-model پیکر
-            console.log(
-              'Loaded birthDate formatted for picker (Shamsi jYYYY/jMM/jDD):',
-              birthDate.value,
-            ) // لاگ نهایی
-          } else {
-            console.error(
-              'Loaded birthDate string resulted in invalid Moment object during check:',
-              newContactToEdit.birthDate,
-            )
-            birthDate.value = null // Set to null if invalid
-          }
-        } catch (e) {
-          console.error('Error processing loaded birthDate string:', e)
-          birthDate.value = null // Set to null on error
-        }
+      // تاریخ تولد اصلی
+      if (contactForEdit.birthDate) {
+        birthDate.value = moment(contactForEdit.birthDate).format('jYYYY/jMM/jDD');
       } else {
-        console.log('No birthDate found on loaded contact.')
-        birthDate.value = null
+        birthDate.value = '';
       }
+
+      // شماره‌های اضافی
+      additionalPhones.value = contactForEdit.additionalPhones
+        ? JSON.parse(JSON.stringify(contactForEdit.additionalPhones)).map(p => ({ ...p, id: generateUniqueId() }))
+        : [];
+
+      // آدرس‌ها
+      contactAddresses.value = contactForEdit.addresses
+        ? JSON.parse(JSON.stringify(contactForEdit.addresses)).map(a => ({ ...a, id: generateUniqueId() }))
+        : [];
+
+      // فیلدهای سفارشی
+      const newCustomValues = {};
+      if (sortedCustomFieldDefinitions.value && Array.isArray(sortedCustomFieldDefinitions.value)) {
+        sortedCustomFieldDefinitions.value.forEach(def => {
+          const existingCustomField = contactForEdit.customFields?.find(cf => cf.fieldId === def.id);
+          if (existingCustomField) {
+            if (def.type === 'date' && existingCustomField.value) {
+              // مقدار تاریخ از دیتابیس (ISO string) باید به فرمت DatePicker تبدیل بشه
+              newCustomValues[def.id] = moment(existingCustomField.value).format('YYYY-MM-DD');
+            } else {
+              newCustomValues[def.id] = existingCustomField.value;
+            }
+          } else {
+            newCustomValues[def.id] = getDefaultValueForCustomFieldType(def.type);
+          }
+        });
+      }
+      customFieldValues.value = newCustomValues;
+      console.log('Custom field values loaded for edit:', customFieldValues.value);
+
+      isCreatingNewGroup.value = false;
+      newGroupName.value = '';
+
     } else {
-      console.log('Watcher: Not in edit mode, clearing form.')
-      clearForm()
+      // --- حالت افزودن جدید ---
+      // وقتی از ویرایش به افزودن جدید میریم (یا فرم برای اولین بار برای افزودن باز میشه)
+      clearForm();
     }
   },
-  { immediate: true },
-)
+  { immediate: true, deep: true } // immediate: true برای اجرای اولیه، deep: true برای آبجکت‌های تو در تو
+);
 
+// Watch برای تغییر contactGroup و مدیریت input ایجاد گروه جدید
 watch(contactGroup, (newValue) => {
   if (newValue === '__CREATE_NEW__') {
-    isCreatingNewGroup.value = true // گزینه "ایجاد گروه جدید" انتخاب شده، input رو نمایش بده
-    newGroupName.value = '' // اسم گروه جدید رو برای ورودی کاربر خالی کن
-    // نیازی نیست contactGroup رو اینجا تغییر بدی، v-model این کار رو کرده
+    isCreatingNewGroup.value = true;
   } else {
-    isCreatingNewGroup.value = false // یه گروه موجود یا "بدون گروه" انتخاب شده، input رو پنهان کن
-    newGroupName.value = '' // اسم گروه جدید رو پاک کن
-    groupStore.error = null // خطای گروه رو پاک کن
+    isCreatingNewGroup.value = false;
+    newGroupName.value = ''; // پاک کردن اسم گروه جدید اگر گروه موجود انتخاب شد
   }
-})
+});
 
 // تابعی که هنگام ارسال فرم اجرا میشه (حالا هم برای افزودن هم ویرایش)
 const handleSubmit = async () => {
-  let finalContactGroup = contactGroup.value // اسم گروه نهایی که توی مخاطب ذخیره میشه، پیش‌فرض همون گروه انتخابی توی Select
+  let finalContactGroupName = contactGroup.value // اسم گروه نهایی که توی مخاطب ذخیره میشه، پیش‌فرض همون گروه انتخابی توی Select
   // مرحله 1: مدیریت ایجاد گروه جدید (اگر لازم بود)
   if (isCreatingNewGroup.value) {
     if (newGroupName.value.trim() === '') {
@@ -346,121 +429,77 @@ const handleSubmit = async () => {
   }
   // !!! توجه: اگه isCreatingNewGroup.value === false بود، کد از این بلوک if میپره و ادامه پیدا می‌کنه. !!!
 
-  // مرحله 2: آماده‌سازی داده‌های مخاطب
-  const phoneEntries = additionalPhones.value
-    .map((item) => ({ type: item.type || '', number: item.number.trim() }))
-    .filter((item) => item.number)
+   // 2. آماده‌سازی داده‌های فیلدهای سفارشی
+  const processedCustomFields = [];
+  if (sortedCustomFieldDefinitions.value && Array.isArray(sortedCustomFieldDefinitions.value)) {
+    for (const fieldDef of sortedCustomFieldDefinitions.value) {
+      const rawValue = customFieldValues.value[fieldDef.id];
+      let valueToStore = rawValue;
 
-  const addressEntries = contactAddresses.value
-    .map((item) => ({
-      // هر آیتم فرم { id, type, street, ... } هست، به { type, street, ... } تبدیل می‌کنیم
-      type: item.type || '',
-      street: item.street || '',
-      city: item.city || '',
-      province: item.province || '',
-      country: item.country || '',
-      postalCode: item.postalCode || '',
-      notes: item.notes || '',
-    }))
-    .filter((item) => item.street || item.city) // فقط آدرس‌هایی که خیابان یا شهرشون خالی نیست رو نگه می‌داریم
-  // تبدیل تاریخ تولد از فرمت DatePicker به فرمت استاندارد میلادی برای ذخیره
-  let gregorianBirthDate = null
-  if (birthDate.value) {
-    try {
-      console.log('--- Date Conversion Debug (Moment-Jalaali) ---')
-      console.log(
-        'BirthDate value from picker:',
-        birthDate.value,
-        '| Type:',
-        typeof birthDate.value,
-      ) // 1. مقدار و نوع ورودی
+      // فقط فیلدهایی که مقدار معنی‌دار دارند یا boolean هستند
+      if (rawValue !== null && rawValue !== undefined && (rawValue !== '' || fieldDef.type === 'boolean')) {
+        if (fieldDef.type === 'date' && rawValue) {
+          // تبدیل از فرمت DatePicker (YYYY-MM-DD میلادی) به ISO string برای ذخیره
+          valueToStore = moment(rawValue, 'YYYY-MM-DD').toISOString();
+        }
+        // برای اعداد، مطمئن شویم که عدد هستند (اگر v-model.number استفاده نشده)
+        if (fieldDef.type === 'number' && rawValue !== null && rawValue !== '') {
+            valueToStore = parseFloat(rawValue);
+            if (isNaN(valueToStore)) valueToStore = null; // اگر عدد معتبر نبود
+        }
 
-      // استفاده از moment() برای ساخت شیء Moment از رشته شمسی و فرمت 'jYYYY/jMM/jDD'
-      const momentObj = moment(birthDate.value, 'jYYYY/jMM/jDD')
-
-      console.log('Moment object after parsing:', momentObj) // 2. شیء Moment
-
-      // اعتبارسنجی شیء Moment
-      if (momentObj.isValid()) {
-        // 3. استفاده از متد isValid() Moment
-        console.log('Moment object is valid.') // 4. معتبر بودن
-
-        // تبدیل به رشته میلادی با فرمت YYYY-MM-DD
-        const gregorianString = momentObj.format('YYYY-MM-DD') // 5. تبدیل به رشته میلادی
-        console.log('Converted Gregorian YYYY-MM-DD string:', gregorianString)
-
-        // برای ذخیره در دیتابیس، بهتره از ISO string استفاده کنیم.
-        // moment().toISOString() به طور پیش‌فرض به ISO string تبدیل می‌کنه
-        // اما برای اطمینان بیشتر از منطقه زمانی، می‌تونیم UTC کنیم:
-        gregorianBirthDate = momentObj.toISOString() // یا momentObj.utc().toISOString(); برای UTC
-        // اگر فقط YYYY-MM-DD بدون زمان نیازه، میتونیم از format استفاده کنیم:
-        // gregorianBirthDate = momentObj.format('YYYY-MM-DD'); // برای ذخیره به صورت رشته YYYY-MM-DD
-
-        console.log('Final Gregorian ISO string for saving:', gregorianBirthDate) // 6. رشته نهایی برای ذخیره
-      } else {
-        console.error('Moment-Jalaali could not parse date:', birthDate.value) // 7. مشکل در parsing
-        contactStore.error = 'فرمت تاریخ تولد صحیح نیست.'
-        // return; // موقتاً return رو برداشتم
+        processedCustomFields.push({
+          fieldId: fieldDef.id, // ID از تعریف فیلد
+          value: valueToStore,
+        });
       }
-    } catch (e) {
-      console.error('Error caught during date conversion process (Moment-Jalaali):', e) // 8. خطایی در try/catch
-      contactStore.error = 'مشکل داخلی در پردازش تاریخ تولد.'
-      // return; // موقتاً return رو برداشتم
     }
-  } else {
-    console.log('BirthDate value is null or empty.')
   }
-  console.log('--- End Date Conversion Debug (Moment-Jalaali) ---')
+  console.log('Processed custom fields for saving:', processedCustomFields);
 
-  const contactData = {
-    name: name.value,
-    lastName: lastName.value,
-    phone: phone.value,
-    title: title.value,
+
+  // 3. آماده‌سازی سایر داده‌های مخاطب
+  const contactDataPayload = {
+    name: name.value.trim(),
+    lastName: lastName.value.trim(),
+    phone: phone.value.trim(),
+    title: title.value.trim(),
     gender: gender.value,
-    notes: notes.value,
-    additionalPhones: phoneEntries,
-    group: finalContactGroup, // <-- استفاده از اسم گروه نهایی شده
-    addresses: addressEntries,
-    birthDate: gregorianBirthDate, // <-- ذخیره تاریخ تولد میلادی استاندارد
-    createdAt: contactStore.contactToEdit
-      ? contactStore.contactToEdit.createdAt
-      : new Date().toISOString(), // تاریخ ایجاد رو در حالت ویرایش حفظ کن
-    updatedAt: new Date().toISOString(),
-    // ... فیلدهای دیگه ...
-  }
+    notes: notes.value.trim(),
+    group: finalContactGroupName === '__CREATE_NEW__' ? '' : finalContactGroupName, // اگر هنوز __CREATE_NEW__ بود، یعنی گروه ایجاد نشد
+    birthDate: birthDate.value ? moment(birthDate.value, 'jYYYY/jMM/jDD').toISOString() : null,
+    additionalPhones: additionalPhones.value
+      .map(p => ({ type: p.type, number: p.number.trim() }))
+      .filter(p => p.number),
+    addresses: contactAddresses.value
+      .map(a => ({
+        type: a.type, street: a.street.trim(), city: a.city.trim(),
+        province: a.province.trim(), country: a.country.trim(),
+        postalCode: a.postalCode.trim(), notes: a.notes.trim()
+      }))
+      .filter(a => Object.values(a).some(val => typeof val === 'string' && val !== '')),
+    customFields: processedCustomFields, // <-- فیلدهای سفارشی پردازش شده
+    // createdAt و updatedAt توسط اکشن‌های store مدیریت میشن
+  };
 
-  // پاک کردن خطای گروه اگر در حالت ایجاد گروه جدید نبودیم و خطا وجود داشت
-  // (این خطا ممکنه از تلاش برای ایجاد گروه تکراری در گذشته مونده باشه)
-  if (groupStore.error && !isCreatingNewGroup.value) {
-    groupStore.error = null
-  }
-
-  // مرحله 3: اضافه یا به‌روزرسانی مخاطب
+  // 4. ذخیره یا به‌روزرسانی مخاطب
+  let success = false;
   if (contactStore.contactToEdit) {
-    // اگر در حالت ویرایش هستیم
-    const contactId = contactStore.contactToEdit.id
-    contactData.updatedAt = new Date().toISOString()
-
-    await contactStore.updateContact(contactId, contactData)
-
-    if (!contactStore.error) {
-      alert('مخاطب با موفقیت به‌روزرسانی شد!')
-      contactStore.clearContactToEdit() // این تابع وضعیت ایجاد گروه جدید رو هم ریست می‌کنه
-    }
+    success = await contactStore.updateContact(contactStore.contactToEdit.id, contactDataPayload);
   } else {
-    // اگر در حالت افزودن هستیم
-    contactData.createdAt = new Date().toISOString()
-    contactData.updatedAt = new Date().toISOString()
-
-    await contactStore.addContact(contactData)
-
-    if (!contactStore.error) {
-      alert('مخاطب با موفقیت اضافه شد!')
-      clearForm() // این تابع وضعیت ایجاد گروه جدید رو هم ریست می‌کنه
-    }
+    success = await contactStore.addContact(contactDataPayload);
   }
-}
+
+  // 5. اقدامات بعد از ذخیره
+  if (success && !contactStore.error) {
+    alert(contactStore.contactToEdit ? 'مخاطب با موفقیت به‌روزرسانی شد!' : 'مخاطب با موفقیت اضافه شد!');
+    clearForm(); // شامل clearContactToEdit هم میشه
+    router.push({ name: 'contact-list' }); // یا هر مسیری که می‌خوای کاربر بهش بره
+  } else if (contactStore.error) {
+    // خطا توسط store مدیریت شده و در UI نمایش داده میشه
+    console.error("Error saving contact:", contactStore.error);
+  }
+};
 </script>
 
 <style scoped>
@@ -706,4 +745,234 @@ button[type='button']:hover:not(:disabled) {
 .add-address-button:hover {
   background-color: #138496;
 }
+.contact-form {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 25px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.contact-form h2 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label, .checkbox-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #555;
+  font-size: 0.95em;
+}
+
+.form-input,
+.form-select,
+.form-textarea,
+.form-datepicker /* کلاس برای input داخل datepicker */
+ {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+  font-size: 1em;
+  transition: border-color 0.2s ease-in-out;
+}
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.form-datepicker { /* استایل برای خود کامپوننت date-picker */
+    width: 100%;
+}
+/* اگر می‌خواهید input درون date-picker هم استایل بگیرد: */
+:deep(.form-datepicker .vpd-input-group input) {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1em;
+     width: 100%;
+    box-sizing: border-box;
+}
+:deep(.form-datepicker .vpd-input-group input:focus){
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+}
+.form-checkbox {
+  margin-right: 8px; /* یا margin-left برای فارسی */
+  width: auto;
+  transform: scale(1.2);
+}
+.checkbox-label {
+    margin-bottom: 0;
+    font-weight: normal;
+}
+
+
+.custom-fields-wrapper {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px dashed #ddd;
+}
+.custom-fields-wrapper h3 {
+  margin-bottom: 15px;
+  font-size: 1.2em;
+  color: #444;
+}
+.custom-field-group {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #e7e7e7;
+    margin-bottom: 15px;
+}
+
+.new-group-input {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #e9ecef;
+  border-radius: 5px;
+}
+.new-group-input label{
+    font-size: 0.9em;
+}
+
+
+.form-section {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fff;
+}
+.form-section h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+.item-block {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dotted #f0f0f0;
+}
+.item-block:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+.item-select {
+    flex-basis: 120px; /* عرض پایه برای select */
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+.item-input {
+    flex-grow: 1; /* فیلد اصلی شماره یا خیابان، فضای بیشتری بگیرد */
+    min-width: 150px;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+.item-input-sml {
+    flex-basis: 100px; /* برای فیلدهای کوچکتر مثل شهر، استان */
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+.item-textarea {
+    flex-basis: 100%; /* textarea عرض کامل بگیرد */
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.add-item-btn, .remove-item-btn {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+.add-item-btn {
+    background-color: #28a745; /* سبز */
+    color: white;
+}
+.remove-item-btn {
+    background-color: #dc3545; /* قرمز */
+    color: white;
+    margin-right: auto; /* برای زبان فارسی، دکمه حذف به سمت راست برود */
+}
+
+
+.form-actions {
+  margin-top: 30px;
+  display: flex;
+  justify-content: flex-end; /* دکمه‌ها در سمت راست */
+  gap: 10px;
+}
+
+.submit-btn, .cancel-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.submit-btn {
+  background-color: #007bff;
+  color: white;
+}
+.submit-btn:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+.submit-btn:disabled {
+  background-color: #a0c3e6;
+}
+.cancel-btn {
+  background-color: #6c757d;
+  color: white;
+}
+.cancel-btn:hover {
+  background-color: #545b62;
+}
+
+.error-message {
+  color: #e74c3c;
+  background-color: #fdeded;
+  border: 1px solid #f5c6cb;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 15px;
+  text-align: center;
+}
+.unsupported-field-type {
+    color: #777;
+    font-style: italic;
+}
+
 </style>
