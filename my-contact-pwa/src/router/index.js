@@ -5,11 +5,21 @@ import GroupManager from '../components/GroupManager.vue' // <-- در components
 import ContactForm from '../components/ContactForm.vue' // <-- در components هست
 // کامپوننت جزئیات درسته
 import ContactDetail from '../views/ContactDetail.vue' // <-- در views هست
+import CustomFieldManager from '../components/CustomFieldManager.vue'; // یا مسیر صحیح اگر در views هست
 
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL), // استفاده از BASE_URL
+    history: createWebHistory(import.meta.env.BASE_URL), // استفاده از BASE_URL
+
+  // ... history و سایر routes
   routes: [
+    // ... بقیه route ها
+    {
+      path: '/custom-fields',
+      name: 'custom-field-manager',
+      component: CustomFieldManager
+    },
+  
     {
       path: '/', // مسیر ریشه
       name: 'contact-list', // اسم مسیر
