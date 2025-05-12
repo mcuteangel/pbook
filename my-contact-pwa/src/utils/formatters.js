@@ -17,6 +17,32 @@ export const formatShamsiDate = (gregorianDateString, includeTime = false) => {
   }
 };
 
+// تابعی برای فرمت‌دهی مقادیر فیلدهای سفارشی بر اساس نوع
+export function formatCustomFieldValue(value, type, options = []) {
+  if (value === undefined || value === null || value === '') {
+    return '';
+  }
+
+  switch (type) {
+    case 'text':
+    case 'textarea':
+    case 'number':
+      return String(value); // برای متن و عدد مستقیماً برمی‌گردونیم
+    case 'date':
+      return formatShamsiDate(value); // برای تاریخ از تابع فرمت شمسی استفاده می‌کنیم
+    case 'boolean':
+      return value ? 'بله' : 'خیر'; // برای بولین، بله یا خیر نمایش میدیم
+    case 'select':
+      // اگر options یک آرایه از آبجکت‌هاست که هر آبجکت شامل value و label باشه:
+      const selectedOption = options.find(opt => opt.value === value);
+      return selectedOption ? selectedOption.label : value;
+      // اگر options فقط یک آرایه از رشته‌هاست:
+      // return value;
+    default:
+      return String(value); // برای انواع ناشناخته، به صورت رشته نمایش میدیم
+  }
+}
+
 export const displayGender = (genderValue) => {
   switch (genderValue) {
     case 'male':
