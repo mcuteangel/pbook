@@ -34,12 +34,14 @@
     <div v-if="contactStore.loading">در حال بارگذاری مخاطبین...</div>
     <div v-else-if="contactStore.error" style="color: red">{{ contactStore.error }}</div>
     <div v-else-if="contactStore.filteredAndSortedContacts.length === 0">هیچ مخاطبی یافت نشد.</div>
-    <ul v-else class="contact-list">
-      <li
-        v-for="contact in contactStore.filteredAndSortedContacts"
-        :key="contact.id"
-        class="contact-item"
-      >
+
+<ul v-else class="contact-list">
+  <li
+    v-for="contact in paginatedContacts"
+    :key="contact.id"
+    class="contact-item"
+  >
+
         <div class="contact-info">
           <router-link
             :to="{ name: 'contact-detail', params: { id: contact.id } }"
@@ -101,11 +103,30 @@
           </button>
         </div>
       </li>
+
+      <div v-if="totalPages > 1" class="pagination-controls">
+  <button @click="prevPage" :disabled="currentPage === 1">قبلی</button>
+  <span>صفحه {{ currentPage }} از {{ totalPages }}</span>
+  <button @click="nextPage" :disabled="currentPage === totalPages">بعدی</button>
+
+  <div class="page-numbers">
+    <button
+      v-for="page in totalPages"
+      :key="page"
+      @click="goToPage(page)"
+      :class="{ active: currentPage === page }"
+    >
+      {{ page }}
+    </button>
+  </div>
+</div>
+
     </ul>
   </div>
 </template>
 
 <script setup>
+import { ref, computed, watch } from 'vue'; // مطمئن شو که watch هم اینجا import شده
 import { useContactStore } from '../store/contacts'
 import { useGroupStore } from '../store/groups'
 import { useRouter } from 'vue-router'
@@ -119,6 +140,54 @@ import {
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
 const router = useRouter()
+
+// --- Pagination State ---
+const currentPage = ref(1); // صفحه فعلی
+const itemsPerPage = ref(10); // تعداد آیتم‌ها در هر صفحه. می‌تونی بعداً این رو از کاربر هم بگیری.
+
+// computed property برای محاسبه تعداد کل مخاطبین (بعد از فیلتر و مرتب‌سازی)
+const totalContactsOnCurrentFilter = computed(() => contactStore.filteredAndSortedContacts.length);
+
+// computed property برای محاسبه تعداد کل صفحات
+const totalPages = computed(() => Math.ceil(totalContactsOnCurrentFilter.value / itemsPerPage.value));
+
+const paginatedContacts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return contactStore.filteredAndSortedContacts.slice(start, end);
+});
+
+// تابع برای رفتن به یک صفحه خاص
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+    // Smooth Scrolling: اسکرول به بالای صفحه/لیست
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+  }
+};
+
+// تابع برای رفتن به صفحه بعدی
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+  }
+};
+
+// تابع برای رفتن به صفحه قبلی
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+  }
+};
+// Watch برای تغییرات در جستجو یا مرتب‌سازی و ریست کردن صفحه فعلی به 1
+watch(
+  () => [contactStore.searchQuery, contactStore.sortField, contactStore.sortOrder],
+  () => {
+    currentPage.value = 1;
+  }
+);
 
 const startEditingContact = (contact) => {
   contactStore.setContactToEdit(contact) // گام اول: تنظیم مخاطب در Store
@@ -288,4 +357,56 @@ const confirmDelete = async (contactId) => {
 .contact-name-link:hover {
   text-decoration: underline; /* زیر خط دار شدن موقع هاور */
 }
+/* Pagination Controls Styling */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px; /* فاصله بین عناصر */
+  flex-wrap: wrap; /* اجازه میده دکمه‌ها در صفحه‌های کوچک به خط بعدی برن */
+  direction: rtl; /* برای راست به چپ کردن کنترل‌ها */
+}
+
+.pagination-controls button {
+  padding: 8px 15px;
+  border: 1px solid #ccc;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  font-family: inherit; /* استفاده از فونت اصلی برنامه */
+}
+
+.pagination-controls button:hover:not(:disabled) {
+  background-color: #e0e0e0;
+  border-color: #b0b0b0;
+}
+
+.pagination-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-controls button.active {
+  background-color: #007bff; /* رنگ اصلی (مثلاً آبی) */
+  color: white;
+  border-color: #007bff;
+}
+
+.pagination-controls span {
+  font-weight: bold;
+  margin: 0 10px;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 5px;
+  margin-left: 10px; /* فاصله از دکمه‌های قبلی/بعدی */
+}
+
+.page-numbers button {
+  min-width: 35px; /* حداقل عرض برای دکمه‌های شماره صفحه */
+}
+
 </style>

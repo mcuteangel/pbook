@@ -17,38 +17,43 @@
 
       <div class="detail-section">
         <h4>اطلاعات اصلی</h4>
-        <p><strong>تلفن اصلی:</strong> {{ contact.phone }}</p>
+<p><strong>تلفن اصلی:</strong> 
+  <a :href="'tel:' + cleanPhoneNumber(contact.phone)" class="phone-link">{{ contact.phone }}</a>
+</p>
         <p v-if="contact.gender"><strong>جنسیت:</strong> {{ displayGender(contact.gender) }}</p>
         <p v-if="contact.group"><strong>گروه:</strong> {{ contact.group }}</p>
         <p v-if="contact.birthDate"><strong>تاریخ تولد:</strong> {{ formatShamsiDate(contact.birthDate) }}</p>
       </div>
 
       <div v-if="contact.additionalPhones && contact.additionalPhones.length > 0" class="detail-section">
-        <h4>شماره‌های اضافی</h4>
-        <ul>
-          <li v-for="(item, index) in contact.additionalPhones" :key="'phone-' + index">
-            <strong>{{ displayPhoneType(item.type) }}:</strong> {{ item.number }}
-          </li>
-        </ul>
-      </div>
+  <h4>شماره‌های اضافی</h4>
+  <ul>
+    <li v-for="(item, index) in contact.additionalPhones" :key="'phone-' + index">
+      <strong>{{ displayPhoneType(item.type) }}:</strong> 
+      <a :href="'tel:' + cleanPhoneNumber(item.number)" class="phone-link">{{ item.number }}</a>
+    </li>
+  </ul>
+</div>
 
-      <div v-if="contact.addresses && contact.addresses.length > 0" class="detail-section">
-        <h4>آدرس‌ها</h4>
-        <ul>
-          <li v-for="(address, index) in contact.addresses" :key="'address-' + index" class="address-item">
-            <p><strong>{{ displayAddressType(address.type) }}:</strong></p>
-            <p v-if="address.street">{{ address.street }}</p>
-            <p>
-              <span v-if="address.city">{{ address.city }}</span>
-              <span v-if="address.city && address.province">، </span>
-              <span v-if="address.province">{{ address.province }}</span>
-            </p>
-            <p v-if="address.country">{{ address.country }}</p>
-            <p v-if="address.postalCode">کد پستی: {{ address.postalCode }}</p>
-            <p v-if="address.notes" class="address-notes"><em>یادداشت: {{ address.notes }}</em></p>
-          </li>
-        </ul>
-      </div>
+     <div v-if="contact.addresses && contact.addresses.length > 0" class="detail-section">
+  <h4>آدرس‌ها</h4>
+  <ul>
+    <li v-for="(address, index) in contact.addresses" :key="'address-' + index" class="address-item">
+      <p><strong>{{ displayAddressType(address.type) }}:</strong></p>
+      <a :href="getMapUrl(address)" target="_blank" rel="noopener noreferrer" class="address-link">
+        <p v-if="address.street">{{ address.street }}</p>
+        <p>
+          <span v-if="address.city">{{ address.city }}</span>
+          <span v-if="address.city && address.province">، </span>
+          <span v-if="address.province">{{ address.province }}</span>
+        </p>
+        <p v-if="address.country">{{ address.country }}</p>
+        <p v-if="address.postalCode">کد پستی: {{ address.postalCode }}</p>
+      </a>
+      <p v-if="address.notes" class="address-notes"><em>یادداشت: {{ address.notes }}</em></p>
+    </li>
+  </ul>
+</div>
 
       <div v-if="contact.notes" class="detail-section">
         <h4>یادداشت/توضیحات</h4>
@@ -111,6 +116,30 @@ const contactId = ref(null) // متغیری برای نگهداری ID مخاط�
 const contact = ref(null) // متغیری برای نگهداری اطلاعات مخاطب لود شده
 const loading = ref(false) // وضعیت لودینگ این صفحه
 const error = ref(null) // پیام خطا در این صفحه
+// تابع برای تمیز کردن شماره تلفن از کاراکترهای اضافی
+const cleanPhoneNumber = (number) => {
+  if (!number) return '';
+  // فقط ارقام رو نگه می‌داره
+  return String(number).replace(/\D/g, '');
+};
+
+// تابع برای ساخت لینک نقشه گوگل از آبجکت آدرس
+const getMapUrl = (address) => {
+  if (!address) return '#';
+  const addressParts = [];
+  if (address.street) addressParts.push(address.street);
+  if (address.city) addressParts.push(address.city);
+  if (address.province) addressParts.push(address.province);
+  if (address.country) addressParts.push(address.country);
+  if (address.postalCode) addressParts.push(address.postalCode);
+
+  const fullAddress = addressParts.join(', ');
+  if (!fullAddress.trim()) return '#'; // اگر آدرس خالی بود، لینک نده
+  
+  // استفاده از Google Maps Search API
+  // encodeURIComponent برای اطمینان از اینکه کاراکترهای خاص در URL مشکلی ایجاد نکنند
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+};
 
 // یه کامپیوتد پروپرتی برای فیلدهای سفارشیِ اون مخاطب خاص تعریف می‌کنیم
 const displayedCustomFields = computed(() => {
@@ -418,5 +447,17 @@ watch(
 }
 .error-message button:hover {
   background-color: #2980b9;
+}
+.phone-link,
+.address-link {
+  color: #007bff; /* رنگ آبی رایج برای لینک‌ها */
+  text-decoration: none; /* خط زیر لینک رو حذف می‌کنیم */
+  cursor: pointer;
+}
+
+.phone-link:hover,
+.address-link:hover {
+  text-decoration: underline; /* با هاور کردن خط زیر اضافه می‌کنیم */
+  color: #0056b3; /* رنگ کمی تیره‌تر با هاور */
 }
 </style>
