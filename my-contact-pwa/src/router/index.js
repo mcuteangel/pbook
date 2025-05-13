@@ -6,6 +6,7 @@ import ContactForm from '../components/ContactForm.vue' // <-- در components �
 // کامپوننت جزئیات درسته
 import ContactDetail from '../views/ContactDetail.vue' // <-- در views هست
 import CustomFieldManager from '../components/CustomFieldManager.vue'; // یا مسیر صحیح اگر در views هست
+import SettingsView from '../views/SettingsView.vue'
 
 
 const router = createRouter({
@@ -43,7 +44,13 @@ const router = createRouter({
        name: 'contact-detail', // اسم مسیر
        component: ContactDetail, // نمایش کامپوننت جزئیات
        props: true // این گزینه باعث میشه پارامترهای مسیر (مثل id) به عنوان props به کامپوننت ContactDetail ارسال بشن (اختیاری ولی خوبه)
-    }
+    },
+
+    {
+      path: '/settings', // آدرسی که می‌خوایم صفحه تنظیمات باهاش باز بشه
+      name: 'settings', // یه اسم منحصر به فرد برای این مسیر (مفید برای ناوبری با نام)
+      component: SettingsView // کامپوننتی که باید برای این مسیر نمایش داده بشه
+    },
     // می‌تونی Routes دیگه هم اینجا اضافه کنی
   ]
 })
