@@ -68,33 +68,51 @@ export const useContactStore = defineStore('contactStore', {
       const sorted = [...filtered] // از لیست فیلتر شده یه کپی می‌گیریم تا آرایه اصلی تغییر نکنه
 
       sorted.sort((a, b) => {
-        const fieldA = a[state.sortField]
-        const fieldB = b[state.sortField]
+  const fieldA = a[state.sortField];
+  const fieldB = b[state.sortField];
 
-        let comparison = 0
+  let comparison = 0;
 
-        // بررسی نوع فیلد برای مرتب‌سازی
-        if (
-          state.sortField === 'createdAt' ||
-          state.sortField === 'updatedAt' ||
-          state.sortField === 'birthDate'
-        ) {
-          // <-- اضافه کردن birthDate
-          // اگر فیلد تاریخ بود، بر اساس timestamp مقایسه می‌کنیم
-          const dateA = fieldA ? moment(fieldA).valueOf() : 0; // .valueOf() در moment معادل getTime() در Date هست
-               const dateB = fieldB ? moment(fieldB).valueOf() : 0;
-               if (dateA > dateB) comparison = 1;
-               else if (dateA < dateB) comparison = -1;
+  // یک تابع کمکی داخلی برای مقایسه بر اساس نوع داده
+  const compareValues = (valA, valB, fieldName) => {
+    // Handle null/undefined values - put them at the end (or beginning depending on asc/desc)
+    // Let's put null/undefined at the end in ascending, and beginning in descending
+    if (valA == null && valB == null) return 0;
+    if (valA == null) return state.sortOrder === 'asc' ? 1 : -1;
+    if (valB == null) return state.sortOrder === 'asc' ? -1 : 1;
 
-        } else {
-          // برای فیلدهای متنی (اسم، فامیل، سمت و...) از localeCompare با لوکال فارسی استفاده می‌کنیم
-          // String() رو اضافه می‌کنیم تا اگه فیلد null یا undefined بود، به رشته خالی تبدیل بشه و خطا نده
-          comparison = String(fieldA || '').localeCompare(String(fieldB || ''), 'fa', { sensitivity: 'base' }); // اضافه کردن || '' برای اطمینان از اینکه رشته هستند
-        }
 
-        // اعمال ترتیب صعودی یا نزولی
-        return state.sortOrder === 'asc' ? comparison : comparison * -1
-      })
+    // Check common date fields by name (can make this smarter later)
+    if (['createdAt', 'updatedAt', 'birthDate'].includes(fieldName)) {
+        const dateA = moment(valA).valueOf();
+        const dateB = moment(valB).valueOf();
+        if (dateA > dateB) return 1;
+        if (dateA < dateB) return -1;
+        return 0; // dates are equal
+    }
+
+    // Check if values *look* like numbers (handle potential number fields not named specifically)
+    // This is a basic check, assumes numbers are stored as numbers or numeric strings
+     if (typeof valA === 'number' && typeof valB === 'number') {
+        if (valA > valB) return 1;
+        if (valA < valB) return -1;
+        return 0; // numbers are equal
+     }
+     // If one is number and other is not, maybe convert? Or treat as text?
+     // For now, let's fall through to text compare if types aren't consistent numbers.
+
+
+    // Default to localeCompare for text comparison
+    // Ensures we compare as strings, handling non-string types gracefully
+    return String(valA).localeCompare(String(valB), 'fa', { sensitivity: 'base' });
+  };
+
+  comparison = compareValues(fieldA, fieldB, state.sortField);
+
+
+  // اعمال ترتیب صعودی یا نزولی
+  return state.sortOrder === 'asc' ? comparison : comparison * -1;
+});
 
       return sorted // لیست فیلتر شده و مرتب شده رو برمی‌گردونیم
     },

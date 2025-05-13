@@ -16,12 +16,12 @@
       <div class="sort-controls">
         <label for="sortField">مرتب‌سازی بر اساس:</label>
         <select id="sortField" v-model="contactStore.sortField">
-          <option value="lastName">نام خانوادگی</option>
-          <option value="name">نام</option>
-          <option value="createdAt">تاریخ ایجاد</option>
-          <option value="group">گروه</option>
-        </select>
-
+  <option value="lastName">نام خانوادگی</option>
+  <option value="name">نام</option>
+  <option value="createdAt">تاریخ ایجاد</option>
+  <option value="group">گروه</option>
+  <option value="title">سمت/تخصص</option> </select>
+  
         <label for="sortOrder">ترتیب:</label>
         <select id="sortOrder" v-model="contactStore.sortOrder">
           <option value="asc">صعودی (الفبا/جدیدترین)</option>
