@@ -14,20 +14,23 @@
       </div>
 
       <div class="sort-controls">
-        <label for="sortField">مرتب‌سازی بر اساس:</label>
-        <select id="sortField" v-model="contactStore.sortField">
-  <option value="lastName">نام خانوادگی</option>
-  <option value="name">نام</option>
-  <option value="createdAt">تاریخ ایجاد</option>
-  <option value="group">گروه</option>
-  <option value="title">سمت/تخصص</option> </select>
-  
-        <label for="sortOrder">ترتیب:</label>
-        <select id="sortOrder" v-model="contactStore.sortOrder">
-          <option value="asc">صعودی (الفبا/جدیدترین)</option>
-          <option value="desc">نزولی (الفبا/قدیمی‌ترین)</option>
-        </select>
-      </div>
+    <label for="sortField">مرتب‌سازی بر اساس:</label>
+    <select id="sortField" v-model="contactStore.sortField">
+      <option
+        v-for="option in sortOptions"
+        :key="option.value"
+        :value="option.value"
+      >
+        {{ option.label }}
+      </option>
+    </select>
+
+    <label for="sortOrder">ترتیب:</label>
+    <select id="sortOrder" v-model="contactStore.sortOrder">
+      <option value="asc">صعودی (الفبا/جدیدترین)</option>
+      <option value="desc">نزولی (الفبا/قدیمی‌ترین)</option>
+    </select>
+  </div>
     </div>
     <hr />
 
@@ -129,6 +132,7 @@
 import { ref, computed, watch } from 'vue'; // مطمئن شو که watch هم اینجا import شده
 import { useContactStore } from '../store/contacts'
 import { useGroupStore } from '../store/groups'
+import { useCustomFieldStore } from '@/store/customFields'; // **1. Import کردن استور فیلدهای سفارشی**
 import { useRouter } from 'vue-router'
 import { 
   formatShamsiDate, 
@@ -138,6 +142,40 @@ import {
 } from '../utils/formatters'; // مسیر صحیح رو چک کن
 
 const contactStore = useContactStore()
+const customFieldStore = useCustomFieldStore(); // **2. استفاده از استور فیلدهای سفارشی**
+
+// Define standard sortable fields with their display labels
+// این لیست فیلدهای استاندارد رو نشون میده که میخوایم قابل مرتب‌سازی باشن
+// 'value' همون چیزیه که به contactStore.setSortCriteria میفرستیم
+const standardSortableOptions = [
+  { value: 'lastName', label: 'نام خانوادگی' },
+  { value: 'name', label: 'نام' },
+  { value: 'createdAt', label: 'تاریخ ایجاد' },
+  { value: 'group', label: 'گروه' }, // فرض می‌کنیم فیلد group روی آبجکت مخاطب هست و متنی مقایسه میشه
+  { value: 'title', label: 'سمت/تخصص' },
+  // اگر فیلدهای استاندارد دیگه ای مثل 'updatedAt', 'birthDate', 'gender'
+  // رو هم میخوای توی لیست مرتب‌سازی نمایش بدی، اینجا اضافه کن
+];
+
+// **3. ساخت computed property برای ترکیب گزینه‌های استاندارد و سفارشی**
+const sortOptions = computed(() => {
+  // با گزینه‌های استاندارد شروع می‌کنیم
+  const options = [...standardSortableOptions];
+
+  // گزینه‌های فیلدهای سفارشی رو اضافه می‌کنیم
+  // از sortedFieldDefinitions استفاده می‌کنیم که احتمالا بر اساس label مرتب شده
+  customFieldStore.sortedFieldDefinitions.forEach(field => {
+    // برای هر فیلد سفارشی یک گزینه به لیست اضافه می‌کنیم
+    options.push({
+      value: field.id, // مقدار ارسالی به استور، همون ID فیلد سفارشی است
+      label: `فیلد سفارشی: ${field.label}` // متنی که به کاربر نشون میدیم
+    });
+  });
+
+  return options;
+});
+
+
 const groupStore = useGroupStore()
 const router = useRouter()
 
