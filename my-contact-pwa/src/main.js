@@ -3,6 +3,8 @@ import App from './App.vue'
 // Router رو import کن
 import router from './router' // <-- این خط رو اضافه کن
 import { createPinia } from 'pinia'    // <-- این را اضافه کنید
+import 'element-plus/dist/index.css'
+
 
 
 const app = createApp(App)

@@ -2,6 +2,9 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -9,6 +12,13 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
     plugins: [
     vue(),
+       AutoImport({
+      resolvers: [ElementPlusResolver()], // استفاده از Resolver مربوط به Element Plus
+    }),
+    // **تنظیم پلاگین Components**
+    Components({
+      resolvers: [ElementPlusResolver()], // استفاده از Resolver مربوط به Element Plus
+    }),
     VitePWA({ // <-- پیکربندی پایه پلاگین PWA
       registerType: 'autoUpdate', // به محض اینکه سرویس ورکر جدیدی آماده بشه، به طور خودکار آپدیت می‌کنه
       devOptions: {
