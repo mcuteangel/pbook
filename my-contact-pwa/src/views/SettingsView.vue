@@ -10,60 +10,154 @@
       </button>
     </section>
 
-    </div>
+    <section class="restore-section">
+      <h3>بازیابی (Import)</h3>
+      <p>برای بازیابی اطلاعات از فایل پشتیبان JSON، فایل مورد نظر را انتخاب کنید.</p>
+      <input type="file" accept=".json" @change="handleImport">
+      </section>
+  </div>
 </template>
 
 <script setup>
-// تابع exportData رو که توی فایل utility ساختیم اینجا ایمپورت می‌کنیم
 import { exportData } from '@/utils/backupRestore';
+import { importData } from '@/utils/backupRestore';
+import { useContactStore } from '@/store/contacts';
+import { useGroupStore } from '@/store/groups';
+import { useCustomFieldStore } from '@/store/customFields';
+
+// گرفتن نمونه استورها برای صدا زدن تابع لود بعد از Import
+const contactStore = useContactStore();
+const groupStore = useGroupStore();
+const customFieldStore = useCustomFieldStore();
+
 
 // تابع async برای مدیریت کلیک روی دکمه Export
 const handleExport = async () => {
   try {
-    // 1. داده‌ها رو به صورت رشته JSON از تابع exportData می‌گیریم
+    // ... منطق Export ...
     const jsonData = await exportData();
-
-    // 2. یه "Blob" (یه جور شیء برای نگهداری داده‌های باینری یا متنی توی حافظه مرورگر) از رشته JSON می‌سازیم
-    // نوع MIME رو 'application/json' میذاریم که مرورگر بفهمه این یه فایل JSON هست
     const blob = new Blob([jsonData], { type: 'application/json' });
-
-    // 3. یه URL موقتی برای این Blob توی مرورگر می‌سازیم
-    // این URL شبیه فایل عمل می‌کنه و میشه ازش دانلود کرد
     const url = URL.createObjectURL(blob);
-
-    // 4. یه عنصر <a> (لینک) به صورت موقت توی DOM می‌سازیم
     const link = document.createElement('a');
-    link.href = url; // آدرس لینک رو URL موقتی Blob میذاریم
-
-    // 5. اسم فایل دانلودی رو مشخص می‌کنیم
-    // با اضافه کردن timestamp، اسم فایل هر بار یونیک میشه
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-'); // مثلاً 2023-10-27T10-30-00-000Z
-    link.download = `contacts_backup_${timestamp}.json`; // اسم فایل دانلودی
-
-    // 6. لینک رو به صورت مخفی به بدنه صفحه اضافه می‌کنیم و روش کلیک می‌کنیم تا دانلود شروع بشه
-    // این روش تضمین می‌کنه که دانلود توی همه مرورگرها کار کنه
-    document.body.appendChild(link); // اضافه کردن به DOM (ممکنه ضروری نباشه ولی ایمن تره)
-    link.click(); // کلیک کردن روی لینک برای شروع دانلود
-
-    // 7. بعد از یه مکث کوتاه، URL موقتی و عنصر لینک رو پاک می‌کنیم
-    // این کار حافظه مرورگر رو آزاد می‌کنه و از شلوغ شدن DOM جلوگیری می‌کنه
-    // مکث کوتاه برای اینه که مرورگر فرصت کنه دانلود رو شروع کنه قبل از پاک شدن URL
+    link.href = url;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    link.download = `contacts_backup_${timestamp}.json`;
+    document.body.appendChild(link);
+    link.click();
     setTimeout(() => {
-      URL.revokeObjectURL(url); // پاک کردن URL موقتی
-      link.remove(); // پاک کردن عنصر لینک از DOM
-    }, 100); // 100 میلی‌ثانیه مکث
-
+      URL.revokeObjectURL(url);
+      link.remove();
+    }, 100);
     console.log('Export file download initiated.');
-
   } catch (error) {
-    // در صورت بروز خطا، پیام رو توی کنسول لاگ می‌کنیم و به کاربر نشون میدیم
     console.error('Error during export:', error);
     alert('خطا در تهیه فایل پشتیبان: ' + error.message);
   }
 };
 
-// تابع handleImport رو بعداً برای بخش Import اضافه خواهیم کرد
-// const handleImport = (event) => { ... };
+// **تابع مدیریت انتخاب فایل Import - حالا با قابلیت خواندن محتوا**
+const handleImport = async (event) => {
+  console.log('فایلی برای بازیابی انتخاب شد.');
+  const file = event.target.files[0]; // گرفتن اولین فایل انتخاب شده
+
+  if (!file) {
+    console.log('فایلی انتخاب نشد.');
+    return; // اگر فایلی انتخاب نشده، کاری انجام نمیشه
+  }
+
+  console.log('فایل انتخاب شده:', file.name, file.type, file.size, 'بایت');
+
+  // **یک چک ساده برای اینکه مطمئن بشیم فرمت فایل JSON هست**
+  if (file.type !== 'application/json') {
+      alert('لطفاً یک فایل با فرمت JSON انتخاب کنید.');
+      // input رو ریست می‌کنیم تا بشه دوباره فایل انتخاب کرد بعد از خطا
+      event.target.value = null;
+      return;
+  }
+
+
+  // **ایجاد یک نمونه FileReader جدید**
+  const reader = new FileReader();
+
+  // **تعریف تابعی که وقتی FileReader فایل رو با موفقیت خوند، اجرا میشه**
+reader.onload = async (e) => {
+    const fileContent = e.target.result; // محتوای فایل به صورت رشته JSON
+
+    console.log('محتوای فایل با موفقیت خوانده شد. در حال پارس کردن JSON...');
+
+    let importedData = null;
+    try {
+      // **1. پارس کردن رشته JSON به یک شیء جاوااسکریپت**
+      importedData = JSON.parse(fileContent);
+      console.log('JSON با موفقیت پارس شد.');
+      // console.log('Parsed data structure:', importedData); // میتونی ساختارش رو اینجا ببینی
+
+
+      // **2. اعتبارسنجی ساختار کلی داده‌های پارس شده**
+      // چک می‌کنیم که شیء اصلی و پراپرتی‌های اصلی (version, data, data.contacts, ...) وجود داشته باشن
+      // و همچنین ورژن فرمت رو چک می‌کنیم
+      if (
+          !importedData || // شیء خالی نباشه
+          typeof importedData !== 'object' || // حتماً شیء باشه
+          importedData.version !== 1 || // ورژن فرمت Export رو چک می‌کنیم (ورژن ۱)
+          !importedData.data || // پراپرتی data وجود داشته باشه
+          typeof importedData.data !== 'object' || // پراپرتی data شیء باشه
+          !Array.isArray(importedData.data.contacts) || // contacts توی data آرایه باشه
+          !Array.isArray(importedData.data.customFieldDefinitions) || // customFieldDefinitions آرایه باشه
+          !Array.isArray(importedData.data.groups) // groups آرایه باشه
+      ) {
+          // اگر ساختار معتبر نبود، یک خطا پرتاب می‌کنیم
+          throw new Error('ساختار فایل پشتیبان نامعتبر است.');
+      }
+
+      console.log('ساختار فایل پشتیبان معتبر است. در حال وارد کردن داده‌ها به دیتابیس...');
+
+      // **حالا تابع importData رو صدا می‌زنیم و منتظر می‌مونیم تا کارش تموم بشه**
+      await importData(importedData.data);
+
+      console.log('بازیابی اطلاعات دیتابیس با موفقیت انجام شد.');
+
+      // **گام مهم: رفرش کردن داده‌ها در استورهای Pinia برای به‌روزرسانی UI**
+      // بعد از اینکه اطلاعات جدید وارد دیتابیس شد، باید استورها رو صدا بزنیم
+      // تا داده‌های جدید رو از دیتابیس بخونن و توی UI نمایش بدن.
+      console.log('Reloading Pinia stores...');
+      await contactStore.loadContacts();
+      await groupStore.loadGroups();
+      await customFieldStore.loadFieldDefinitions();
+      console.log('Stores reloaded. UI should update.');
+
+
+      alert('بازیابی اطلاعات با موفقیت انجام شد!'); // پیام موفقیت نهایی
+      
+    } catch (error) {
+      // اگر در حین پارس کردن JSON یا اعتبارسنجی خطا رخ داد
+      console.error('خطا در پردازش یا اعتبارسنجی فایل پشتیبان:', error);
+      alert('خطا در پردازش یا اعتبارسنجی فایل پشتیبان: ' + error.message); // پیام خطا به کاربر
+    } finally {
+      // در نهایت، input رو ریست می‌کنیم تا بتونه دوباره فایل انتخاب کنه
+      event.target.value = null;
+    }
+  };
+
+  // **تعریف تابعی که اگر در حین خواندن فایل خطایی پیش اومد، اجرا میشه**
+  reader.onerror = (error) => {
+    console.error('خطا در خواندن فایل:', error);
+    alert('خطا در خواندن فایل پشتیبان.');
+    // input رو هم در صورت خطا ریست می‌کنیم
+    event.target.value = null;
+  };
+
+  // **شروع عملیات خواندن فایل به صورت متنی**
+  // چون فایل JSON ما متنی هست، از readAsText استفاده می‌کنیم
+  reader.readAsText(file);
+
+  // **نکته:** می‌تونید اینجا یه وضعیت لودینگ (مثلاً یک Spinners یا پیام) نمایش بدید
+  // و input فایل رو غیرفعال کنید تا کاربر دوباره فایل انتخاب نکنه
+  // و در توابع onload و onerror اون وضعیت لودینگ رو بردارید و input رو فعال کنید.
+};
+
+
+// ... بقیه script setup و style ...
 </script>
 
 <style scoped>
@@ -103,13 +197,16 @@ const handleExport = async () => {
   background-color: #0056b3;
 }
 
-/* استایل برای input type="file" که بعداً اضافه می‌کنیم */
+/* استایل برای input type="file" که اضافه کردیم */
 .settings-container input[type="file"] {
     margin-top: 10px;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
     background-color: #fff;
-    cursor: pointer; /* اضافه کردن این برای ظاهر بهتر */
+    cursor: pointer;
+    display: block; /* اضافه کردن این خط */
+    width: 100%; /* اضافه کردن این خط */
+    box-sizing: border-box; /* اضافه کردن این خط */
 }
 </style>

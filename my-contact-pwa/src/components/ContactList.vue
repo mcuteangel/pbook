@@ -234,9 +234,28 @@ const startEditingContact = (contact) => {
   router.push({ name: 'add-contact' }) // <-- ناوبری به Route 'add-contact'
 }
 
-const confirmDelete = async (contactId) => {
-  if (confirm('مطمئنی می‌خوای این مخاطب رو حذف کنی؟')) {
-    await contactStore.deleteContact(contactId)
+const confirmDeleteContact = async (contactId) => {
+  // نمایش پیام تایید به کاربر
+  const confirmed = window.confirm('آیا از حذف این مخاطب اطمینان دارید؟');
+
+  // اگر کاربر تایید کرد
+  if (confirmed) {
+    try {
+      console.log(`درخواست حذف مخاطب با ID: ${contactId}`);
+      // صدا زدن اکشن deleteContact از استور مخاطبین
+      await contactStore.deleteContact(contactId);
+      console.log(`مخاطب با ID ${contactId} با موفقیت حذف شد.`);
+      // می‌تونی اینجا یک پیام موفقیت کوچیک هم به کاربر نشون بدی (اختیاری)
+      // alert('مخاطب با موفقیت حذف شد.');
+
+    } catch (error) {
+      console.error('خطا در حذف مخاطب:', error);
+      // نمایش پیام خطا به کاربر
+      alert('خطا در حذف مخاطب: ' + (error.message || 'خطای نامشخص در هنگام حذف.'));
+    }
+  } else {
+      console.log('حذف مخاطب توسط کاربر لغو شد.');
+      // می‌تونی یه پیام لغو هم نشون بدی (اختیاری)
   }
 }
 
