@@ -145,8 +145,8 @@
               <p>
                   <span class="rule-field-label">
                        {{ filterableFields.find(f => f.value === rule.field)?.label || rule.field }}: </span>
-                  <span class="rule-operator-label">
-                       {{ availableOperators.find(op => op.value === rule.operator)?.label || rule.operator }} </span>
+                 <span class="rule-operator-label">
+     {{ getRuleOperatorLabel(rule) }} </span>
                   <span v-if="rule.value !== null && rule.operator !== 'isNull' && rule.operator !== 'isNotNull' && rule.value !== ''" class="rule-value"> "{{ formatRuleValue(rule) }}" </span>
                    <span v-else-if="rule.operator === 'isNull' || rule.operator === 'isNotNull'" class="rule-value-none">
                        (بدون نیاز به مقدار)
@@ -530,6 +530,69 @@ const valueSelectOptions = computed(() => {
 
     return options;
 });
+
+
+const getRuleOperatorLabel = (rule) => {
+    // اگر قانون یا عملگرش undefined/null بود، مقدار خام یا رشته خالی برگردون
+    if (!rule || rule.operator === null || rule.operator === undefined) {
+        return String(rule?.operator || '');
+    }
+
+    // پیدا کردن تعریف فیلد برای این قانون، با استفاده از لیست کلی فیلدهای قابل فیلتر
+    const fieldDef = filterableFields.value.find(f => f.value === rule.field);
+
+    // اگر تعریف فیلد پیدا نشد، یا نوع نداشت، مقدار خام عملگر رو برگردون
+    if (!fieldDef || !fieldDef.type) {
+        console.warn(`Could not find field definition or type for rule field: ${rule.field}`);
+        return String(rule.operator); // Fallback به مقدار خام عملگر
+    }
+
+    const type = fieldDef.type;
+
+    // ** تعریف همه عملگرهای ممکن به صورت ثابت داخل این تابع یا دسترسی به یک منبع ثابت **
+    // (این ساختار مشابه availableOperators است، اما وابسته به newRule.field نیست)
+     const allPossibleOperators = {
+        text: [
+            { value: 'equals', label: 'مساوی با' }, { value: 'notEquals', label: 'مساوی نباشد با' },
+            { value: 'contains', label: 'شامل باشد' }, { value: 'notContains', label: 'شامل نباشد' },
+            { value: 'startsWith', label: 'شروع شود با' }, { value: 'endsWith', label: 'پایان یابد با' },
+        ],
+        textarea: [ // همانند text
+            { value: 'equals', label: 'مساوی با' }, { value: 'notEquals', label: 'مساوی نباشد با' },
+            { value: 'contains', label: 'شامل باشد' }, { value: 'notContains', label: 'شامل نباشد' },
+        ],
+        number: [
+            { value: 'equals', label: 'مساوی با' }, { value: 'notEquals', label: 'مساوی نباشد با' },
+            { value: 'greaterThan', label: 'بزرگتر از' }, { value: 'lessThan', label: 'کوچکتر از' },
+            { value: 'greaterThanOrEqual', label: 'بزرگتر یا مساوی' }, { value: 'lessThanOrEqual', label: 'کوچکتر یا مساوی' },
+        ],
+        date: [
+             { value: 'equals', label: 'مساوی با تاریخ' }, { value: 'notEquals', label: 'مساوی نباشد با تاریخ' },
+             { value: 'isBefore', label: 'قبل از تاریخ' }, { value: 'isAfter', label: 'بعد از تاریخ' },
+             { value: 'isSameOrBefore', label: 'مساوی یا قبل از تاریخ' }, { value: 'isSameOrAfter', label: 'مساوی یا بعد از تاریخ' },
+        ],
+        boolean: [ // برای چک‌باکس
+            { value: 'equals', label: 'مساوی با (بله/خیر)' }, { value: 'notEquals', label: 'مساوی نباشد با (بله/خیر)' },
+        ],
+        select: [ // برای Dropdownها / گروه‌ها / جنسیت
+            { value: 'equals', label: 'مساوی با' }, { value: 'notEquals', label: 'مساوی نباشد با' },
+        ]
+    };
+     const commonOperators = [
+        { value: 'isNull', label: 'مقدار نداشته باشد' },
+        { value: 'isNotNull', label: 'مقدار داشته باشد' },
+     ];
+
+    // گرفتن لیست عملگرهای مربوط به نوع فیلد و ترکیب با عملگرهای مشترک
+    const typeOperators = allPossibleOperators[type] || [];
+    const combinedOperators = [...typeOperators, ...commonOperators];
+
+    // پیدا کردن شیء عملگر مربوطه بر اساس مقدار rule.operator
+    const operatorObj = combinedOperators.find(op => op.value === rule.operator);
+
+    // برگرداندن label عملگر اگر پیدا شد، در غیر این صورت مقدار خام عملگر (که نباید اتفاق بیفته اگر عملگر معتبر باشه)
+    return operatorObj?.label || String(rule.operator);
+};
 
 
 // ** Helper function برای فرمت دهی مقدار قانون در لیست نمایش قوانین **

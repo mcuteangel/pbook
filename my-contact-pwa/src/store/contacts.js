@@ -440,22 +440,34 @@ export const useContactStore = defineStore('contactStore', {
     },
     actions: {
       // اکشن برای افزودن یک مخاطب جدید
-      async addContact(contactData) {
-        this.loading = true // وضعیت لودینگ رو true می‌کنیم
-        this.error = null // خطا رو ریست می‌کنیم
+       async addContact(contactData) {
+        this.loading = true // وضعیت لودینگ
+        this.error = null // خطا
 
         try {
-          // از Dexie برای اضافه کردن مخاطب به استور 'contacts' استفاده می‌کنیم
-          const id = await db.contacts.add(contactData)
-          console.log('مخاطب با موفقیت اضافه شد، ID:', id)
+          // ** اضافه کردن تاریخ ایجاد و ویرایش قبل از ذخیره **
+          const timestamp = moment().toISOString(); // گرفتن تاریخ و زمان فعلی با فرمت ISO 8601
+          const contactToSave = {
+              ...contactData, // کپی کردن داده‌های موجود از فرم (name, lastName, etc.)
+              createdAt: timestamp, // تنظیم تاریخ ایجاد
+              updatedAt: timestamp  // تنظیم تاریخ اولین ویرایش (لحظه ایجاد)
+          };
+            console.log('Data to save for new contact:', contactToSave);
+
+
+          // استفاده از Dexie برای اضافه کردن مخاطب به استور 'contacts'
+          const id = await db.contacts.add(contactToSave); // ذخیره کردن مخاطب با تاریخ‌ها
+          console.log('مخاطب با موفقیت اضافه شد، ID:', id);
+
           // بعد از افزودن، لیست مخاطبین رو دوباره لود می‌کنیم تا UI به‌روز بشه
-          await this.loadContacts()
+          await this.loadContacts(); // لود مجدد همه مخاطبین (برای سادگی فعلاً)
+
         } catch (error) {
           console.error('خطا در افزودن مخاطب:', error)
           this.error = 'امکان افزودن مخاطب وجود ندارد.'
-           throw error; // خطا رو دوباره پرتاب می‌کنیم تا کامپوننت بتونه Catch کنه و پیام مناسب نشون بده
+           throw error; // پرتاب خطا
         } finally {
-          this.loading = false // وضعیت لودینگ رو false می‌کنیم
+          this.loading = false // پایان لودینگ
         }
       },
 
@@ -512,33 +524,39 @@ export const useContactStore = defineStore('contactStore', {
       },
 
       // اکشن برای به‌روزرسانی یک مخاطب موجود
-      async updateContact(id, changes) {
-        this.loading = true // وضعیت لودینگ رو true می‌کنیم
-        this.error = null // خطا رو ریست می‌کنیم
+     async updateContact(id, changes) {
+            this.loading = true;
+            this.error = null;
 
-        try {
-          // از Dexie برای به‌روزرسانی آیتم با ID مشخص در استور 'contacts' استفاده می‌کنیم
-          // changes همون شیءی هست که فیلدهای به‌روز شده رو داره
-          await db.contacts.update(id, changes)
-          console.log('مخاطب با موفقیت به‌روزرسانی شد، ID:', id)
+            try {
+                const timestamp = moment().toISOString();
+                const changesToApply = {
+                    ...changes,
+                    updatedAt: timestamp // به‌روزرسانی تاریخ ویرایش
+                };
 
-          // حالا state.contacts رو به‌روز می‌کنیم تا تغییرات توی لیست نمایش داده بشه
-          // بهترین راه اینه که آیتم به‌روز شده رو توی آرایه پیدا کنیم و خودش رو یا فیلدهاش رو به‌روز کنیم
-          const index = this.contacts.findIndex((contact) => contact.id === id)
-          if (index !== -1) {
-            // از Object.assign استفاده می‌کنیم تا تغییرات (changes) رو روی شیء موجود توی آرایه State اعمال کنیم
-            // این کار reactivity رو حفظ می‌کنه و Vue متوجه تغییر میشه
-            Object.assign(this.contacts[index], changes)
-          }
-        } catch (error) {
-          console.error('خطا در به‌روزرسانی مخاطب:', error)
-          this.error = 'امکان به‌روزرسانی مخاطب وجود ندارد.'
-           throw error; // خطا رو دوباره پرتاب می‌کنیم
-        } finally {
-          this.loading = false // وضعیت لودینگ رو false می‌کنیم
-        }
-      },
+                // به‌روزرسانی در دیتابیس Dexie
+                await db.contacts.update(id, changesToApply);
+                console.log('مخاطب با موفقیت به‌روزرسانی شد، ID:', id);
 
+                // به‌روزرسانی State در Pinia
+                const index = this.contacts.findIndex((contact) => contact.id === id);
+                if (index !== -1) {
+                    Object.assign(this.contacts[index], changesToApply);
+                }
+
+                // ** نکته مهم: بعد از به‌روزرسانی موفقیت‌آمیز، وضعیت ویرایش را پاک می‌کنیم **
+                // این کار باعث می‌شود که دفعه بعد که به صفحه Add/Edit می‌رویم، فرم برای افزودن مخاطب جدید خالی باشد.
+                this.clearContactToEdit(); // <-- اینجا اکشن clearContactToEdit را صدا می‌زنیم
+
+            } catch (error) {
+                console.error('خطا در به‌روزرسانی مخاطب:', error);
+                this.error = 'امکان به‌روزرسانی مخاطب وجود ندارد.';
+                throw error; // پرتاب مجدد خطا
+            } finally {
+                this.loading = false;
+            }
+        },
       // اکشن برای به‌روزرسانی عبارت جستجو
       setSearchQuery(query) {
         this.searchQuery = query
