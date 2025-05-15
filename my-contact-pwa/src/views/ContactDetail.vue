@@ -22,7 +22,7 @@
 </p>
         <p v-if="contact.gender"><strong>جنسیت:</strong> {{ displayGender(contact.gender) }}</p>
         <p v-if="contact.group"><strong>گروه:</strong> {{ contact.group }}</p>
-        <p v-if="contact.birthDate"><strong>تاریخ تولد:</strong> {{ formatShamsiDate(contact.birthDate) }}</p>
+        <p v-if="contact.birthDate"><strong>تاریخ تولد:</strong> {{ formatGregorianDateToShamsi(contact.birthDate) }}</p>
       </div>
 
       <div v-if="contact.additionalPhones && contact.additionalPhones.length > 0" class="detail-section">
@@ -73,8 +73,8 @@
 
       <div class="meta-info detail-section">
         <h4>اطلاعات سیستمی</h4>
-        <p v-if="contact.createdAt"><strong>تاریخ ایجاد:</strong> {{ formatShamsiDate(contact.createdAt, true) }}</p>
-        <p v-if="contact.updatedAt"><strong>آخرین ویرایش:</strong> {{ formatShamsiDate(contact.updatedAt, true) }}</p>
+        <p v-if="contact.createdAt"><strong>تاریخ ایجاد:</strong> {{ formatGregorianDateToShamsi(contact.createdAt, true) }}</p>
+        <p v-if="contact.updatedAt"><strong>آخرین ویرایش:</strong> {{ formatGregorianDateToShamsi(contact.updatedAt, true) }}</p>
       </div>
 
     <div class="actions">
@@ -97,13 +97,7 @@ import { useCustomFieldStore } from '@/store/customFields'; // این رو اض�
 
 // برای دسترسی به Store مخاطبین و لود اطلاعات
 import { useContactStore } from '../store/contacts'
-import { 
-  formatShamsiDate, 
-  formatCustomFieldValue,
-  displayGender, 
-  displayPhoneType, 
-  displayAddressType 
-} from '../utils/formatters'; // مسیر صحیح رو چک کن
+import { formatGregorianDateToShamsi, formatCustomFieldValue, displayGender, displayPhoneType, displayAddressType } from '@/utils/formatters';
 import { db } from '../db' 
 
 const route = useRoute() // دسترسی به اطلاعات route فعلی
@@ -142,39 +136,38 @@ const getMapUrl = (address) => {
 };
 
 // یه کامپیوتد پروپرتی برای فیلدهای سفارشیِ اون مخاطب خاص تعریف می‌کنیم
+// src/views/ContactDetail.vue - بخش script setup - Computed Property displayedCustomFields با لاگ‌های دیباگ
+
 const displayedCustomFields = computed(() => {
-  console.log('--- محاسبه displayedCustomFields ---');
-  console.log('Computed: contact.value موجود است؟', !!contact.value);
-  console.log('Computed: customFieldStore.fieldDefinitions موجود است؟', !!customFieldStore.fieldDefinitions);
-
   if (!contact.value || !customFieldStore.fieldDefinitions) {
-        console.log('Computed: یکی از مقادیر contact.value یا fieldDefinitions خالی است. برمی‌گردیم []');
-
     return [];
   }
 
-  // فیلدهای سفارشی تعریف شده رو با مقادیر ذخیره شده برای این مخاطب ترکیب می‌کنیم
   const result = customFieldStore.fieldDefinitions
     .map(fieldDef => {
-      // 👈 تغییر از customFieldsData به customFields و استفاده از find
+      // پیدا کردن مقدار این فیلد سفارشی در مخاطب
       const existingCustomField = contact.value.customFields?.find(cf => cf.fieldId === fieldDef.id);
-      const value = existingCustomField ? existingCustomField.value : undefined; // مقدار واقعی فیلد
+      const value = existingCustomField ? existingCustomField.value : undefined; // مقدار واقعی
 
-      console.log(`Computed: بررسی فیلد "${fieldDef.label}" (ID: ${fieldDef.id}) - مقدار در مخاطب:`, value);
-      if (value !== undefined && value !== null && (typeof value === 'string' ? value.trim() !== '' : true)) { // added check for empty string for non-boolean types
-        console.log(`Computed: فیلد "${fieldDef.label}" مقدار دارد، فرمت‌شده:`, formatCustomFieldValue(value, fieldDef.type, fieldDef.options));
+      // چک می‌کنیم که آیا فیلد مقداری دارد که باید نمایش داده شود
+      // (undefined، null، یا رشته خالی/whitespace را نادیده می‌گیریم مگر اینکه نوع بولین باشد که undefined/null هم مهم باشد)
+      const hasDisplayableValue = value !== undefined && value !== null && (typeof value === 'string' ? value.trim() !== '' : true);
+
+      if (hasDisplayableValue) {
+        // ** اینجا مقدار را با استفاده از formatCustomFieldValue فرمت می‌کنیم **
+        const formatted = formatCustomFieldValue(value, fieldDef.type, fieldDef.options);
+
         return {
-          ...fieldDef,
-          value: value,
-          formattedValue: formatCustomFieldValue(value, fieldDef.type, fieldDef.options)
+          ...fieldDef, // کپی کردن خصوصیات تعریف فیلد (مثل id, label, type, options)
+          value: value, // ذخیره مقدار خام هم (اختیاری)
+          formattedValue: formatted // ** ذخیره مقدار فرمت شده برای نمایش در Template **
         };
       }
-      console.log(`Computed: فیلد "${fieldDef.label}" مقدار ندارد یا خالی است.`);
-      return null;
+
+      return null; // اگر مقداری نداشت، این آیتم را در نهایت فیلتر می‌کنیم
     })
-    .filter(field => field !== null);
-  
-  console.log('Computed: نتیجه نهایی displayedCustomFields:', result);
+    .filter(field => field !== null); // حذف آیتم‌های null (فیلدهایی که مقداری نداشتند)
+
   return result;
 });
 // --- Hook برای بارگذاری داده‌ها هنگام mount شدن کامپوننت ---
@@ -199,16 +192,6 @@ onMounted(async () => {
     }
   });
 
-    console.log('--- بررسی اطلاعات برای نمایش فیلدهای سفارشی ---');
-  console.log('1. مقدار نهایی contact.value در onMounted:', contact.value);
-  console.log('2. تعاریف فیلدهای سفارشی (fieldDefinitions) در استور:', customFieldStore.fieldDefinitions);
-  if (contact.value) {
-      // 👈 تغییر از customFieldsData به customFields
-      console.log('3. داده‌های فیلدهای سفارشی (customFields) در مخاطب:', contact.value.customFields); 
-  } else {
-      console.log('3. مخاطب هنوز لود نشده، customFields قابل دسترسی نیست.');
-  }
-
   isLoading.value = false;
 });
 
@@ -232,14 +215,11 @@ const loadContactDetail = async (id) => {
     const loadedContact = await db.contacts.get(id) // <--- فرض بر اینه که 'db' در دسترس هست
     if (loadedContact) {
       contact.value = loadedContact
-      console.log('مخاطب با موفقیت برای نمایش جزئیات لود شد:', loadedContact)
     } else {
       error.value = 'مخاطب مورد نظر یافت نشد.'
-      console.error('مخاطب با ID', id, 'برای نمایش جزئیات یافت نشد.')
     }
   } catch (err) {
     error.value = 'خطا در بارگذاری جزئیات مخاطب.'
-    console.error('خطا در لود جزئیات مخاطب:', err)
   } finally {
     loading.value = false
   }

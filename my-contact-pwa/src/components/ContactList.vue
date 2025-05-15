@@ -70,16 +70,68 @@
              ></ElOption>
            </ElSelect>
 
-           <ElInput
-             v-model="newRule.value"
-             placeholder="مقدار فیلتر"
-             class="rule-control"
-             :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'" ></ElInput>
+           <template v-if="selectedNewRuleFieldDefinition">
+               <ElInput
+                   v-if="['text', 'textarea'].includes(selectedNewRuleFieldDefinition.type)"
+                   v-model="newRule.value"
+                   :placeholder="`مقدار فیلتر (${selectedNewRuleFieldDefinition.label})`"
+                   class="rule-control"
+                   :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
+                   :type="selectedNewRuleFieldDefinition.type === 'textarea' ? 'textarea' : 'text'"
+               ></ElInput>
+
+               <ElInput
+                   v-else-if="selectedNewRuleFieldDefinition.type === 'number'"
+                   v-model.number="newRule.value" :placeholder="`مقدار فیلتر عددی (${selectedNewRuleFieldDefinition.label})`"
+                   class="rule-control"
+                    :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
+                   type="number"
+               ></ElInput>
+
+               <vue-persian-datetime-picker
+                   v-else-if="selectedNewRuleFieldDefinition.type === 'date'"
+                   v-model="newRule.value"
+                   format="jYYYY/jM/jD" display-format="jYYYY/jM/jD" type="date"
+                   placeholder="انتخاب تاریخ شمسی"
+                   :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
+                   clearable
+                   class="rule-control" ></vue-persian-datetime-picker>
+
+
+               <ElSelect
+                   v-else-if="['select', 'boolean'].includes(selectedNewRuleFieldDefinition.type)"
+                   v-model="newRule.value"
+                   :placeholder="`انتخاب مقدار (${selectedNewRuleFieldDefinition.label})`"
+                   class="rule-control"
+                   :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
+                   clearable
+               >
+                   <ElOption
+                       v-for="option in valueSelectOptions"
+                       :key="option.value"
+                       :label="option.label"
+                       :value="option.value"
+                   ></ElOption>
+               </ElSelect>
+
+               <ElInput
+                   v-else
+                   v-model="newRule.value"
+                   placeholder="مقدار فیلتر (نوع نامشخص)"
+                   class="rule-control"
+                   :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
+               ></ElInput>
+
+           </template>
+            <span v-else class="rule-control-placeholder">
+                فیلد را انتخاب کنید
+           </span>
+
 
            <ElButton
              type="primary"
              @click="addNewRule"
-             :disabled="!newRule.field || !newRule.operator || ((newRule.operator !== 'isNull' && newRule.operator !== 'isNotNull') && newRule.value === null)" >
+             :disabled="!newRule.field || !newRule.operator || ((newRule.operator !== 'isNull' && newRule.operator !== 'isNotNull') && (newRule.value === null || newRule.value === ''))" >
                افزودن قانون
            </ElButton>
       </div>
@@ -95,8 +147,10 @@
                        {{ filterableFields.find(f => f.value === rule.field)?.label || rule.field }}: </span>
                   <span class="rule-operator-label">
                        {{ availableOperators.find(op => op.value === rule.operator)?.label || rule.operator }} </span>
-                  <span v-if="rule.value !== null && rule.operator !== 'isNull' && rule.operator !== 'isNotNull'" class="rule-value">
-                      "{{ rule.value }}" </span>
+                  <span v-if="rule.value !== null && rule.operator !== 'isNull' && rule.operator !== 'isNotNull' && rule.value !== ''" class="rule-value"> "{{ formatRuleValue(rule) }}" </span>
+                   <span v-else-if="rule.operator === 'isNull' || rule.operator === 'isNotNull'" class="rule-value-none">
+                       (بدون نیاز به مقدار)
+                   </span>
               </p>
               <ElButton type="danger" size="small" @click="removeRule(index)">حذف</ElButton>
           </div>
@@ -138,7 +192,7 @@
           <p v-if="contact.title"><strong>سمت:</strong> {{ contact.title }}</p>
           <p v-if="contact.gender"><strong>جنسیت:</strong> {{ displayGender(contact.gender) }}</p>
           <p v-if="contact.group"><strong>گروه:</strong> {{ contact.group }}</p>
-          <p v-if="contact.birthDate"><strong>تاریخ تولد:</strong> {{ formatShamsiDate(contact.birthDate) }}</p>
+          <p v-if="contact.birthDate"><strong>تاریخ تولد:</strong> {{ formatGregorianDateToShamsi(contact.birthDate) }}</p>
            <p v-if="contact.notes" class="contact-notes"><strong>یادداشت:</strong> {{ contact.notes }}</p>
 
           <div v-if="contact.additionalPhones && contact.additionalPhones.length > 0" class="additional-info">
@@ -166,8 +220,8 @@
             </ul>
           </div>
 
-           <p v-if="contact.createdAt" class="date-info"><strong>ایجاد:</strong> {{ formatShamsiDate(contact.createdAt) }}</p>
-           <p v-if="contact.updatedAt" class="date-info"><strong>ویرایش:</strong> {{ formatShamsiDate(contact.updatedAt) }}</p>
+           <p v-if="contact.createdAt" class="date-info"><strong>ایجاد:</strong> {{ formatGregorianDateToShamsi(contact.createdAt) }}</p>
+           <p v-if="contact.updatedAt" class="date-info"><strong>ویرایش:</strong> {{ formatGregorianDateToShamsi(contact.updatedAt) }}</p>
 
            <div v-if="contact.customFields && contact.customFields.length > 0" class="additional-info">
                <strong>فیلدهای سفارشی:</strong>
@@ -175,12 +229,11 @@
                    <li v-for="(customField, index) in contact.customFields" :key="index">
                        <span v-if="customFieldStore.getFieldDefinitionById(customField.fieldId)">
                             <strong>{{ customFieldStore.getFieldDefinitionById(customField.fieldId).label }}:</strong>
-                            {{ customField.value }}
+                            {{ formatCustomFieldValue(customField.value, customFieldStore.getFieldDefinitionById(customField.fieldId).type, customFieldStore.getFieldDefinitionById(customField.fieldId).options) }}
                        </span>
                        <span v-else>
                             <strong>فیلد ناشناس ({{ customField.fieldId }}):</strong>
-                            {{ customField.value }}
-                       </span>
+                            {{ customField.value }} </span>
                    </li>
                </ul>
            </div>
@@ -223,21 +276,28 @@
           </button>
         </div>
       </div>
+
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useContactStore } from '@/store/contacts';
-import { useCustomFieldStore } from '@/store/customFields';
+import { useCustomFieldStore } from '@/store/customFields'; // مطمئن شو این هم Import شده
 import { useGroupStore } from '@/store/groups';
 import { useRouter } from 'vue-router';
+// ** این خط Import رو به صورت کامل و صحیح اصلاح کن **
 import {
-  formatShamsiDate,
-  displayGender,
-  displayPhoneType,
-  displayAddressType
+  formatGregorianDateToShamsi,     // برای نمایش تاریخ‌های استاندارد در قالب
+  parseJalaaliStringToGregorianMoment, // برای پارس تاریخ شمسی ورودی فیلتر
+  formatCustomFieldValue,         // <-- این تابع قبلاً جا افتاده بود، حالا اضافه شد!
+  displayGender,                  // برای نمایش جنسیت
+  displayPhoneType,               // برای نمایش نوع تلفن
+  displayAddressType              // برای نمایش نوع آدرس
 } from '@/utils/formatters';
+import moment from 'moment-jalaali'; // برای کار با تاریخ
+import VuePersianDatetimePicker from 'vue3-persian-datetime-picker'; // کامپوننت تاریخ‌انتخاب‌کن
+
 
 // Element Plus components are auto-imported
 
@@ -253,18 +313,17 @@ const isFilterSectionVisible = ref(false);
 // **تابع برای Toggle کردن وضعیت نمایش بخش فیلتر**
 const toggleFilterSection = () => {
   isFilterSectionVisible.value = !isFilterSectionVisible.value;
-  // شاید بخواهیم وقتی بخش فیلتر بسته می‌شود، قوانین فعلی یا قانون در حال ساخت را پاک کنیم؟ فعلاً نگه می‌داریم.
 };
 
-// **متغیر Reactive برای نگهداری لیست قوانین فیلتر که کاربر در UI اضافه کرده (جدید)**
+// **متغیر Reactive برای نگهداری لیست قوانین فیلتر که کاربر در UI اضافه کرده**
 // این لیست با قوانین Store فرق دارد، قوانین اینجا قبل از اعمال نهایی به Store هستند.
-const currentFilterRules = ref([]); // این لیست قوانین در حال ساخت/نمایش در UI را نگه می‌دارد.
+const currentFilterRules = ref([]);
 
-// **متغیر Reactive برای نگهداری اطلاعات قانون فیلتر در حال ساخت در فرم (جدید)**
+// **متغیر Reactive برای نگهداری اطلاعات قانون فیلتر در حال ساخت در فرم**
 const newRule = ref({
-    field: null, // شناسه فیلد انتخاب شده
-    operator: null, // عملگر انتخاب شده
-    value: null // مقدار وارد شده برای فیلتر
+    field: null,
+    operator: null,
+    value: null
 });
 
 // --- Watcher برای newRule.field to reset operator و value وقتی فیلد جدید انتخاب می‌شود ---
@@ -279,7 +338,7 @@ watch(
 );
 
 
-// --- Pagination State (Existing) ---
+// --- Pagination State ---
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
 const totalContactsOnCurrentFilter = computed(() => contactStore.filteredAndSortedContacts.length);
@@ -313,7 +372,7 @@ watch(
     contactStore.searchQuery,
     contactStore.sortField,
     contactStore.sortOrder,
-    contactStore.filterRules.length // حالا با تغییر در تعداد قوانین فیلتر Store هم ریست می‌شود
+    contactStore.filterRules.length // با تغییر تعداد قوانین فیلتر Store هم ریست می‌شود
   ],
   () => {
     currentPage.value = 1;
@@ -321,7 +380,7 @@ watch(
 );
 
 
-// --- Sorting Options (کد قبلی) ---
+// --- Sorting Options ---
 const standardSortableOptions = [
   { value: 'lastName', label: 'نام خانوادگی' },
   { value: 'name', label: 'نام' },
@@ -332,7 +391,6 @@ const standardSortableOptions = [
 const sortOptions = computed(() => {
   const options = [...standardSortableOptions];
   customFieldStore.sortedFieldDefinitions.forEach(field => {
-     // می‌تونید اینجا انواع فیلد سفارشی که نباید مرتب بشن رو exclude کنید
     options.push({
       value: field.id,
       label: `فیلد سفارشی: ${field.label}`
@@ -342,7 +400,7 @@ const sortOptions = computed(() => {
 });
 
 
-// ** --- Advanced Filter Logic UI (New) --- **
+// ** --- Advanced Filter Logic UI --- **
 
 // **Computed property برای لیست فیلدهایی (استاندارد + سفارشی) که می‌توان بر اساس آنها فیلتر کرد**
 const filterableFields = computed(() => {
@@ -375,11 +433,9 @@ const selectedNewRuleFieldDefinition = computed(() => {
 });
 
 
-// **Computed property برای لیست عملگرهای موجود بر اساس نوع فیلد انتخاب شده (حالا با منطق پایه)**
+// **Computed property برای لیست عملگرهای موجود بر اساس نوع فیلد انتخاب شده**
 const availableOperators = computed(() => {
     const type = selectedNewRuleFieldDefinition.value?.type;
-    console.log("Determining operators for type:", type); // برای دیباگ
-
     const operators = {
         text: [
             { value: 'equals', label: 'مساوی با' },
@@ -418,12 +474,9 @@ const availableOperators = computed(() => {
         select: [ // برای Dropdownها / گروه‌ها / جنسیت
             { value: 'equals', label: 'مساوی با' },
             { value: 'notEquals', label: 'مساوی نباشد با' },
-            { value: 'contains', label: 'شامل باشد' }, // شاید شامل باشد برای select هم معنی داشته باشد؟
-            { value: 'notContains', label: 'شامل نباشد' },
         ]
     };
 
-    // عملگرهای مشترک بین همه نوع‌ها (مقدار داشته باشد/نداشته باشد)
     const commonOperators = [
         { value: 'isNull', label: 'مقدار نداشته باشد' },
         { value: 'isNotNull', label: 'مقدار داشته باشد' },
@@ -434,11 +487,94 @@ const availableOperators = computed(() => {
 });
 
 
-// **متدهای مدیریت قوانین فیلتر (حالا پیاده می‌شوند)**
+// ** Computed property برای تولید گزینه‌های Dropdown مقدار فیلتر (برای انواع Select و Boolean) **
+const valueSelectOptions = computed(() => {
+    const fieldDef = selectedNewRuleFieldDefinition.value;
+    if (!fieldDef) return [];
+
+    const options = [];
+
+    if (fieldDef.type === 'select') {
+        if (fieldDef.value === 'gender') {
+            options.push(
+                { label: 'مرد', value: 'male' },
+                { label: 'زن', value: 'female' },
+                { label: 'دیگر', value: 'other' }
+            );
+        } else if (fieldDef.value === 'group') {
+             groupStore.groups.forEach(group => {
+                 options.push({ label: group.name, value: group.name });
+             });
+             // استفاده از رشته خالی '' به جای null برای حل اخطار Element Plus
+             options.unshift({ label: 'بدون گروه', value: '' });
+         }
+        else if (fieldDef.value.startsWith('customField_')) {
+             const customFieldDefinition = customFieldStore.getFieldDefinitionById(fieldDef.value);
+             if (customFieldDefinition && customFieldDefinition.options) {
+                 customFieldDefinition.options.forEach(opt => {
+                      if (typeof opt === 'string') {
+                          options.push({ label: opt, value: opt });
+                      } else {
+                          options.push({ label: opt.label || opt.value, value: opt.value });
+                      }
+                 });
+             }
+         }
+
+    } else if (fieldDef.type === 'boolean') {
+        options.push(
+            { label: 'بله', value: true },
+            { label: 'خیر', value: false }
+        );
+    }
+
+    return options;
+});
+
+
+// ** Helper function برای فرمت دهی مقدار قانون در لیست نمایش قوانین **
+const formatRuleValue = (rule) => {
+     if (rule.value === null || rule.value === undefined || rule.value === '') return '';
+
+     const fieldDef = filterableFields.value.find(f => f.value === rule.field);
+     const type = fieldDef?.type || 'text';
+
+     switch (type) {
+         case 'date':
+             // ** مقدار ذخیره شده برای تاریخ حالا رشته میلادی 'YYYY-MM-DD' است **
+             // از فرمتر جدید که میلادی می‌گیرد و شمسی نمایش می‌دهد استفاده می‌کنیم
+             return formatGregorianDateToShamsi(rule.value); // ارسال رشته میلادی ذخیره شده
+         case 'boolean':
+             return rule.value ? 'بله' : 'خیر';
+         case 'select':
+              if (rule.field === 'gender') {
+                  return displayGender(rule.value);
+              } else if (rule.field === 'group') {
+                  return rule.value; // نام گروه ذخیره شده نمایش داده می‌شود
+              } else { // Select سفارشی
+                  const customFieldDef = customFieldStore.getFieldDefinitionById(rule.field);
+                   const option = customFieldDef?.options?.find(opt =>
+                        (typeof opt === 'string' && opt === rule.value) ||
+                        (typeof opt === 'object' && opt.value === rule.value)
+                   );
+                   return option ? (option.label || option.value) : rule.value;
+              }
+          case 'number':
+              return Number(rule.value);
+         case 'text':
+         case 'textarea':
+         default:
+             return String(rule.value);
+     }
+};
+
+
+// **متدهای مدیریت قوانین فیلتر**
 const addNewRule = () => {
     console.log('Attempting to add new rule:', newRule.value);
 
     const rule = newRule.value;
+    const fieldDef = selectedNewRuleFieldDefinition.value;
 
     // 1. اعتبارسنجی پایه
     if (!rule.field || !rule.operator) {
@@ -448,42 +584,77 @@ const addNewRule = () => {
 
     const requiresValue = rule.operator !== 'isNull' && rule.operator !== 'isNotNull';
 
-    if (requiresValue && rule.value === null) {
-         // TODO: اعتبارسنجی دقیق‌تر مقدار بر اساس نوع فیلد (مثلاً عدد معتبر، تاریخ معتبر و ...)
+    if (requiresValue && (rule.value === null || rule.value === '')) {
          alert('لطفاً مقدار فیلتر را وارد کنید.');
          return;
     }
 
+    // ** 1b. اعتبارسنجی و تبدیل نوع مقدار برای ذخیره‌سازی (میلادی برای تاریخ) **
+    let valueToStore = rule.value; // مقدار پیش‌فرض برای ذخیره‌سازی
+
+    if (requiresValue && fieldDef) {
+        switch (fieldDef.type) {
+            case 'number':
+                valueToStore = Number(rule.value);
+                if (isNaN(valueToStore)) {
+                    alert('لطفاً یک عدد معتبر وارد کنید.');
+                    return;
+                }
+                break;
+            case 'date':
+                 // مقدار از Date Picker شمسی یک رشته شمسی است (مثلاً '1404/2/25').
+                 // ** باید این رشته شمسی را به Moment object تبدیل کرده و سپس به فرمت میلادی استاندارد ('YYYY-MM-DD') برای ذخیره‌سازی در قانون فیلتر تبدیل کنیم **
+                 const jalaaliMoment = parseJalaaliStringToGregorianMoment(rule.value);
+
+                 if (!jalaaliMoment || !jalaaliMoment.isValid()) {
+                      alert('تاریخ شمسی انتخاب شده نامعتبر است.');
+                      return;
+                 }
+                 // ** ذخیره کردن تاریخ به فرمت رشته میلادی استاندارد ISO 8601 **
+                 valueToStore = jalaaliMoment.format('YYYY-MM-DD');
+                 console.log('Storing Gregorian date for filter rule:', valueToStore);
+
+
+                break;
+            case 'boolean':
+                valueToStore = Boolean(rule.value);
+                break;
+             case 'select':
+                 valueToStore = rule.value; // مقدار از Dropdown می‌آید (رشته نام گروه یا مقدار گزینه سفارشی)
+                 break;
+            case 'text':
+            case 'textarea':
+                valueToStore = String(rule.value);
+                break;
+        }
+    }
+
      // TODO: چک کنیم که آیا همین قانون دقیقاً قبلاً اضافه شده است؟
 
-    // 2. اضافه کردن قانون معتبر به آرایه currentFilterRules
-    // ** این خط در کد قبلی کامنت بود و حالا فعال شده است **
-    currentFilterRules.value.push({...rule}); // اضافه کردن کپی قانون به آرایه قوانین فعال در UI
+    // 2. اضافه کردن قانون معتبر (با مقدار تبدیل شده - میلادی برای تاریخ) به آرایه currentFilterRules
+    currentFilterRules.value.push({
+         field: rule.field,
+         operator: rule.operator,
+         value: valueToStore // ذخیره کردن مقدار تبدیل شده (رشته میلادی برای تاریخ)
+    });
     console.log('Rule added to currentFilterRules:', currentFilterRules.value);
 
 
-    // 3. ریست کردن فرم newRule برای اضافه کردن قانون بعدی
+    // 3. ریست کردن فرم newRule
     newRule.value = {
         field: null,
         operator: null,
         value: null
     };
 
-    // 4. (اختیاری) نمایش پیام موفقیت
-    // alert('قانون فیلتر اضافه شد. برای اعمال، روی "اعمال فیلتر" کلیک کنید.');
+    // 4. (اختیاری) پیام موفقیت
 };
 
 const removeRule = (index) => {
     console.log('Attempting to remove rule at index:', index);
-
-    // 1. حذف قانون از آرایه currentFilterRules
      if (index >= 0 && index < currentFilterRules.value.length) {
-        // ** این خط در کد قبلی کامنت بود و حالا فعال شده است **
-        const removedRule = currentFilterRules.value.splice(index, 1); // حذف یک عنصر در جایگاه index
-        console.log('Rule removed from currentFilterRules:', removedRule, currentFilterRules.value);
-
-        // 2. بعد از حذف قانون، فیلترها را دوباره اعمال می‌کنیم تا لیست به‌روز شود
-        applyFilters(); // صدا زدن تابع اعمال فیلترها
+        currentFilterRules.value.splice(index, 1);
+        applyFilters();
      } else {
          console.warn('Invalid index for removing rule:', index);
      }
@@ -491,42 +662,19 @@ const removeRule = (index) => {
 
 const applyFilters = () => {
      console.log('Applying filters:', currentFilterRules.value);
-
-    // 1. ارسال currentFilterRules.value به اکشن setFilterRules در Store
-    // Store مسئول اجرای منطق فیلتر بر اساس این قوانین است.
-    // ** این خط در کد قبلی کامنت بود و حالا فعال شده است **
-    contactStore.setFilterRules(currentFilterRules.value); // ارسال آرایه قوانین فعلی در UI به Store
-
-    // 2. پیام موفقیت (اختیاری)
-    // alert('فیلترها اعمال شدند.');
+    contactStore.setFilterRules(currentFilterRules.value);
     console.log('Filters applied to store.');
-
-    // 3. (اختیاری) بستن بخش فیلتر بعد از اعمال؟
-    // isFilterSectionVisible.value = false;
 };
 
 const clearFilters = () => {
     console.log('Clearing all filters');
-
-    // 1. پاک کردن آرایه currentFilterRules در UI
-    // ** این خط در کد قبلی کامنت بود و حالا فعال شده است **
-    currentFilterRules.value = []; // پاک کردن قوانین در UI
-    console.log('currentFilterRules cleared.');
-
-    // 2. پاک کردن فیلترها در Store با ارسال آرایه خالی
-    // ** این خط در کد قبلی کامنت بود و حالا فعال شده است **
-    contactStore.setFilterRules([]); // ارسال آرایه خالی به Store برای پاک کردن فیلترها
+    currentFilterRules.value = [];
+    contactStore.setFilterRules([]);
     console.log('Filters cleared in store.');
-
-    // 3. پیام موفقیت (اختیاری)
-    // alert('همه فیلترها پاک شدند.');
-
-    // 4. (اختیاری) بستن بخش فیلتر بعد از پاک کردن؟
-    // isFilterSectionVisible.value = false;
 };
 
 
-// --- Contact Actions (کد قبلی) ---
+// --- Contact Actions ---
 const goToContactDetail = (id) => {
     router.push({ name: 'contact-detail', params: { id } });
 };
@@ -646,16 +794,30 @@ h2 {
 }
 
 /* استایل عمومی برای Input و Select در فرم افزودن قانون */
-/* Element Plus components generate their own classes like el-select, el-input */
+/* Element Plus components generate their own classes like el-select, el-input, el-date-editor */
 .advanced-filter-section .el-select,
-.advanced-filter-section .el-input {
+.advanced-filter-section .el-input,
+.advanced-filter-section .el-date-editor,
+ .advanced-filter-section .vpd-input { /* اضافه شد */
     flex-basis: 180px;
     flex-grow: 1;
 }
 
 /* استایل دکمه افزودن قانون */
-.add-rule-form .el-button {
-    /* Element Plus uses .el-button class */
+/* .add-rule-form .el-button { }  این بلوک خالی باعث خطا میشد و پاک شد */
+
+
+/* استایل placeholder وقتی فیلدی انتخاب نشده */
+.rule-control-placeholder {
+    flex-basis: 180px;
+    flex-grow: 1;
+    padding: 8px 12px; /* هم اندازه با پدینگ input ها */
+    color: #a8a8a8; /* رنگ خاکستری ملایم */
+    border: 1px solid #dcdfe6; /* حاشیه پیش‌فرض Element Plus Input */
+    border-radius: 4px;
+    background-color: #fff;
+    font-size: 0.9em;
+    line-height: 1.5; /* هم اندازه با lineHeight Input */
 }
 
 
@@ -711,6 +873,11 @@ h2 {
 .rule-value {
     font-weight: bold;
     color: #333;
+}
+
+.rule-value-none {
+     font-style: italic;
+     color: #777;
 }
 
 
@@ -984,10 +1151,18 @@ h2 {
     }
 
      .search-control input[type='text'], .sort-controls select,
-     .advanced-filter-section .el-select, .advanced-filter-section .el-input {
+     .advanced-filter-section .el-select, .advanced-filter-section .el-input,
+     .advanced-filter-section .el-date-editor,
+      .advanced-filter-section .vpd-input { /* اضافه شد */
          width: 100%;
          flex-basis: auto;
      }
+
+    .rule-control-placeholder {
+         width: 100%;
+         flex-basis: auto;
+         text-align: center;
+    }
 
 
     .toggle-filter-button {

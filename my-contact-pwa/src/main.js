@@ -1,18 +1,26 @@
+
 import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import App from './App.vue'
-// Router رو import کن
-import router from './router' // <-- این خط رو اضافه کن
-import { createPinia } from 'pinia'    // <-- این را اضافه کنید
+import router from './router'
+import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
-
-
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import VuePersianDatetimePicker from 'vue3-persian-datetime-picker'; // ** وارد کردن کامپوننت تاریخ‌انتخاب‌کن شمسی **
 
 const app = createApp(App)
 
-const pinia = createPinia()
-app.use(pinia)
-// Router رو به برنامه Vue اضافه کن
-app.use(router) // <-- این خط رو اضافه کن
+app.use(createPinia())
+app.use(router)
+app.use(ElementPlus)
+
+// رجیستر کردن آیکون‌های Element Plus به صورت سراسری
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
+
+// ** رجیستر کردن کامپوننت تاریخ‌انتخاب‌کن شمسی به صورت سراسری **
+app.component('VuePersianDatetimePicker', VuePersianDatetimePicker);
 
 
-app.mount('#app') // برنامه رو به المنت #app در index.html وصل کن
+app.mount('#app')

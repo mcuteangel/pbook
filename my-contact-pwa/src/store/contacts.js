@@ -4,18 +4,26 @@ import { defineStore } from 'pinia';
 import { db } from '../db';
 import moment from 'moment-jalaali'; // مطمئن شو که moment-jalaali وارد شده
 import { useCustomFieldStore } from './customFields'; // مطمئن شو که استور فیلدهای سفارشی وارد شده
+import { parseJalaaliStringToGregorianMoment } from '../utils/formatters';
 
-
-// ** تابع کمکی ruleMatches رو قبل از defineStore تعریف می‌کنیم **
-// این تابع مقدار یک فیلد مخاطب رو با مقدار قانون فیلتر مقایسه می‌کنه
+// ** تابع ruleMatches - اصلاح شده برای هندل کردن تاریخ‌های میلادی و رشته خالی برای گروه **
+// این تابع یک فیلد مخاطب را با یک قانون فیلتر مقایسه می‌کند
 function ruleMatches(fieldValue, operator, ruleValue, fieldType) {
-    // نکته: fieldValue می‌تواند null یا undefined باشد اگر مخاطب مقداری برای آن فیلد نداشته باشد
+    // console.log(`Checking Rule: Field: ${rule.field} (${fieldType}), Op: ${operator}, Rule Value: ${ruleValue}, Contact Value: ${fieldValue}`); // Debug log (optional)
 
-    // **1. مدیریت مقادیر null/undefined برای fieldValue**
-    if (fieldValue == null) { // از == استفاده می‌کنیم تا null و undefined هر دو پوشش داده بشن
-        // عملگرهایی که مستقیماً با null یا نبود مقدار کار می‌کنند
-        if (operator === 'isNull' || operator === 'notExists') return true; // اگر مقدار null یا undefined است و قانون می‌گوید مقدار نباشد، مطابقت دارد
-        if (operator === 'isNotNull' || operator === 'exists') return false; // اگر مقدار null یا undefined است و قانون می‌گوید مقدار باشد، مطابقت ندارد
+    // **1. مدیریت مقادیر null/undefined برای fieldValue و هندلینگ خاص برای فیلتر گروه 'بدون گروه' **
+    // این بخش قبلا اصلاح شده بود و رشته خالی '' را برای گروه بدون مقدار هندل می‌کند
+    if (fieldValue == null) { // Covers null and undefined
+        if (operator === 'isNull' || operator === 'notExists') return true;
+        if (operator === 'isNotNull' || operator === 'exists') return false;
+
+         // اگر فیلد نوع Select است و مقدار قانون رشته خالی '' (بدون گروه) است
+         if (fieldType === 'select' && ruleValue === '') {
+             if (operator === 'equals') return true; // مخاطب بدون گروه (null/undefined) با قانون 'بدون گروه' مطابقت دارد
+             if (operator === 'notEquals') return false; // مخاطب بدون گروه با قانون 'بدون گروه' نابرابر نیست (چون برابر است)
+             // سایر عملگرها مثل contains, startsWith و ... برای مقدار خالی و فیلد null/undefined مطابقت ندارند
+         }
+
         // برای سایر عملگرها، اگر fieldValue null باشد، معمولاً با یک ruleValue مشخص مطابقت ندارد
         return false;
     }
@@ -26,100 +34,120 @@ function ruleMatches(fieldValue, operator, ruleValue, fieldType) {
      if (operator === 'isNotNull' || operator === 'exists') return true;
 
 
-    // **2. مقایسه بر اساس نوع فیلد و عملگر**
+    // **2. مقایسه بر اساس نوع فیلد و عملگر **
     switch (fieldType) {
         case 'text':
-        case 'textarea': // فیلدهای متنی و چند خطی رو مثل متن عادی مقایسه می‌کنیم
-        case 'select': // مقدار انتخاب شده در select رو هم مثل متن مقایسه می‌کنیم
-            // مطمئن میشیم که مقادیر رشته هستند و برای مقایسه‌های بدون حساسیت به حروف بزرگ/کوچک، اون‌ها رو کوچک می‌کنیم
-            const textValue = String(fieldValue || '').toLowerCase();
-            const ruleTextValue = String(ruleValue || '').toLowerCase();
+        case 'textarea': // همانند text
+        case 'select': // مقدار انتخاب شده در select رو هم مثل متن مقایسه می‌کنیم، به جز حالت 'بدون گروه'
+            const textValue = String(fieldValue).toLowerCase(); // مقدار فیلد رو به رشته تبدیل و کوچک می‌کنیم
+            const ruleTextValue = String(ruleValue || '').toLowerCase(); // مقدار قانون رو به رشته تبدیل و کوچک می‌کنیم (ruleValue='' برای بدون گروه)
+
+            // ** هندل کردن فیلتر گروه "بدون گروه" با مقدار '' وقتی fieldValue null نیست **
+             // اگر فیلد گروه است و مقدار قانون رشته خالی است
+             if (fieldType === 'select' && ruleValue === '') {
+                 switch (operator) {
+                     case 'equals': return textValue === ''; // مخاطب با گروهی که نامش رشته خالی است (اگر چنین چیزی ممکن باشد)
+                     case 'notEquals': return textValue !== ''; // مخاطب با گروهی که نامش رشته خالی نیست
+                     // سایر عملگرها (contains, startsWith) در این حالت معمولاً معنی ندارند و باید false برگردانند
+                     default: return false; // یا شاید true بسته به منطق دقیق مورد نیاز برای سایر عملگرها با مقدار خالی
+                 }
+             }
+
+            // مقایسه متنی استاندارد برای سایر موارد (فیلدهای متنی و selectهای با مقدار غیرخالی)
             switch (operator) {
                 case 'equals': return textValue === ruleTextValue;
                 case 'notEquals': return textValue !== ruleTextValue;
-                case 'contains': return textValue.includes(ruleTextValue); // شامل متن باشد
-                case 'notContains': return !textValue.includes(ruleTextValue); // شامل متن نباشد
-                case 'startsWith': return textValue.startsWith(ruleTextValue); // با متن شروع شود
-                case 'endsWith': return textValue.endsWith(ruleTextValue); // با متن تمام شود
-                // می‌تونیم عملگرهای متنی دیگه رو هم اینجا اضافه کنیم
+                case 'contains': return textValue.includes(ruleTextValue);
+                case 'notContains': return !textValue.includes(ruleTextValue);
+                case 'startsWith': return textValue.startsWith(ruleTextValue);
+                case 'endsWith': return textValue.endsWith(ruleTextValue);
                 default:
-                    console.warn(`Unknown text operator: ${operator}. Rule ignored.`);
-                    return true; // اگر عملگر ناشناخته بود، این قانون فیلتر اعمال نشود (مخاطب شامل فیلتر شود)
+                    console.warn(`Unknown text/select operator: ${operator}. Rule ignored.`);
+                    return true; // قانون ناشناخته باعث حذف مخاطب نمی‌شود
             }
 
-        case 'number':
-            const numValue = Number(fieldValue); // تبدیل به عدد
+        case 'number': // منطق مقایسه عددی قبلاً درست بود
+            const numValue = Number(fieldValue);
             const ruleNumValue = Number(ruleValue);
-            // مدیریت حالتی که مقادیر عدد معتبری نیستند (NaN - Not a Number)
-            if (isNaN(numValue) || isNaN(ruleNumValue)) {
+
+             if (isNaN(numValue) || isNaN(ruleNumValue)) {
                  console.warn(`Number comparison with NaN value. Field Value: ${fieldValue}, Rule Value: ${ruleValue}`);
-                // رفتار پیش‌فرض برای مقایسه با NaN این است که بیشتر مقایسه‌ها (>, <, ==) false می‌شوند.
-                // اگر یکی NaN و دیگری عدد باشد، برابر نیستند. اگر هر دو NaN باشند، با == هم برابر نیستند (در JS).
-                // رفتار مد نظر ما چیست؟ مثلاً NaN با عدد برابر نیست.
                  switch(operator) {
-                     // اگر یکی عدد معتبر و دیگری نامعتبر باشد، نابرابرند. اگر هر دو نامعتبر باشند، نابرابرند (طبق !== جاوااسکریپت).
                      case 'notEquals': return !isNaN(numValue) || !isNaN(ruleNumValue);
-                     // فقط وقتی هر دو NaN باشند برابرند (رفتار دلخواه برای فیلتر 'equals' روی NaN)
                      case 'equals': return isNaN(numValue) && isNaN(ruleNumValue);
-                     default: return false; // برای > , <, <=, >= اگر یکی یا هر دو NaN باشند، همیشه false برمی‌گردانیم
+                     default: return false;
                  }
              }
 
             switch (operator) {
                 case 'equals': return numValue === ruleNumValue;
                 case 'notEquals': return numValue !== ruleNumValue;
-                case 'greaterThan': return numValue > ruleNumValue; // بزرگتر از
-                case 'lessThan': return numValue < ruleNumValue; // کوچکتر از
-                case 'greaterThanOrEqual': return numValue >= ruleNumValue; // بزرگتر یا مساوی
-                case 'lessThanOrEqual': return numValue <= ruleNumValue; // کوچکتر یا مساوی
-                // می‌تونیم عملگر 'between' (بین دو عدد) رو هم بعداً اضافه کنیم (نیاز به دو مقدار در ruleValue داره)
+                case 'greaterThan': return numValue > ruleNumValue;
+                case 'lessThan': return numValue < ruleNumValue;
+                case 'greaterThanOrEqual': return numValue >= ruleNumValue;
+                case 'lessThanOrEqual': return numValue <= ruleNumValue;
                 default:
                      console.warn(`Unknown number operator: ${operator}. Rule ignored.`);
                      return true;
             }
 
-        case 'date':
-            // فرض می‌کنیم تاریخ‌ها با فرمت 'jYYYY/jM/jD' (شمسی) ذخیره شدن
-            const dateValueMoment = moment(fieldValue, 'jYYYY/jM/jD');
-            const ruleValueMoment = moment(ruleValue, 'jYYYY/jM/jD');
+        case 'date': // ** اصلاح منطق مقایسه تاریخ برای ورودی‌های میلادی **
+            // fieldValue تاریخ از مخاطب است (انتظار می‌رود میلادی باشد یا Date object)
+            // ruleValue تاریخ از قانون فیلتر است (حالا به صورت رشته میلادی 'YYYY-MM-DD' ذخیره می‌شود)
 
-            // مدیریت تاریخ‌های نامعتبر
-             if (!dateValueMoment.isValid() || !ruleValueMoment.isValid()) {
-                 console.warn(`Date comparison with invalid date. Field Value: ${fieldValue}, Rule Value: ${ruleValue}`);
-                // رفتار برای تاریخ‌های نامعتبر: معمولاً مقایسه‌های زمانی معنی ندارند.
+            // ** پارس کردن fieldValue (تاریخ مخاطب) - اول میلادی، اگر نشد شمسی (برای سازگاری با دیتای احتمالی قدیمی) **
+            let contactDateMoment = moment(fieldValue);
+            // اگر پارس میلادی نامعتبر بود و fieldValue یک رشته بود، سعی می‌کنیم به عنوان رشته شمسی پارس کنیم
+            if (!contactDateMoment.isValid() && typeof fieldValue === 'string') {
+                 const jalaaliFieldMoment = parseJalaaliStringToGregorianMoment(fieldValue); // استفاده از تابع کمکی جدید برای پارس شمسی
+                 if (jalaaliFieldMoment && jalaaliFieldMoment.isValid()) {
+                     contactDateMoment = jalaaliFieldMoment; // اگر پارس شمسی موفق بود، از آن استفاده می‌کنیم
+                 }
+                 // اگر با هیچ روشی معتبر نشد، contactDateMoment نامعتبر باقی می‌ماند
+            }
+
+
+            // ** پارس کردن ruleValue (تاریخ قانون) - که به صورت رشته میلادی استاندارد ذخیره شده **
+            const ruleValueMoment = moment(ruleValue, 'YYYY-MM-DD'); // حتماً با فرمت میلادی YYYY-MM-DD پارس می‌کنیم
+
+
+            // ** هندل کردن تاریخ‌های نامعتبر برای مقایسه **
+             if (!contactDateMoment || !contactDateMoment.isValid() || !ruleValueMoment || !ruleValueMoment.isValid()) {
+                 // console.warn(`Date comparison with invalid date. Field: ${fieldValue}, Rule: ${ruleValue}`);
                  switch(operator) {
-                     // تاریخ معتبر با نامعتبر برابر نیست
-                     case 'notEquals': return dateValueMoment.isValid() !== ruleValueMoment.isValid();
-                     // فقط وقتی هر دو معتبر باشند و تاریخشان یکسان باشد (مقایسه فقط روز) برابرند
-                     case 'equals': return dateValueMoment.isValid() && ruleValueMoment.isValid() && dateValueMoment.isSame(ruleValueMoment, 'day');
-                     default: return false; // برای >, < و ... اگر یکی نامعتبر باشد، false
+                     case 'notEquals':
+                          // اگر فقط یکی معتبر باشد، نابرابرند. اگر هر دو نامعتبر باشند هم نابرابر در نظر می‌گیریم.
+                          return (contactDateMoment?.isValid() || false) !== (ruleValueMoment?.isValid() || false);
+                     case 'equals':
+                          // فقط اگر هر دو معتبر باشند و تاریخشان برابر باشد (مقایسه روز)
+                          return (contactDateMoment?.isValid() || false) && (ruleValueMoment?.isValid() || false) && contactDateMoment.isSame(ruleValueMoment, 'day');
+                     default:
+                          // برای >, < و ... اگر یکی یا هر دو نامعتبر باشند، همیشه false
+                          return false;
                  }
              }
 
-
+            // ** انجام مقایسه بر روی Moment objectهای معتبر (که داخلی میلادی هستند) **
             switch (operator) {
-                case 'equals': return dateValueMoment.isSame(ruleValueMoment, 'day'); // مقایسه فقط روز (بدون ساعت)
-                case 'notEquals': return !dateValueMoment.isSame(ruleValueMoment, 'day');
-                case 'isBefore': return dateValueMoment.isBefore(ruleValueMoment, 'day'); // قبل از تاریخ باشد
-                case 'isAfter': return dateValueMoment.isAfter(ruleValueMoment, 'day'); // بعد از تاریخ باشد
-                case 'isSameOrBefore': return dateValueMoment.isSameOrBefore(ruleValueMoment, 'day'); // قبل یا مساوی باشد
-                case 'isSameOrAfter': return dateValueMoment.isSameOrAfter(ruleValueMoment, 'day'); // بعد یا مساوی باشد
-                 // می‌تونیم عملگر 'between' (بین دو تاریخ) رو هم بعداً اضافه کنیم
+                case 'equals': return contactDateMoment.isSame(ruleValueMoment, 'day'); // مقایسه فقط روز
+                case 'notEquals': return !contactDateMoment.isSame(ruleValueMoment, 'day');
+                case 'isBefore': return contactDateMoment.isBefore(ruleValueMoment, 'day');
+                case 'isAfter': return contactDateMoment.isAfter(ruleValueMoment, 'day');
+                case 'isSameOrBefore': return contactDateMoment.isSameOrBefore(ruleValueMoment, 'day');
+                case 'isSameOrAfter': return contactDateMoment.isSameOrAfter(ruleValueMoment, 'day');
                 default:
                     console.warn(`Unknown date operator: ${operator}. Rule ignored.`);
-                    return true;
+                    return true; // عملگر ناشناخته باعث حذف مخاطب نمی‌شود
             }
 
-        case 'boolean': // فرض می‌کنیم مقادیر true یا false هستند (برای چک‌باکس)
-            // مقدار قانون (ruleValue) هم باید به Boolean تبدیل شود (شاید از UI به صورت رشته 'true'/'false' بیاید)
+        case 'boolean': // منطق مقایسه Boolean قبلاً درست بود
              const ruleBoolValue = (typeof ruleValue === 'string') ? ruleValue.toLowerCase() === 'true' : Boolean(ruleValue);
-
             switch (operator) {
-                case 'equals': return Boolean(fieldValue) === ruleBoolValue; // مقایسه مقادیر Boolean
+                case 'equals': return Boolean(fieldValue) === ruleBoolValue;
                 case 'notEquals': return Boolean(fieldValue) !== ruleBoolValue;
-                // عملگرهای دیگه مثل >, < برای Boolean معنی ندارند
-                 // عملگرهای null/notNull بالا مدیریت شده‌اند
-                 return false; // عملگر نامعتبر برای Boolean
+                 case 'isNull':
+                case 'isNotNull':
+                 return false;
                 default:
                     console.warn(`Unknown boolean operator: ${operator}. Rule ignored.`);
                     return true;
@@ -127,9 +155,15 @@ function ruleMatches(fieldValue, operator, ruleValue, fieldType) {
 
         default:
             console.warn(`Unknown field type for filtering: ${fieldType}. Rule ignored.`);
-            return true; // اگر نوع فیلد ناشناخته بود، این قانون فیلتر اعمال نشود
+            return true; // نوع فیلد ناشناخته باعث حذف مخاطب نمی‌شود
     }
 }
+
+// ... بقیه محتوای فایل Contacts.js (State, Getters, Actions) در اینجا قرار می‌گیرد ...
+// مطمئن شوید که تابع ruleMatches قبل از export const useContactStore = defineStore قرار دارد
+
+
+// export const useContactStore = defineStore('contactStore', { ... });
 
 
 export const useContactStore = defineStore('contactStore', {
@@ -345,9 +379,9 @@ export const useContactStore = defineStore('contactStore', {
           switch (fieldType) {
             case 'date':
               // برای مقایسه تاریخ شمسی از moment-jalaali استفاده می‌کنیم
-              // فرض می‌کنیم تاریخ‌ها با فرمت 'jYYYY/jM/jD' ذخیره شدن
-              const dateA = moment(valueA, 'jYYYY/jM/jD');
-              const dateB = moment(valueB, 'jYYYY/jM/jD');
+              // فرض می‌کنیم تاریخ‌ها با فرمت 'jYYYY/M/D' ذخیره شدن
+              const dateA = moment(valueA, 'jYYYY/M/D');
+              const dateB = moment(valueB, 'jYYYY/M/D');
 
 
               // اگر تاریخ‌ها نامعتبر بودن، اون‌ها رو هم در نظر می‌گیریم
