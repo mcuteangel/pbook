@@ -99,7 +99,7 @@
 
 
                <ElSelect
-                   v-else-if="['select', 'boolean'].includes(selectedNewRuleFieldDefinition.type)"
+                   v-else-if="['select', 'boolean', 'gender', 'group'].includes(selectedNewRuleFieldDefinition.type)"
                    v-model="newRule.value"
                    :placeholder="`انتخاب مقدار (${selectedNewRuleFieldDefinition.label})`"
                    class="rule-control"
@@ -165,7 +165,8 @@
       </div>
     </div>
 
-    <hr class="separator" /> <div v-if="contactStore.loading" class="status-message loading">در حال بارگذاری مخاطبین...</div>
+    <hr class="separator" />
+     <div v-if="contactStore.loading" class="status-message loading">در حال بارگذاری مخاطبین...</div>
     <div v-else-if="contactStore.error" class="status-message error">{{ contactStore.error }}</div>
     <div v-else-if="paginatedContacts.length === 0" class="status-message no-results">
        هیچ مخاطبی یافت نشد.
@@ -176,38 +177,38 @@
 
     <ul v-else class="contact-list">
       <li
-        v-for="contact in paginatedContacts"
-        :key="contact.id"
-        class="contact-item"
-      >
+          v-for="contactItem in contactsPreparedForDisplay"
+    :key="contactItem.contact.id"
+    class="contact-item"
+  >
         <div class="contact-info">
           <router-link
-            :to="{ name: 'contact-detail', params: { id: contact.id } }"
+            :to="{ name: 'contact-detail', params: { id: contactItem.contact.id } }"
             class="contact-name-link"
           >
-            {{ contact.name }} {{ contact.lastName }}
+            {{ contactItem.contact.name }} {{ contactItem.contact.lastName }}
           </router-link>
 
-          <p v-if="contact.phone"><strong>تلفن:</strong> {{ contact.phone }}</p>
-          <p v-if="contact.title"><strong>سمت:</strong> {{ contact.title }}</p>
-          <p v-if="contact.gender"><strong>جنسیت:</strong> {{ displayGender(contact.gender) }}</p>
-          <p v-if="contact.group"><strong>گروه:</strong> {{ contact.group }}</p>
-          <p v-if="contact.birthDate"><strong>تاریخ تولد:</strong> {{ formatGregorianDateToShamsi(contact.birthDate) }}</p>
-           <p v-if="contact.notes" class="contact-notes"><strong>یادداشت:</strong> {{ contact.notes }}</p>
+          <p
+            v-for="fieldData in contactItem.displayData"
+            :key="fieldData.key"
+          >
+            <strong>{{ fieldData.label }}:</strong> {{ fieldData.value }}
+          </p>
 
-          <div v-if="contact.additionalPhones && contact.additionalPhones.length > 0" class="additional-info">
+          <div v-if="contactItem.contact.additionalPhones && contactItem.contact.additionalPhones.length > 0" class="additional-info">
             <strong>شماره‌های اضافی:</strong>
             <ul>
-              <li v-for="(additionalPhone, index) in contact.additionalPhones" :key="index">
+              <li v-for="(additionalPhone, index) in contactItem.contact.additionalPhones" :key="index">
                 {{ displayPhoneType(additionalPhone.type) }}: {{ additionalPhone.number }}
               </li>
             </ul>
           </div>
 
-          <div v-if="contact.addresses && contact.addresses.length > 0" class="additional-info">
+          <div v-if="contactItem.contact.addresses && contactItem.contact.addresses.length > 0" class="additional-info">
             <strong>آدرس‌ها:</strong>
             <ul>
-              <li v-for="(address, index) in contact.addresses" :key="index">
+              <li v-for="(address, index) in contactItem.contact.addresses" :key="index">
                 <strong>{{ displayAddressType(address.type) }}</strong
                 >:
                 {{ address.street ? address.street + ', ' : '' }}
@@ -219,47 +220,29 @@
               </li>
             </ul>
           </div>
+          </div>
 
-           <p v-if="contact.createdAt" class="date-info"><strong>ایجاد:</strong> {{ formatGregorianDateToShamsi(contact.createdAt) }}</p>
-           <p v-if="contact.updatedAt" class="date-info"><strong>ویرایش:</strong> {{ formatGregorianDateToShamsi(contact.updatedAt) }}</p>
+       <div class="contact-actions">
+         <button
+           class="button edit-button"
+           @click="startEditingContact(contactItem.contact)"
+           :disabled="contactStore.loading"
+         >
+           ویرایش
+         </button>
 
-           <div v-if="contact.customFields && contact.customFields.length > 0" class="additional-info">
-               <strong>فیلدهای سفارشی:</strong>
-               <ul>
-                   <li v-for="(customField, index) in contact.customFields" :key="index">
-                       <span v-if="customFieldStore.getFieldDefinitionById(customField.fieldId)">
-                            <strong>{{ customFieldStore.getFieldDefinitionById(customField.fieldId).label }}:</strong>
-                            {{ formatCustomFieldValue(customField.value, customFieldStore.getFieldDefinitionById(customField.fieldId).type, customFieldStore.getFieldDefinitionById(customField.fieldId).options) }}
-                       </span>
-                       <span v-else>
-                            <strong>فیلد ناشناس ({{ customField.fieldId }}):</strong>
-                            {{ customField.value }} </span>
-                   </li>
-               </ul>
-           </div>
-        </div>
+         <button
+           class="button delete-button"
+           @click="confirmDeleteContact(contactItem.contact.id)"
+           :disabled="contactStore.loading"
+         >
+           حذف
+         </button>
+       </div>
+     </li>
+   </ul>
 
-        <div class="contact-actions">
-          <button
-            class="button edit-button"
-            @click="startEditingContact(contact)"
-            :disabled="contactStore.loading"
-          >
-            ویرایش
-          </button>
-
-          <button
-            class="button delete-button"
-            @click="confirmDeleteContact(contact.id)"
-            :disabled="contactStore.loading"
-          >
-            حذف
-          </button>
-        </div>
-      </li>
-    </ul>
-
-     <div v-if="totalPages > 1" class="pagination-controls">
+    <div v-if="totalPages > 1" class="pagination-controls">
         <button @click="prevPage" :disabled="currentPage === 1" class="button pagination-button">قبلی</button>
         <span>صفحه {{ currentPage }} از {{ totalPages }}</span>
         <button @click="nextPage" :disabled="currentPage === totalPages" class="button pagination-button">بعدی</button>
@@ -277,281 +260,154 @@
         </div>
       </div>
 
+      <div class="total-contacts">
+            تعداد کل مخاطبین (بر اساس فیلتر فعلی): {{ totalContactsOnCurrentFilter }}
+        </div>
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { computed, ref, watch, watchEffect } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useContactStore } from '@/store/contacts';
-import { useCustomFieldStore } from '@/store/customFields'; // مطمئن شو این هم Import شده
+import { useCustomFieldStore } from '@/store/customFields';
 import { useGroupStore } from '@/store/groups';
+import { useSettingsStore } from '@/store/settings'; // <-- ایمپورت Store تنظیمات
 import { useRouter } from 'vue-router';
-// ** این خط Import رو به صورت کامل و صحیح اصلاح کن **
+import { ElButton, ElInput, ElSelect, ElOption, ElMessageBox } from 'element-plus';
+
+// Import توابع کمکی فرمت‌دهی
 import {
-  formatGregorianDateToShamsi,     // برای نمایش تاریخ‌های استاندارد در قالب
-  parseJalaaliStringToGregorianMoment, // برای پارس تاریخ شمسی ورودی فیلتر
-  formatCustomFieldValue,         // <-- این تابع قبلاً جا افتاده بود، حالا اضافه شد!
-  displayGender,                  // برای نمایش جنسیت
-  displayPhoneType,               // برای نمایش نوع تلفن
-  displayAddressType              // برای نمایش نوع آدرس
+  formatGregorianDateToShamsi,
+  parseJalaaliStringToGregorianMoment,
+  formatCustomFieldValue,
+  displayGender,
+  displayPhoneType,
+  displayAddressType
 } from '@/utils/formatters';
-import moment from 'moment-jalaali'; // برای کار با تاریخ
-import VuePersianDatetimePicker from 'vue3-persian-datetime-picker'; // کامپوننت تاریخ‌انتخاب‌کن
+import moment from 'moment-jalaali';
+import VuePersianDatetimePicker from 'vue3-persian-datetime-picker';
 
 
-// Element Plus components are auto-imported
-
-
+// گرفتن نمونه استورها
 const contactStore = useContactStore();
 const customFieldStore = useCustomFieldStore();
 const groupStore = useGroupStore();
+const settingsStore = useSettingsStore(); // <-- گرفتن نمونه settings Store
 const router = useRouter();
+
+// گرفتن state های مورد نیاز به صورت reactive از store ها
+// displayColumns از settingsStore
+const { displayColumns } = storeToRefs(settingsStore);
+// fieldDefinitions از customFieldStore (نیاز داریم برای اطلاعات فیلدهای سفارشی)
+const { fieldDefinitions } = storeToRefs(customFieldStore);
+// filteredAndSortedContacts از contactStore (برای نمایش در لیست صفحه بندی شده)
+const { filteredAndSortedContacts } = storeToRefs(contactStore);
+
+const contactsPreparedForDisplay = ref([]); // با یک آرایه خالی مقداردهی اولیه میکنیم
+
+// ** تعریف یک Map برای لیبل فیلدهای استاندارد (همانند SettingsView) **
+// این کمک میکنه که لیبل فارسی فیلدها رو داشته باشیم
+const standardFieldLabels = {
+  phone: 'تلفن ', // کلید صحیح 'primaryPhone' هست
+  group: 'گروه',
+  birthDate: 'تاریخ تولد',
+  title: 'سمت / تخصص',
+  createdAt: 'تاریخ ایجاد',
+  updatedAt: 'آخرین ویرایش',
+  'address.city': 'شهر (آدرس)',
+  'address.street': 'خیابان (آدرس)',
+  notes: 'یادداشت',
+  gender: 'جنسیت', // کلید صحیح 'gender' هست
+};
+
+// Map برای تعیین نوع فیلدهای استاندارد برای کمک به فرمت‌دهی و تصمیم نمایش
+const standardFieldTypes = {
+  phone: 'text',
+  group: 'group', // نوع خاص برای گروه
+  birthDate: 'date',
+  title: 'text',
+  createdAt: 'date',
+  updatedAt: 'date',
+  'address.city': 'addressPart', // نوع خاص برای بخش آدرس
+  'address.street': 'addressPart', // نوع خاص برای بخش آدرس
+  notes: 'textarea',
+  gender: 'gender', // نوع خاص برای جنسیت
+  // Add other standard fields and their types as needed
+};
+
+
+// watchEffect برای آماده‌سازی داده‌های نمایشی هر زمان که مخاطبین یا تعاریف فیلدهای سفارشی تغییر کنند
+
+
 
 // **متغیر Reactive برای مدیریت وضعیت نمایش بخش فیلتر پیشرفته**
 const isFilterSectionVisible = ref(false);
-
-// **تابع برای Toggle کردن وضعیت نمایش بخش فیلتر**
 const toggleFilterSection = () => {
   isFilterSectionVisible.value = !isFilterSectionVisible.value;
 };
-
-// **متغیر Reactive برای نگهداری لیست قوانین فیلتر که کاربر در UI اضافه کرده**
-// این لیست با قوانین Store فرق دارد، قوانین اینجا قبل از اعمال نهایی به Store هستند.
 const currentFilterRules = ref([]);
-
-// **متغیر Reactive برای نگهداری اطلاعات قانون فیلتر در حال ساخت در فرم**
 const newRule = ref({
     field: null,
     operator: null,
     value: null
 });
 
-// --- Watcher برای newRule.field to reset operator و value وقتی فیلد جدید انتخاب می‌شود ---
 watch(
     () => newRule.value.field,
     (newField, oldField) => {
         if (newField !== oldField) {
-            newRule.value.operator = null; // ریست کردن عملگر
-            newRule.value.value = null; // ریست کردن مقدار
+            newRule.value.operator = null;
+            newRule.value.value = null;
         }
     }
 );
 
-
-// --- Pagination State ---
-const currentPage = ref(1);
-const itemsPerPage = ref(10);
-const totalContactsOnCurrentFilter = computed(() => contactStore.filteredAndSortedContacts.length);
-const totalPages = computed(() => Math.ceil(totalContactsOnCurrentFilter.value / itemsPerPage.value));
-const paginatedContacts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value;
-  const end = start + itemsPerPage.value;
-  return contactStore.filteredAndSortedContacts.slice(start, end);
-});
-const goToPage = (page) => {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-};
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-};
-const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-};
-// Watch برای تغییرات در جستجو، مرتب‌سازی یا فیلتر و ریست کردن صفحه فعلی به 1
-watch(
-  () => [
-    contactStore.searchQuery,
-    contactStore.sortField,
-    contactStore.sortOrder,
-    contactStore.filterRules.length // با تغییر تعداد قوانین فیلتر Store هم ریست می‌شود
-  ],
-  () => {
-    currentPage.value = 1;
-  }
-);
-
-
-// --- Sorting Options ---
-const standardSortableOptions = [
-  { value: 'lastName', label: 'نام خانوادگی' },
-  { value: 'name', label: 'نام' },
-  { value: 'createdAt', label: 'تاریخ ایجاد' },
-  { value: 'group', label: 'گروه' },
-  { value: 'title', label: 'سمت/تخصص' },
-];
-const sortOptions = computed(() => {
-  const options = [...standardSortableOptions];
-  customFieldStore.sortedFieldDefinitions.forEach(field => {
-    options.push({
-      value: field.id,
-      label: `فیلد سفارشی: ${field.label}`
-    });
-  });
-  return options;
-});
-
-
-// ** --- Advanced Filter Logic UI --- **
-
-// **Computed property برای لیست فیلدهایی (استاندارد + سفارشی) که می‌توان بر اساس آنها فیلتر کرد**
 const filterableFields = computed(() => {
     const standardFields = [
         { value: 'name', label: 'نام', type: 'text' },
         { value: 'lastName', label: 'نام خانوادگی', type: 'text' },
-        { value: 'phone', label: 'تلفن اصلی', type: 'text' },
+        { value: 'phone', label: 'تلفن اصلی', type: 'text' }, // key should be 'phone' not 'primaryPhone' here for filtering
         { value: 'title', label: 'سمت/تخصص', type: 'text' },
         { value: 'notes', label: 'یادداشت/توضیحات', type: 'textarea' },
         { value: 'createdAt', label: 'تاریخ ایجاد', type: 'date' },
         { value: 'updatedAt', label: 'تاریخ ویرایش', type: 'date' },
         { value: 'birthDate', label: 'تاریخ تولد', type: 'date' },
-        { value: 'gender', label: 'جنسیت', type: 'select' },
-        { value: 'group', label: 'گروه', type: 'select' },
+        { value: 'gender', label: 'جنسیت', type: 'select' }, // type select for filtering UI
+        { value: 'group', label: 'گروه', type: 'select' },   // type select for filtering UI
     ];
 
-    const customFields = customFieldStore.fieldDefinitions.map(field => ({
-        value: field.id,
+    const customFields = fieldDefinitions.value.map(field => ({
+        value: field.id, // استفاده از id فیلد سفارشی برای فیلتر
         label: `فیلد سفارشی: ${field.label}`,
-        type: field.type
+        type: field.type // نوع فیلد سفارشی
     }));
 
     return [...standardFields, ...customFields];
 });
 
-// Computed property برای پیدا کردن تعریف (شامل نوع) فیلدی که در حال حاضر در newRule انتخاب شده
+// Adjusted logic to find definition for both standard and custom fields for filtering UI
 const selectedNewRuleFieldDefinition = computed(() => {
     if (!newRule.value.field) return null;
-    return filterableFields.value.find(f => f.value === newRule.value.field);
+    // پیدا کردن تعریف فیلد در لیست filterableFields
+     const field = filterableFields.value.find(f => f.value === newRule.value.field);
+
+     // اگر فیلد پیدا شد و یک فیلد سفارشی بود (id دارد)، تعریف کامل آن را از fieldDefinitions بگیریم
+     if (field?.value && !standardFieldLabels[field.value]) { // اگر کلید در standardFieldLabels نبود، احتمالا سفارشی است
+          const customFieldId = field.value; // value برای فیلدهای سفارشی همان id است
+          return fieldDefinitions.value.find(def => def.id === customFieldId); // برگرداندن تعریف کامل فیلد سفارشی
+     }
+    // در غیر این صورت، همان شیء استاندارد را برگردانیم (شامل value, label, type)
+    return field;
 });
 
 
-// **Computed property برای لیست عملگرهای موجود بر اساس نوع فیلد انتخاب شده**
 const availableOperators = computed(() => {
-    const type = selectedNewRuleFieldDefinition.value?.type;
-    const operators = {
-        text: [
-            { value: 'equals', label: 'مساوی با' },
-            { value: 'notEquals', label: 'مساوی نباشد با' },
-            { value: 'contains', label: 'شامل باشد' },
-            { value: 'notContains', label: 'شامل نباشد' },
-            { value: 'startsWith', label: 'شروع شود با' },
-            { value: 'endsWith', label: 'پایان یابد با' },
-        ],
-        textarea: [ // همانند text
-            { value: 'equals', label: 'مساوی با' },
-            { value: 'notEquals', label: 'مساوی نباشد با' },
-            { value: 'contains', label: 'شامل باشد' },
-            { value: 'notContains', label: 'شامل نباشد' },
-        ],
-        number: [
-            { value: 'equals', label: 'مساوی با' },
-            { value: 'notEquals', label: 'مساوی نباشد با' },
-            { value: 'greaterThan', label: 'بزرگتر از' },
-            { value: 'lessThan', label: 'کوچکتر از' },
-            { value: 'greaterThanOrEqual', label: 'بزرگتر یا مساوی' },
-            { value: 'lessThanOrEqual', label: 'کوچکتر یا مساوی' },
-        ],
-        date: [
-             { value: 'equals', label: 'مساوی با تاریخ' }, // مقایسه فقط روز
-             { value: 'notEquals', label: 'مساوی نباشد با تاریخ' },
-             { value: 'isBefore', label: 'قبل از تاریخ' },
-             { value: 'isAfter', label: 'بعد از تاریخ' },
-             { value: 'isSameOrBefore', label: 'مساوی یا قبل از تاریخ' },
-             { value: 'isSameOrAfter', label: 'مساوی یا بعد از تاریخ' },
-        ],
-        boolean: [ // برای چک‌باکس
-            { value: 'equals', label: 'مساوی با (بله/خیر)' },
-            { value: 'notEquals', label: 'مساوی نباشد با (بله/خیر)' },
-        ],
-        select: [ // برای Dropdownها / گروه‌ها / جنسیت
-            { value: 'equals', label: 'مساوی با' },
-            { value: 'notEquals', label: 'مساوی نباشد با' },
-        ]
-    };
-
-    const commonOperators = [
-        { value: 'isNull', label: 'مقدار نداشته باشد' },
-        { value: 'isNotNull', label: 'مقدار داشته باشد' },
-    ];
-
-    const typeOperators = operators[type] || [];
-    return [...typeOperators, ...commonOperators];
-});
-
-
-// ** Computed property برای تولید گزینه‌های Dropdown مقدار فیلتر (برای انواع Select و Boolean) **
-const valueSelectOptions = computed(() => {
     const fieldDef = selectedNewRuleFieldDefinition.value;
-    if (!fieldDef) return [];
-
-    const options = [];
-
-    if (fieldDef.type === 'select') {
-        if (fieldDef.value === 'gender') {
-            options.push(
-                { label: 'مرد', value: 'male' },
-                { label: 'زن', value: 'female' },
-                { label: 'دیگر', value: 'other' }
-            );
-        } else if (fieldDef.value === 'group') {
-             groupStore.groups.forEach(group => {
-                 options.push({ label: group.name, value: group.name });
-             });
-             // استفاده از رشته خالی '' به جای null برای حل اخطار Element Plus
-             options.unshift({ label: 'بدون گروه', value: '' });
-         }
-        else if (fieldDef.value.startsWith('customField_')) {
-             const customFieldDefinition = customFieldStore.getFieldDefinitionById(fieldDef.value);
-             if (customFieldDefinition && customFieldDefinition.options) {
-                 customFieldDefinition.options.forEach(opt => {
-                      if (typeof opt === 'string') {
-                          options.push({ label: opt, value: opt });
-                      } else {
-                          options.push({ label: opt.label || opt.value, value: opt.value });
-                      }
-                 });
-             }
-         }
-
-    } else if (fieldDef.type === 'boolean') {
-        options.push(
-            { label: 'بله', value: true },
-            { label: 'خیر', value: false }
-        );
-    }
-
-    return options;
-});
-
-
-const getRuleOperatorLabel = (rule) => {
-    // اگر قانون یا عملگرش undefined/null بود، مقدار خام یا رشته خالی برگردون
-    if (!rule || rule.operator === null || rule.operator === undefined) {
-        return String(rule?.operator || '');
-    }
-
-    // پیدا کردن تعریف فیلد برای این قانون، با استفاده از لیست کلی فیلدهای قابل فیلتر
-    const fieldDef = filterableFields.value.find(f => f.value === rule.field);
-
-    // اگر تعریف فیلد پیدا نشد، یا نوع نداشت، مقدار خام عملگر رو برگردون
-    if (!fieldDef || !fieldDef.type) {
-        console.warn(`Could not find field definition or type for rule field: ${rule.field}`);
-        return String(rule.operator); // Fallback به مقدار خام عملگر
-    }
-
-    const type = fieldDef.type;
-
-    // ** تعریف همه عملگرهای ممکن به صورت ثابت داخل این تابع یا دسترسی به یک منبع ثابت **
-    // (این ساختار مشابه availableOperators است، اما وابسته به newRule.field نیست)
-     const allPossibleOperators = {
+    const type = fieldDef?.type;
+    // ... بقیه منطق availableOperators (کد قبلی) ...
+     const operators = {
         text: [
             { value: 'equals', label: 'مساوی با' }, { value: 'notEquals', label: 'مساوی نباشد با' },
             { value: 'contains', label: 'شامل باشد' }, { value: 'notContains', label: 'شامل نباشد' },
@@ -567,14 +423,17 @@ const getRuleOperatorLabel = (rule) => {
             { value: 'greaterThanOrEqual', label: 'بزرگتر یا مساوی' }, { value: 'lessThanOrEqual', label: 'کوچکتر یا مساوی' },
         ],
         date: [
-             { value: 'equals', label: 'مساوی با تاریخ' }, { value: 'notEquals', label: 'مساوی نباشد با تاریخ' },
-             { value: 'isBefore', label: 'قبل از تاریخ' }, { value: 'isAfter', label: 'بعد از تاریخ' },
-             { value: 'isSameOrBefore', label: 'مساوی یا قبل از تاریخ' }, { value: 'isSameOrAfter', label: 'مساوی یا بعد از تاریخ' },
+             { value: 'equals', label: 'مساوی با تاریخ' },
+             { value: 'notEquals', label: 'مساوی نباشد با تاریخ' },
+             { value: 'isBefore', label: 'قبل از تاریخ' },
+             { value: 'isAfter', label: 'بعد از تاریخ' },
+             { value: 'isSameOrBefore', label: 'مساوی یا قبل از تاریخ' },
+             { value: 'isSameOrAfter', label: 'مساوی یا بعد از تاریخ' },
         ],
-        boolean: [ // برای چک‌باکس
+        boolean: [
             { value: 'equals', label: 'مساوی با (بله/خیر)' }, { value: 'notEquals', label: 'مساوی نباشد با (بله/خیر)' },
         ],
-        select: [ // برای Dropdownها / گروه‌ها / جنسیت
+        select: [
             { value: 'equals', label: 'مساوی با' }, { value: 'notEquals', label: 'مساوی نباشد با' },
         ]
     };
@@ -583,47 +442,158 @@ const getRuleOperatorLabel = (rule) => {
         { value: 'isNotNull', label: 'مقدار داشته باشد' },
      ];
 
-    // گرفتن لیست عملگرهای مربوط به نوع فیلد و ترکیب با عملگرهای مشترک
-    const typeOperators = allPossibleOperators[type] || [];
-    const combinedOperators = [...typeOperators, ...commonOperators];
+    const typeOperators = operators[type] || [];
+    return [...typeOperators, ...commonOperators];
+});
 
-    // پیدا کردن شیء عملگر مربوطه بر اساس مقدار rule.operator
+
+const valueSelectOptions = computed(() => {
+    const fieldDef = selectedNewRuleFieldDefinition.value;
+    if (!fieldDef) return [];
+
+    const options = [];
+
+    if (fieldDef.type === 'select' || fieldDef.type === 'boolean' || fieldDef.type === 'gender' || fieldDef.type === 'group') { // اضافه کردن انواع خاص که Select دارند
+        if (fieldDef.value === 'gender' || fieldDef.type === 'gender') { // هندل کردن جنسیت
+            options.push(
+                { label: 'مرد', value: 'male' },
+                { label: 'زن', value: 'female' },
+                { label: 'دیگر', value: 'other' }
+            );
+        } else if (fieldDef.value === 'group' || fieldDef.type === 'group') { // هندل کردن گروه
+             groupStore.groups.forEach(group => {
+                 options.push({ label: group.name, value: group.name });
+             });
+             options.unshift({ label: 'بدون گروه', value: '' });
+         }
+        else if (fieldDef.id && fieldDef.type === 'select') { // فیلد سفارشی از نوع Select
+             const customFieldDefinition = fieldDefinitions.value.find(def => def.id === fieldDef.id); // پیدا کردن تعریف کامل
+             if (customFieldDefinition && customFieldDefinition.options) {
+                 customFieldDefinition.options.forEach(opt => {
+                      if (typeof opt === 'string') {
+                          options.push({ label: opt, value: opt });
+                      } else {
+                          options.push({ label: opt.label || opt.value, value: opt.value });
+                      }
+                 });
+             }
+         } else if (fieldDef.type === 'boolean') { // هندل کردن Boolean
+            options.push(
+                { label: 'بله', value: true },
+                { label: 'خیر', value: false }
+            );
+        }
+
+    }
+
+    return options;
+});
+
+
+const getRuleOperatorLabel = (rule) => {
+    if (!rule || rule.operator === null || rule.operator === undefined) {
+        return String(rule?.operator || '');
+    }
+
+    const fieldDef = filterableFields.value.find(f => f.value === rule.field);
+    const type = fieldDef?.type;
+
+     const allPossibleOperators = {
+        text: [
+            { value: 'equals', label: 'مساوی با' }, { value: 'notEquals', label: 'مساوی نباشد با' },
+            { value: 'contains', label: 'شامل باشد' }, { value: 'notContains', label: 'شامل نباشد' },
+            { value: 'startsWith', label: 'شروع شود با' }, { value: 'endsWith', label: 'پایان یابد با' },
+        ],
+        textarea: [
+            { value: 'equals', label: 'مساوی با' }, { value: 'notEquals', label: 'مساوی نباشد با' },
+            { value: 'contains', label: 'شامل باشد' }, { value: 'notContains', label: 'شامل نباشد' },
+        ],
+        number: [
+            { value: 'equals', label: 'مساوی با' }, { value: 'notEquals', label: 'مساوی نباشد با' },
+            { value: 'greaterThan', label: 'بزرگتر از' }, { value: 'lessThan', label: 'کوچکتر از' },
+            { value: 'greaterThanOrEqual', label: 'بزرگتر یا مساوی' }, { value: 'lessThanOrEqual', label: 'کوچکتر یا مساوی' },
+        ],
+        date: [
+             { value: 'equals', label: 'مساوی با تاریخ' },
+             { value: 'notEquals', label: 'مساوی نباشد با تاریخ' },
+             { value: 'isBefore', label: 'قبل از تاریخ' },
+             { value: 'isAfter', label: 'بعد از تاریخ' },
+             { value: 'isSameOrBefore', label: 'مساوی یا قبل از تاریخ' },
+             { value: 'isSameOrAfter', label: 'مساوی یا بعد از تاریخ' },
+        ],
+        boolean: [
+            { value: 'equals', label: 'مساوی با (بله/خیر)' }, { value: 'notEquals', label: 'مساوی نباشد با (بله/خیر)' },
+        ],
+        select: [
+            { value: 'equals', label: 'مساوی با' }, { value: 'notEquals', label: 'مساوی نباشد با' },
+        ],
+         gender: [ // عملگرهای جنسیت
+            { value: 'equals', label: 'مساوی با' }, { value: 'notEquals', label: 'مساوی نباشد با' },
+             { value: 'isNull', label: 'مقدار نداشته باشد' }, { value: 'isNotNull', label: 'مقدار داشته باشد' },
+         ],
+         group: [ // عملگرهای گروه
+            { value: 'equals', label: 'مساوی با' }, { value: 'notEquals', label: 'مساوی نباشد با' },
+             { value: 'isNull', label: 'مقدار نداشته باشد' }, { value: 'isNotNull', label: 'مقدار داشته باشد' },
+         ],
+         addressPart: [ // عملگرهای بخش آدرس
+             { value: 'equals', label: 'مساوی با' }, { value: 'notEquals', label: 'مساوی نباشد با' },
+             { value: 'contains', label: 'شامل باشد' }, { value: 'notContains', label: 'شامل نباشد' },
+              { value: 'isNull', label: 'مقدار نداشته باشد' }, { value: 'isNotNull', label: 'مقدار داشته باشد' },
+         ],
+
+    };
+     const commonOperators = [ // عملگرهای مشترک که ممکن است قبلا تعریف شده باشند
+        { value: 'isNull', label: 'مقدار نداشته باشد' },
+        { value: 'isNotNull', label: 'مقدار داشته باشد' },
+     ];
+
+    // ترکیب عملگرها بر اساس نوع
+    // ابتدا عملگرهای خاص نوع، سپس عملگرهای مشترک (اگر قبلا اضافه نشده باشند)
+    const typeOperators = allPossibleOperators[type] || [];
+     const combinedOperators = [...typeOperators];
+     commonOperators.forEach(commonOp => {
+         if (!combinedOperators.find(op => op.value === commonOp.value)) {
+             combinedOperators.push(commonOp);
+         }
+     });
+
+
     const operatorObj = combinedOperators.find(op => op.value === rule.operator);
 
-    // برگرداندن label عملگر اگر پیدا شد، در غیر این صورت مقدار خام عملگر (که نباید اتفاق بیفته اگر عملگر معتبر باشه)
     return operatorObj?.label || String(rule.operator);
 };
 
-
-// ** Helper function برای فرمت دهی مقدار قانون در لیست نمایش قوانین **
 const formatRuleValue = (rule) => {
-     if (rule.value === null || rule.value === undefined || rule.value === '') return '';
+     if (rule.value === null || rule.value === undefined || rule.value === '') {
+          // اگر مقدار null/undefined/'' بود و عملگر null/notNull نبود، رشته خالی برگردان
+          if (rule.operator !== 'isNull' && rule.operator !== 'isNotNull') return '';
+     }
+
 
      const fieldDef = filterableFields.value.find(f => f.value === rule.field);
-     const type = fieldDef?.type || 'text';
+     const type = fieldDef?.type || 'text'; // استفاده از نوع از filterableFields
 
      switch (type) {
          case 'date':
-             // ** مقدار ذخیره شده برای تاریخ حالا رشته میلادی 'YYYY-MM-DD' است **
-             // از فرمتر جدید که میلادی می‌گیرد و شمسی نمایش می‌دهد استفاده می‌کنیم
-             return formatGregorianDateToShamsi(rule.value); // ارسال رشته میلادی ذخیره شده
+             return formatGregorianDateToShamsi(rule.value); // مقدار ذخیره شده میلادی، نمایش شمسی
          case 'boolean':
              return rule.value ? 'بله' : 'خیر';
-         case 'select':
-              if (rule.field === 'gender') {
-                  return displayGender(rule.value);
-              } else if (rule.field === 'group') {
-                  return rule.value; // نام گروه ذخیره شده نمایش داده می‌شود
-              } else { // Select سفارشی
-                  const customFieldDef = customFieldStore.getFieldDefinitionById(rule.field);
-                   const option = customFieldDef?.options?.find(opt =>
-                        (typeof opt === 'string' && opt === rule.value) ||
-                        (typeof opt === 'object' && opt.value === rule.value)
-                   );
-                   return option ? (option.label || option.value) : rule.value;
+         case 'gender': // هندل کردن جنسیت
+            return displayGender(rule.value);
+         case 'group': // هندل کردن گروه
+             return rule.value === '' ? 'بدون گروه' : rule.value;
+         case 'select': // فیلد سفارشی Select
+              const customSelectDef = fieldDefinitions.value.find(def => def.id === rule.field); // پیدا کردن تعریف با rule.field (که id است)
+              if (customSelectDef) {
+                 const option = customSelectDef.options?.find(opt =>
+                      (typeof opt === 'string' && opt === rule.value) ||
+                      (typeof opt === 'object' && opt.value === rule.value)
+                 );
+                 return option ? (option.label || option.value) : rule.value;
               }
+             return String(rule.value); // Fallback
           case 'number':
-              return Number(rule.value);
+              return Number(rule.value); // نمایش عدد به صورت عدد
          case 'text':
          case 'textarea':
          default:
@@ -632,28 +602,26 @@ const formatRuleValue = (rule) => {
 };
 
 
-// **متدهای مدیریت قوانین فیلتر**
 const addNewRule = () => {
     console.log('Attempting to add new rule:', newRule.value);
-
     const rule = newRule.value;
-    const fieldDef = selectedNewRuleFieldDefinition.value;
+    const fieldDef = selectedNewRuleFieldDefinition.value; // استفاده از selectedNewRuleFieldDefinition
 
     // 1. اعتبارسنجی پایه
     if (!rule.field || !rule.operator) {
         alert('لطفاً فیلد و عملگر را انتخاب کنید.');
         return;
     }
-
     const requiresValue = rule.operator !== 'isNull' && rule.operator !== 'isNotNull';
-
     if (requiresValue && (rule.value === null || rule.value === '')) {
+         // اگر مقدار نیاز است و مقدار واقعاً خالی/null/undefined است
          alert('لطفاً مقدار فیلتر را وارد کنید.');
          return;
     }
 
-    // ** 1b. اعتبارسنجی و تبدیل نوع مقدار برای ذخیره‌سازی (میلادی برای تاریخ) **
-    let valueToStore = rule.value; // مقدار پیش‌فرض برای ذخیره‌سازی
+
+    // 1b. اعتبارسنجی و تبدیل نوع مقدار برای ذخیره‌سازی
+    let valueToStore = rule.value;
 
     if (requiresValue && fieldDef) {
         switch (fieldDef.type) {
@@ -665,43 +633,42 @@ const addNewRule = () => {
                 }
                 break;
             case 'date':
-                 // مقدار از Date Picker شمسی یک رشته شمسی است (مثلاً '1404/2/25').
-                 // ** باید این رشته شمسی را به Moment object تبدیل کرده و سپس به فرمت میلادی استاندارد ('YYYY-MM-DD') برای ذخیره‌سازی در قانون فیلتر تبدیل کنیم **
                  const jalaaliMoment = parseJalaaliStringToGregorianMoment(rule.value);
-
                  if (!jalaaliMoment || !jalaaliMoment.isValid()) {
                       alert('تاریخ شمسی انتخاب شده نامعتبر است.');
                       return;
                  }
-                 // ** ذخیره کردن تاریخ به فرمت رشته میلادی استاندارد ISO 8601 **
-                 valueToStore = jalaaliMoment.format('YYYY-MM-DD');
+                 valueToStore = jalaaliMoment.format('YYYY-MM-DD'); // ذخیره میلادی
                  console.log('Storing Gregorian date for filter rule:', valueToStore);
-
-
                 break;
             case 'boolean':
-                valueToStore = Boolean(rule.value);
+                 // مقدار بولین از UI (true/false) می‌آید
+                valueToStore = rule.value;
                 break;
              case 'select':
-                 valueToStore = rule.value; // مقدار از Dropdown می‌آید (رشته نام گروه یا مقدار گزینه سفارشی)
+             case 'gender':
+             case 'group':
+                 // مقدار این‌ها از Dropdown می‌آید (رشته یا '' برای گروه)
+                 valueToStore = rule.value;
                  break;
             case 'text':
             case 'textarea':
+            default:
                 valueToStore = String(rule.value);
                 break;
         }
     }
 
-     // TODO: چک کنیم که آیا همین قانون دقیقاً قبلاً اضافه شده است؟
 
-    // 2. اضافه کردن قانون معتبر (با مقدار تبدیل شده - میلادی برای تاریخ) به آرایه currentFilterRules
+     // TODO: چک کنیم که آیا همین قانون دقیقاً قبلاً اضافه شده است؟ (نیاز به تابع کمکی مقایسه قوانین)
+
+    // 2. اضافه کردن قانون معتبر (با مقدار تبدیل شده) به آرایه currentFilterRules
     currentFilterRules.value.push({
          field: rule.field,
          operator: rule.operator,
-         value: valueToStore // ذخیره کردن مقدار تبدیل شده (رشته میلادی برای تاریخ)
+         value: valueToStore // استفاده از مقدار تبدیل شده
     });
     console.log('Rule added to currentFilterRules:', currentFilterRules.value);
-
 
     // 3. ریست کردن فرم newRule
     newRule.value = {
@@ -713,10 +680,12 @@ const addNewRule = () => {
     // 4. (اختیاری) پیام موفقیت
 };
 
+
 const removeRule = (index) => {
-    console.log('Attempting to remove rule at index:', index);
+     console.log('Attempting to remove rule at index:', index);
      if (index >= 0 && index < currentFilterRules.value.length) {
         currentFilterRules.value.splice(index, 1);
+        // پس از حذف، فیلترها را مجدداً اعمال می‌کنیم
         applyFilters();
      } else {
          console.warn('Invalid index for removing rule:', index);
@@ -725,6 +694,7 @@ const removeRule = (index) => {
 
 const applyFilters = () => {
      console.log('Applying filters:', currentFilterRules.value);
+    // اعمال قوانین ذخیره شده در currentFilterRules.value به Store
     contactStore.setFilterRules(currentFilterRules.value);
     console.log('Filters applied to store.');
 };
@@ -732,15 +702,268 @@ const applyFilters = () => {
 const clearFilters = () => {
     console.log('Clearing all filters');
     currentFilterRules.value = [];
-    contactStore.setFilterRules([]);
+    contactStore.setFilterRules([]); // پاک کردن قوانین فیلتر در Store
     console.log('Filters cleared in store.');
 };
 
 
-// --- Contact Actions ---
-const goToContactDetail = (id) => {
-    router.push({ name: 'contact-detail', params: { id } });
+// --- Pagination State (کدهای قبلی شما) ---
+const currentPage = ref(1);
+const itemsPerPage = ref(10); // مثلاً 10 آیتم در هر صفحه
+const totalContactsOnCurrentFilter = computed(() => filteredAndSortedContacts.value.length); // استفاده از filteredAndSortedContacts که از StoreToRefs گرفته شده
+const totalPages = computed(() => Math.ceil(totalContactsOnCurrentFilter.value / itemsPerPage.value));
+const paginatedContacts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return filteredAndSortedContacts.value.slice(start, end); // استفاده از filteredAndSortedContacts
+});
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // اسکرول به بالا هنگام تغییر صفحه
+  }
 };
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+     window.scrollTo({ top: 0, behavior: 'smooth' }); // اسکرول به بالا هنگام تغییر صفحه
+  }
+};
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+     window.scrollTo({ top: 0, behavior: 'smooth' }); // اسکرول به بالا هنگام تغییر صفحه
+  }
+};
+// Watch برای تغییرات در جستجو، مرتب‌سازی یا فیلتر و ریست کردن صفحه فعلی به 1
+watch(
+  () => [
+    contactStore.searchQuery,
+    contactStore.sortField,
+    contactStore.sortOrder,
+    // تغییر تعداد قوانین فیلتر در Store باعث ریست صفحه می‌شود
+    // حالا که setFilterRules قوانین currentFilterRules.value را در Store کپی می‌کند،
+    // باید به تغییرات خود currentFilterRules.value در UI هم واکنش نشان دهیم
+    currentFilterRules.value.length
+  ],
+  () => {
+    currentPage.value = 1;
+  }
+);
+
+watchEffect(() => {
+  // به صورت صریح به وابستگی‌ها دسترسی پیدا میکنیم
+  // const contacts = paginatedContacts.value; // الان paginatedContacts اینجا تعریف شده
+  // ... بقیه کد watchEffect ...
+
+   // دسترسی به پرچم‌های لودینگ Store ها (مطمئن شو که اینها در Store ها اضافه شدن)
+   const contactsLoading = contactStore.loading;
+   const customFieldsLoading = customFieldStore.loading;
+   const groupsLoading = groupStore.loading;
+
+    const contacts = paginatedContacts.value; // اینجا بهش دسترسی پیدا میکنیم
+
+  console.log('[watchEffect - contactsPreparedForDisplay] شروع محاسبه مجدد...');
+  console.log('[watchEffect - contactsPreparedForDisplay] وضعیت لودینگ Store ها: مخاطبین=', contactsLoading, ', فیلدهای سفارشی=', customFieldsLoading, ', گروه‌ها=', groupsLoading);
+  console.log('[watchEffect - contactsPreparedForDisplay] تعداد مخاطبین:', contacts ? contacts.length : 0);
+  console.log('[watchEffect - contactsPreparedForDisplay] تعداد تعاریف فیلد سفارشی:', customFieldStore.fieldDefinitions ? customFieldStore.fieldDefinitions.length : 0); // از customFieldStore مستقیما استفاده کن
+
+  // اگر در حال لودینگ هستیم یا داده‌های اولیه (مخاطبین و تعاریف فیلد سفارشی) لود نشده‌اند، منتظر می‌مانیم
+  if (contactsLoading || customFieldsLoading || groupsLoading || !contacts || customFieldStore.fieldDefinitions.length === 0) { // چک طول فیلد سفارشی
+      console.log('[watchEffect - contactsPreparedForDisplay] داده‌ها هنوز در حال بارگذاری هستند یا کامل نیستند. watchEffect منتظر می‌ماند.');
+      contactsPreparedForDisplay.value = []; // آرایه نمایش رو خالی نگه دار تا داده‌ها کامل شن
+      return; // از watchEffect خارج شو
+  }
+
+
+  console.log('[watchEffect - contactsPreparedForDisplay] تمام وابستگی‌های لازم لود شده‌اند. ادامه آماده‌سازی داده‌ها...');
+  // ... بقیه منطق آماده‌سازی داده‌ها (map روی contacts و ساخت displayData) ...
+
+  const preparedData = contacts.map(contact => {
+    const displayData = []; // آرایه برای نگهداری داده‌های نمایشی *این مخاطب*
+
+    console.log(`[watchEffect - contactsPreparedForDisplay] >>> شروع پردازش مخاطب با ID: ${contact.id}`);
+    if (contact.customFields) {
+      console.log(`[watchEffect - contactsPreparedForDisplay]     محتوای اولیه contact.customFields برای مخاطب ${contact.id}:`, JSON.parse(JSON.stringify(contact.customFields)));
+    } else {
+      console.log(`[watchEffect - contactsPreparedForDisplay]     مخاطب ${contact.id} پراپرتی contact.customFields را ندارد یا null است.`);
+    }
+
+
+    // از settingsStore.displayColumns و customFieldStore.fieldDefinitions مستقیما استفاده کن
+    settingsStore.displayColumns.forEach(columnKey => {
+      // نام و نام خانوادگی جداگانه نمایش داده می‌شوند
+      if (columnKey === 'name' || columnKey === 'lastName') {
+        return;
+      }
+
+      let label = standardFieldLabels[columnKey] || 'فیلد ناشناس';
+      let rawValue = undefined;
+      let fieldType = standardFieldTypes[columnKey] || 'text'; // نوع پیش‌فرض
+      let currentFieldDefForFormatter = null; // برای پاس دادن options به formatCustomFieldValue
+
+      // ۱. پیدا کردن مقدار خام (rawValue) و نوع دقیق (fieldType)
+      if (standardFieldLabels[columnKey]) { // اگر فیلد استاندارد بود
+        rawValue = contact[columnKey];
+        // مدیریت خاص برای بخش‌های آدرس
+        if (columnKey.startsWith('address.')) {
+          const addressPartKey = columnKey.split('.')[1];
+          if (Array.isArray(contact.addresses) && contact.addresses.length > 0) {
+            rawValue = contact.addresses[0][addressPartKey]; // فرض بر اولین آدرس
+          } else {
+            rawValue = undefined;
+          }
+        }
+         console.log(`[watchEffect - contactsPreparedForDisplay]     فیلد استاندارد: ${columnKey}, مقدار خام:`, rawValue);
+
+
+      } else if (columnKey.startsWith('customFieldDef_')) { // اگر فیلد سفارشی بود
+        const fieldIdString = columnKey.split('_')[1];
+        console.log(`[watchEffect - contactsPreparedForDisplay]     پردازش فیلد سفارشی با columnKey: ${columnKey}, استخراج شده fieldIdString: ${fieldIdString}`);
+
+
+        // اینجا از customFieldStore.fieldDefinitions استفاده می‌کنیم
+        // این شرط دیگه با شرط اصلی بالا پوشش داده میشه ولی برای اطمینان میتونه اینجا هم بمونه
+        if (!customFieldStore.fieldDefinitions || customFieldStore.fieldDefinitions.length === 0) {
+           console.warn(`[watchEffect - contactsPreparedForDisplay] (داخل حلقه) برای ${columnKey}: تعاریف فیلدهای سفارشی (fieldDefinitionsValue) خالی یا لود نشده. از این ستون صرف‌نظر می‌شود.`);
+          return; // از ادامه این تکرار forEach صرف‌نظر کن
+        }
+
+        const fieldId = Number(fieldIdString);
+        if (isNaN(fieldId)) {
+          console.warn(`[watchEffect - contactsPreparedForDisplay]     خطا: ID فیلد سفارشی نامعتبر در displayColumns: '${fieldIdString}' برای کلید ${columnKey}.`);
+          return;
+        }
+
+        const fieldDef = customFieldStore.fieldDefinitions.find(def => def.id === fieldId);
+        currentFieldDefForFormatter = fieldDef; // برای استفاده در فرمت‌دهنده
+
+        if (!fieldDef) {
+          console.warn(`[watchEffect - contactsPreparedForDisplay]     هشدار: تعریف فیلد سفارشی با ID ${fieldId} (از کلید ${columnKey}) برای نمایش پیدا نشد.`);
+          return;
+        }
+
+        label = fieldDef.label;
+        fieldType = fieldDef.type;
+
+         console.log(`[watchEffect - contactsPreparedForDisplay]     برای مخاطب ID ${contact.id}، جستجو برای فیلد سفارشی ID ${fieldId} ('${label}').`);
+        console.log(`[watchEffect - contactsPreparedForDisplay]     محتوای contact.customFields برای این مخاطب:`, contact.customFields ? JSON.parse(JSON.stringify(contact.customFields)) : 'contact.customFields تعریف نشده/null است');
+
+
+        const customFieldData = contact.customFields ? contact.customFields.find(cf => cf.fieldId === fieldId) : null;
+        console.log(`[watchEffect - contactsPreparedForDisplay]     آبجکت customFieldData پیدا شده:`, customFieldData ? JSON.parse(JSON.stringify(customFieldData)) : 'پیدا نشد');
+
+
+        rawValue = customFieldData ? customFieldData.value : undefined;
+         console.log(`[watchEffect - contactsPreparedForDisplay]     مقدار خام (rawValue) برای فیلد '${label}':`, rawValue);
+
+
+      } else {
+        console.warn(`[watchEffect - contactsPreparedForDisplay]     هشدار: کلید ستون ناشناس برای نمایش: ${columnKey}`);
+        return;
+      }
+
+      let formattedValue = '';
+      let shouldDisplay = false;
+
+      // ۲. فرمت‌دهی مقدار و تصمیم برای نمایش
+      switch (fieldType) {
+        case 'date':
+          formattedValue = rawValue ? formatGregorianDateToShamsi(rawValue) : '';
+          shouldDisplay = formattedValue !== '';
+          break;
+        case 'gender':
+          formattedValue = displayGender(rawValue);
+          shouldDisplay = formattedValue !== '';
+          break;
+       case 'group':
+          formattedValue = (rawValue === '' || rawValue === null || rawValue === undefined) ? 'بدون گروه' : String(rawValue);
+          shouldDisplay = true; // گروه همیشه نمایش داده شود اگر انتخاب شده
+          break;
+        case 'addressPart':
+          formattedValue = rawValue != null ? String(rawValue) : '';
+          shouldDisplay = formattedValue.trim() !== '';
+          break;
+        case 'boolean':
+          formattedValue = formatCustomFieldValue(rawValue, 'boolean');
+          // shouldDisplay باید برای true و false نمایش داده شود
+          shouldDisplay = rawValue === true || rawValue === false;
+          break;
+        case 'number':
+          shouldDisplay = typeof rawValue === 'number' && !isNaN(rawValue);
+          formattedValue = shouldDisplay ? String(rawValue) : '';
+          break;
+        case 'select':
+          // پاس دادن options از fieldDef مربوط به این فیلد سفارشی
+          // اطمینان حاصل کنید که currentFieldDefForFormatter معتبر است قبل از دسترسی به options
+          formattedValue = formatCustomFieldValue(rawValue, 'select', currentFieldDefForFormatter?.options);
+          // باید نمایش داده شود اگر مقدار اولیه (rawValue) وجود داشته
+           shouldDisplay = rawValue !== undefined && rawValue !== null && String(rawValue).trim() !== '';
+
+          break;
+        case 'text':
+        case 'textarea':
+        default:
+          formattedValue = rawValue != null ? String(rawValue) : '';
+          shouldDisplay = formattedValue.trim() !== '';
+          break;
+      }
+
+      console.log(`[watchEffect - contactsPreparedForDisplay]     برای فیلد '${label}' (کلید: ${columnKey}, نوع: ${fieldType}): مقدار فرمت‌شده: '${formattedValue}', باید نمایش داده شود: ${shouldDisplay}`);
+
+
+      // ۳. اگر باید نمایش داده شود، به آرایه displayData اضافه کن
+      if (shouldDisplay) {
+        displayData.push({
+          label: label,
+          value: formattedValue,
+          key: columnKey, // استفاده از columnKey به عنوان key منحصر به فرد
+        });
+      }
+    }); // پایان forEach برای ستون‌ها
+
+    console.log(`[watchEffect - contactsPreparedForDisplay] <<< پایان پردازش مخاطب ID ${contact.id}. آرایه displayData نهایی برای این مخاطب:`, JSON.parse(JSON.stringify(displayData)));
+
+
+    return { // آبجکت نهایی برای این آیتم در لیست map شده
+      contact: contact,       // خود آبجکت اصلی مخاطب
+      displayData: displayData // آرایه داده‌های آماده نمایش برای این مخاطب
+    };
+  }); // پایان map روی contacts
+
+  // نتیجه نهایی را در متغیر واکنشی ذخیره کنید
+  contactsPreparedForDisplay.value = preparedData;
+  console.log('[watchEffect - contactsPreparedForDisplay] آماده‌سازی داده‌ها به پایان رسید.');
+});
+
+// --- Sorting Options (کدهای قبلی شما) ---
+const standardSortableOptions = [
+  { value: 'lastName', label: 'نام خانوادگی' },
+  { value: 'name', label: 'نام' },
+  { value: 'phone', label: 'تلفن اصلی' },
+  { value: 'createdAt', label: 'تاریخ ایجاد' },
+  { value: 'group', label: 'گروه' },
+  { value: 'title', label: 'سمت/تخصص' },
+   { value: 'birthDate', label: 'تاریخ تولد' }, // تاریخ تولد هم قابل مرتب‌سازی است
+];
+const sortOptions = computed(() => {
+  const options = [...standardSortableOptions];
+  // اضافه کردن فیلدهای سفارشی قابل مرتب‌سازی
+  customFieldStore.sortedFieldDefinitions.forEach(field => {
+    options.push({
+      value: field.id, // استفاده از id فیلد سفارشی برای مرتب‌سازی
+      label: `فیلد سفارشی: ${field.label}`
+    });
+  });
+  return options;
+});
+
+
+// --- Contact Actions (کدهای قبلی شما) ---
+// از router.push مستقیما استفاده میکنیم بجای تابع wrappers
+// const goToContactDetail = (id) => {
+//     router.push({ name: 'contact-detail', params: { id } });
+// };
 
 const startEditingContact = (contact) => {
   contactStore.setContactToEdit(contact);
@@ -763,8 +986,10 @@ const confirmDeleteContact = async (contactId) => {
 };
 
 // --- Lifecycle Hooks ---
-// Loding logic is in App.vue
+// لود کردن اولیه مخاطبین و فیلدهای سفارشی و گروه ها
+// این قسمت احتمالا توی App.vue هندل میشه یا در main.js پس اینجا نیازی نیست دوباره لود کنیم
 </script>
+
 <style scoped>
 /* **استایل‌های کلی کانتینر صفحه** */
 .contact-list-wrapper {

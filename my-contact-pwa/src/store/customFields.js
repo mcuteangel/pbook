@@ -3,7 +3,7 @@ import { toRaw } from 'vue'; // این خط رو اضافه کن
 import { defineStore } from 'pinia';
 import { db } from '../db'; // نمونه دیتابیس Dexie
 
-export const useCustomFieldStore = defineStore('customFieldStore', {
+export const useCustomFieldStore = defineStore('customFieldStore', { // <-- Store ID: 'customFieldStore'
   state: () => ({
     fieldDefinitions: [], // آرایه‌ای برای نگهداری تعاریف فیلدهای سفارشی
     loading: false,
@@ -18,9 +18,23 @@ export const useCustomFieldStore = defineStore('customFieldStore', {
         String(a.label || '').localeCompare(String(b.label || ''), 'fa', { sensitivity: 'base' })
       );
     },
-    // گتری برای پیدا کردن یک فیلد خاص با ID (ممکنه لازم بشه)
+    // گتری برای پیدا کردن یک فیلد خاص با ID
     getFieldDefinitionById: (state) => (id) => {
-      return state.fieldDefinitions.find(field => field.id === id);
+      // ID ورودی (که از کلیدهای نمایش مثل 'customFieldDef_1' می‌آید) یک رشته است.
+      // ID ذخیره شده در field.id (که از دیتابیس می‌آید) یک عدد است.
+      // برای مقایسه صحیح، ID ورودی را به عدد تبدیل می‌کنیم.
+      const idAsNumber = Number(id); // <-- اضافه کردن تبدیل به عدد
+
+      // اطمینان از اینکه تبدیل به عدد موفق بوده است
+      if (isNaN(idAsNumber)) {
+          // این هشدار دیگه نباید ظاهر بشه اگه قبلاً کلیدها رو درست کرده باشیم
+          // و فقط برای موارد نامعتبریه که نباید پیش بیان
+          console.warn(`Invalid ID passed to getFieldDefinitionById: ${id}. Conversion to Number failed.`);
+          return undefined; // یا null برگردانید بر اساس نیاز
+      }
+
+      // حالا تعریف را در آرایه پیدا می‌کنیم جایی که field.id عددی، مساوی با ID عددی تبدیل شده ما باشد.
+      return state.fieldDefinitions.find(field => field.id === idAsNumber); // <-- مقایسه عدد با عدد با ===
     }
   },
   actions: {
@@ -84,7 +98,7 @@ export const useCustomFieldStore = defineStore('customFieldStore', {
             });
         }
             console.log('  order:', fieldData.order || 0);
-            
+
         const newFieldId = await db.customFieldDefinitions.add({
           label: trimmedLabel,
           type: fieldData.type,
@@ -129,7 +143,7 @@ export const useCustomFieldStore = defineStore('customFieldStore', {
                 this.loading = false;
                 return false;
             }
-                        dataToUpdate.options = toRaw(updates.options); // اینجا هم toRaw رو اضافه کن
+            dataToUpdate.options = toRaw(updates.options); // اینجا هم toRaw رو اضافه کن
 
         } else {
             // اگر نوع فیلد دیگر select نیست، options رو پاک کن
