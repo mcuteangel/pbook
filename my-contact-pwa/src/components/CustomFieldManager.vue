@@ -214,22 +214,24 @@ onUnmounted(() => {
   max-width: 700px;
   margin: 20px auto;
   padding: 20px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border-medium); /* تغییر کرد */
   border-radius: 8px;
-  background-color: #f9f9f9;
+  background-color: var(--color-background-darker-light); /* تغییر کرد */
+  box-shadow: 0 4px 12px var(--color-shadow); /* اضافه شد */
 }
 .custom-field-manager-container h2,
 .custom-field-manager-container h3 {
   text-align: center;
-  color: #333;
+  color: var(--color-text-primary); /* تغییر کرد */
   margin-bottom: 15px;
 }
 .field-form {
-  background-color: #fff;
+  background-color: var(--color-background-light); /* تغییر کرد */
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 20px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--color-border-light); /* تغییر کرد */
+  box-shadow: 0 2px 6px var(--color-shadow-light); /* اضافه شد */
 }
 .field-form div {
   margin-bottom: 15px;
@@ -238,21 +240,25 @@ onUnmounted(() => {
   display: block;
   margin-bottom: 5px;
   font-weight: bold;
+  color: var(--color-text-secondary); /* اضافه شد */
 }
 .field-form input[type="text"],
 .field-form input[type="number"],
 .field-form select {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border-medium); /* تغییر کرد */
   border-radius: 4px;
   box-sizing: border-box;
+  background-color: var(--color-background-light); /* اضافه شد */
+  color: var(--color-text-primary); /* اضافه شد */
 }
 .options-section {
-  border: 1px dashed #ccc;
+  border: 1px dashed var(--color-border-medium); /* تغییر کرد */
   padding: 15px;
   border-radius: 4px;
   margin-top: 10px;
+  background-color: var(--color-background-darker-light); /* اضافه شد */
 }
 .option-input {
   display: flex;
@@ -262,21 +268,24 @@ onUnmounted(() => {
 }
 .option-input input {
   flex-grow: 1;
+  background-color: var(--color-background-light); /* اضافه شد */
+  color: var(--color-text-primary); /* اضافه شد */
+  border: 1px solid var(--color-border-medium); /* اضافه شد */
 }
 .remove-option-btn, .add-option-btn {
   padding: 8px 12px;
   border-radius: 4px;
   cursor: pointer;
-  border: 1px solid transparent;
+  border: none; /* تغییر کرد */
 }
 .remove-option-btn {
-  background-color: #e74c3c;
-  color: white;
+  background-color: var(--el-color-danger); /* از متغیر Element Plus */
+  color: var(--el-color-white);
 }
 .add-option-btn {
-  background-color: #2ecc71;
-  color: white;
-  display: block; /* برای گرفتن عرض کامل در صورت نیاز */
+  background-color: var(--el-color-success); /* از متغیر Element Plus */
+  color: var(--el-color-white);
+  display: block;
   margin-top: 5px;
 }
 
@@ -286,14 +295,15 @@ onUnmounted(() => {
   border-radius: 4px;
   cursor: pointer;
   margin-right: 10px;
-  background-color: #3498db;
-  color: white;
+  background-color: var(--color-link-primary); /* تغییر کرد */
+  color: var(--el-color-white); /* اضافه شد */
 }
 .form-actions button:disabled {
-  background-color: #bdc3c7;
+  background-color: var(--color-button-disabled-bg); /* تغییر کرد */
+  color: var(--color-button-disabled-text); /* اضافه شد */
 }
 .form-actions button[type="button"] {
-  background-color: #95a5a6;
+  background-color: var(--color-text-tertiary); /* تغییر کرد */
 }
 
 .field-list {
@@ -301,21 +311,23 @@ onUnmounted(() => {
   padding: 0;
 }
 .field-item {
-  background-color: #fff;
+  background-color: var(--color-background-light); /* تغییر کرد */
   padding: 15px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--color-border-light); /* تغییر کرد */
   border-radius: 4px;
   margin-bottom: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 1px 3px var(--color-shadow-light); /* اضافه شد */
 }
 .field-info strong {
   font-size: 1.1em;
+  color: var(--color-text-primary); /* اضافه شد */
 }
 .field-info em {
   font-size: 0.9em;
-  color: #555;
+  color: var(--color-text-secondary); /* تغییر کرد */
   display: block;
   margin-top: 5px;
 }
@@ -325,13 +337,15 @@ onUnmounted(() => {
   border-radius: 4px;
   cursor: pointer;
   margin-left: 8px;
+  color: var(--el-color-white); /* اضافه شد */
 }
 .edit-btn {
-  background-color: #f1c40f;
+  background-color: var(--el-color-warning); /* از متغیر Element Plus */
+  color: var(--el-color-black); /* Element Plus default text color for warning */
 }
 .delete-btn {
-  background-color: #e74c3c;
-  color: white;
+  background-color: var(--el-color-danger); /* از متغیر Element Plus */
+  color: var(--el-color-white);
 }
 .loading-message, .error-message {
     padding: 10px;
@@ -340,11 +354,11 @@ onUnmounted(() => {
     text-align: center;
 }
 .loading-message {
-    background-color: #eaf4ff;
-    color: #3498db;
+    background-color: var(--el-color-primary-light-9); /* از متغیر Element Plus */
+    color: var(--el-color-primary); /* از متغیر Element Plus */
 }
 .error-message {
-    background-color: #ffebee;
-    color: #c62828;
+    background-color: var(--el-color-danger-light-9); /* از متغیر Element Plus */
+    color: var(--el-color-danger); /* از متغیر Element Plus */
 }
 </style>

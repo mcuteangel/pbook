@@ -7,9 +7,10 @@ import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css' // 
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import VuePersianDatetimePicker from 'vue3-persian-datetime-picker';
+import './assets/styles/theme.css' // ** اضافه کردن این خط: ایمپورت settingsStore **
 
-// ** اضافه کردن این خط: ایمپورت settingsStore **
 import { useSettingsStore } from '@/store/settings';
+
 
 
 const app = createApp(App)

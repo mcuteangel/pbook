@@ -1,0 +1,84 @@
+/* src/assets/styles/theme.css */
+
+body {
+    /* رنگ پس‌زمینه اصلی برنامه را از متغیرهای تم می‌گیرد */
+    background-color: var(--color-background-primary);
+    /* برای انیمیشن روان هنگام تغییر تم (روشن/تاریک) */
+    transition: background-color 0.3s ease, color 0.3s ease;
+    /* تنظیم فونت سراسری برای کل برنامه */
+    font-family: 'Vazirmatn', sans-serif;
+    /* تنظیم جهت نوشتار برای کل برنامه */
+    direction: rtl;
+    /* حذف Margin پیش‌فرض مرورگر */
+    margin: 0;
+    /* تنظیم رنگ متن پیش‌فرض برای کل برنامه */
+    color: var(--color-text-primary);
+}
+
+/* این بخش برای اطمینان از RTL روی کامپوننت‌های Element Plus */
+.el-overlay, .el-message-box, .el-notification, .el-loading-mask,
+.el-dropdown-menu, .el-picker-panel, .el-date-editor,
+.el-popover, .el-tooltip__popper,
+.el-input__inner, .el-textarea__inner { /* چند تا دیگه هم اضافه کردم که ممکنه نیاز باشه */
+    font-family: 'Vazirmatn', sans-serif !important;
+    direction: rtl !important;
+}
+
+
+:root {
+  /* Light Theme Variables */
+  --color-background-primary: #f8f9fa; /* رنگ پس‌زمینه کلی برنامه */
+  --color-background-content: #ffffff; /* رنگ پس‌زمینه کانتینر محتوا */
+  --color-background-header: linear-gradient(to left, #e0eafc, #cfdef3); /* گرادینت برای هدر */
+  --color-text-primary: #343a40; /* متن اصلی */
+  --color-text-secondary: #6c757d; /* متن ثانویه (مثلاً برای لیبل‌ها) */
+  --color-text-tertiary: #adb5bd; /* متن کم‌رنگ‌تر */
+  --color-text-header: #212529; /* رنگ متن کلی هدر */
+  --color-text-header-title: #004d9c; /* رنگ عنوان اصلی هدر */
+  --color-border-light: #e9ecef; /* بوردرهای خیلی کم‌رنگ */
+  --color-border-medium: #dee2e6; /* بوردرهای متوسط */
+  --color-border-header: #ced4da; /* بوردر برای جداکننده هدر */
+  --color-link-primary: #007bff; /* رنگ لینک و دکمه اصلی */
+  --color-link-hover: #0056b3; /* هاور لینک و دکمه اصلی */
+  --color-link-header: #495057; /* رنگ لینک‌های ناوبری در هدر */
+  --color-link-hover-header: rgba(0, 123, 255, 0.1); /* هاور لینک‌های ناوبری */
+  --color-link-hover-text-header: #0056b3; /* متن هاور لینک‌های ناوبری */
+  --color-link-active-header: #007bff; /* لینک فعال در ناوبری */
+  --color-link-active-text-header: #ffffff; /* متن لینک فعال */
+  --color-button-disabled-bg: #e9ecef; /* پس‌زمینه دکمه غیرفعال */
+  --color-button-disabled-text: #adb5bd; /* متن دکمه غیرفعال */
+  --color-error-text: #dc3545; /* متن خطا */
+  --color-shadow-light: rgba(0, 0, 0, 0.05); /* سایه کم‌رنگ */
+  --color-shadow-medium: rgba(0, 0, 0, 0.1); /* سایه متوسط */
+  --color-shadow-strong: rgba(0, 0, 0, 0.15); /* سایه قوی */
+  --color-shadow-focus: rgba(0, 123, 255, 0.25); /* سایه در حالت فوکوس */
+}
+
+html.dark {
+  /* Dark Theme Variables */
+  --color-background-primary: #2c2c2c;
+  --color-background-content: #3a3a3a;
+  --color-background-header: linear-gradient(to left, #232526, #414345);
+  --color-text-primary: #e0e0e0;
+  --color-text-secondary: #b0b0b0;
+  --color-text-tertiary: #888888;
+  --color-text-header: #ffffff;
+  --color-text-header-title: #7bb5f7;
+  --color-border-light: #444444;
+  --color-border-medium: #555555;
+  --color-border-header: #666666;
+  --color-link-primary: #66b1ff;
+  --color-link-hover: #409eff;
+  --color-link-header: #a0a0a0;
+  --color-link-hover-header: rgba(102, 177, 255, 0.1);
+  --color-link-hover-text-header: #66b1ff;
+  --color-link-active-header: #409eff;
+  --color-link-active-text-header: #ffffff;
+  --color-button-disabled-bg: #444444;
+  --color-button-disabled-text: #888888;
+  --color-error-text: #ff7f7f;
+  --color-shadow-light: rgba(0, 0, 0, 0.2);
+  --color-shadow-medium: rgba(0, 0, 0, 0.3);
+  --color-shadow-strong: rgba(0, 0, 0, 0.4);
+  --color-shadow-focus: rgba(102, 177, 255, 0.25);
+}

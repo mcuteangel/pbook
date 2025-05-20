@@ -256,18 +256,18 @@ watch(
   max-width: 700px;
   margin: 20px auto;
   padding: 25px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--color-border-medium); /* تغییر کرد */
   border-radius: 10px;
-  background-color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  font-family: 'Vazirmatn', sans-serif; /* یا فونت فارسی دلخواه شما */
+  background-color: var(--color-background-light); /* تغییر کرد */
+  box-shadow: 0 4px 12px var(--color-shadow-detail); /* تغییر کرد */
+  font-family: 'Vazirmatn', sans-serif;
 }
 
 .contact-detail-container h2 {
   text-align: center;
-  color: #2c3e50; /* رنگ تیره‌تر برای عنوان اصلی */
+  color: var(--color-text-primary); /* تغییر کرد */
   margin-bottom: 25px;
-  border-bottom: 2px solid #3498db; /* رنگ آبی برای خط زیر عنوان */
+  border-bottom: 2px solid var(--color-link-primary); /* تغییر کرد */
   padding-bottom: 15px;
   font-size: 1.8em;
 }
@@ -277,12 +277,12 @@ watch(
 .no-contact-message {
   text-align: center;
   padding: 20px;
-  color: #7f8c8d; /* خاکستری ملایم */
+  color: var(--color-text-tertiary); /* تغییر کرد */
   font-size: 1.1em;
 }
 
 .error-message p {
-  color: #e74c3c; /* قرمز برای پیام خطا */
+  color: var(--color-error-text); /* تغییر کرد */
   margin-bottom: 15px;
 }
 
@@ -302,56 +302,55 @@ watch(
 
 .contact-header h3 {
   font-size: 1.6em;
-  color: #34495e; /* آبی نفتی */
+  color: var(--color-text-primary); /* تغییر کرد */
   margin-bottom: 5px;
 }
 
 .title-text {
   font-size: 1em;
-  color: #7f8c8d; /* خاکستری برای سمت */
+  color: var(--color-text-tertiary); /* تغییر کرد */
   margin-top: 0;
 }
 
 .detail-section {
   margin-bottom: 25px;
   padding: 15px;
-  border: 1px solid #ecf0f1; /* بوردر خیلی روشن */
+  border: 1px solid var(--color-border-light); /* تغییر کرد */
   border-radius: 8px;
-  background-color: #fdfdfd; /* پس‌زمینه خیلی کم‌رنگ */
+  background-color: var(--color-background-darker-light); /* تغییر کرد */
 }
 
 .detail-section h4 {
   font-size: 1.2em;
-  color: #3498db; /* آبی برای عنوان بخش‌ها */
+  color: var(--color-link-primary); /* تغییر کرد */
   margin-top: 0;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--color-border-medium); /* تغییر کرد */
 }
 
 .detail-section p,
 .detail-section li {
   font-size: 1em;
-  color: #555;
+  color: var(--color-text-secondary); /* تغییر کرد */
   line-height: 1.7;
   margin-bottom: 8px;
 }
 
 .detail-section p strong,
 .detail-section li strong {
-  color: #333;
-  margin-left: 5px; /* برای زبان فارسی LTR، اگر RTL هستید از margin-right استفاده کنید */
+  color: var(--color-text-primary); /* تغییر کرد */
+  margin-left: 5px;
 }
 
 .detail-section ul {
   list-style: none;
-  padding-right: 0; /* برای زبان فارسی */
-  /* padding-left: 20px; برای زبان انگلیسی */
+  padding-right: 0;
 }
 
 .address-item {
   padding: 10px;
-  border-bottom: 1px dashed #eee;
+  border-bottom: 1px dashed var(--color-border-light); /* تغییر کرد */
 }
 .address-item:last-child {
   border-bottom: none;
@@ -361,26 +360,26 @@ watch(
 }
 .address-notes {
   font-size: 0.9em;
-  color: #777;
+  color: var(--color-text-secondary); /* تغییر کرد */
 }
 .notes-text {
-  white-space: pre-wrap; /* برای حفظ فاصله‌ها و خطوط جدید در یادداشت */
-  background-color: #f9f9f9;
+  white-space: pre-wrap;
+  background-color: var(--color-background-light); /* تغییر کرد */
   padding: 10px;
   border-radius: 4px;
-  border: 1px solid #eee;
+  border: 1px solid var(--color-border-light); /* تغییر کرد */
 }
 
 .meta-info p {
   font-size: 0.9em;
-  color: #888;
+  color: var(--color-text-tertiary); /* تغییر کرد */
 }
 
 .actions {
   text-align: center;
   margin-top: 30px;
   padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--color-border-medium); /* تغییر کرد */
 }
 
 .actions button {
@@ -396,29 +395,29 @@ watch(
 
 .actions button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px var(--color-shadow); /* تغییر کرد */
 }
 
 .back-button {
-  background-color: #7f8c8d; /* خاکستری */
-  color: white;
+  background-color: var(--color-text-tertiary); /* تغییر کرد */
+  color: white; /* این ثابت می‌مونه */
 }
 
 .back-button:hover {
-  background-color: #6c7a7d;
+  background-color: var(--color-text-secondary); /* تغییر کرد */
 }
 
 .edit-button {
-  background-color: #f39c12; /* نارنجی */
+  background-color: var(--el-color-warning); /* از متغیر Element Plus استفاده می‌کنیم */
   color: white;
 }
 
 .edit-button:hover {
-  background-color: #e67e22;
+  background-color: var(--el-color-warning-dark-2); /* از متغیر Element Plus استفاده می‌کنیم */
 }
 
 .error-message button {
-   background-color: #3498db;
+   background-color: var(--color-link-primary); /* تغییر کرد */
    color: white;
    padding: 8px 15px;
    border-radius: 4px;
@@ -426,18 +425,18 @@ watch(
    cursor: pointer;
 }
 .error-message button:hover {
-  background-color: #2980b9;
+  background-color: var(--color-link-hover); /* تغییر کرد */
 }
 .phone-link,
 .address-link {
-  color: #007bff; /* رنگ آبی رایج برای لینک‌ها */
-  text-decoration: none; /* خط زیر لینک رو حذف می‌کنیم */
+  color: var(--color-link-primary); /* تغییر کرد */
+  text-decoration: none;
   cursor: pointer;
 }
 
 .phone-link:hover,
 .address-link:hover {
-  text-decoration: underline; /* با هاور کردن خط زیر اضافه می‌کنیم */
-  color: #0056b3; /* رنگ کمی تیره‌تر با هاور */
+  text-decoration: underline;
+  color: var(--color-link-hover); /* تغییر کرد */
 }
 </style>

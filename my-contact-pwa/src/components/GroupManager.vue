@@ -160,9 +160,10 @@ const confirmDeleteGroup = async (groupToDelete) => {
     max-width: 500px;
     margin: 20px auto;
     padding: 20px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border-medium); /* تغییر کرد */
     border-radius: 8px;
-    background-color: #f9f9f9;
+    background-color: var(--color-background-darker-light); /* تغییر کرد */
+    box-shadow: 0 2px 8px var(--color-shadow-light); /* اضافه شد */
 }
 
 .group-list {
@@ -175,18 +176,24 @@ const confirmDeleteGroup = async (groupToDelete) => {
     justify-content: space-between;
     align-items: center;
     padding: 10px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-border-light); /* تغییر کرد */
+    background-color: var(--color-background-light); /* اضافه شد */
+    margin-bottom: 8px; /* اضافه شد */
+    border-radius: 4px; /* اضافه شد */
+    box-shadow: 0 1px 3px var(--color-shadow-light); /* اضافه شد */
 }
 
 .group-item:last-child {
     border-bottom: none;
+    margin-bottom: 0;
 }
 
 .group-name-section {
-     flex-grow: 1; /* این بخش فضای موجود رو پر کنه */
-     display: flex; /* برای اینکه input عرض کامل بگیره */
+     flex-grow: 1;
+     display: flex;
      align-items: center;
-     padding-left: 10px; /* فاصله از دکمه ها */
+     padding-left: 10px;
+     color: var(--color-text-primary); /* اضافه شد */
 }
 
 .group-name {
@@ -194,17 +201,19 @@ const confirmDeleteGroup = async (groupToDelete) => {
 }
 
 .group-name-section input[type="text"] {
-    flex-grow: 1; /* فیلد ورودی فضای موجود رو پر کنه */
+    flex-grow: 1;
     padding: 5px;
-    border: 1px solid #007bff;
+    border: 1px solid var(--color-link-primary); /* تغییر کرد */
     border-radius: 4px;
     font-size: 1em;
+    background-color: var(--color-background-light); /* اضافه شد */
+    color: var(--color-text-primary); /* اضافه شد */
 }
 
 
 .group-actions {
     display: flex;
-    gap: 5px; /* فاصله بین دکمه ها */
+    gap: 5px;
 }
 
 .group-actions button {
@@ -214,43 +223,42 @@ const confirmDeleteGroup = async (groupToDelete) => {
     border-radius: 4px;
     transition: background-color 0.3s ease;
     font-size: 0.9em;
+    color: var(--el-color-white); /* رنگ متن دکمه‌ها */
 }
 
 /* استایل دکمه حذف */
 .delete-button {
-    background-color: #dc3545;
-    color: white;
+    background-color: var(--el-color-danger); /* از متغیر Element Plus */
 }
 
 .delete-button:hover:not(:disabled) {
-    background-color: #c82333;
+    background-color: var(--el-color-danger-dark-2); /* از متغیر Element Plus */
 }
 
 /* استایل دکمه ویرایش */
 .edit-button {
-    background-color: #ffc107;
-    color: #212529;
+    background-color: var(--el-color-warning); /* از متغیر Element Plus */
+    color: var(--el-color-black); /* Element Plus default text color for warning */
 }
 .edit-button:hover:not(:disabled) {
-    background-color: #e0a800;
+    background-color: var(--el-color-warning-dark-2); /* از متغیر Element Plus */
 }
 
 /* استایل دکمه ذخیره */
 .save-button {
-    background-color: #28a745;
-    color: white;
+    background-color: var(--el-color-success); /* از متغیر Element Plus */
 }
 .save-button:hover:not(:disabled) {
-    background-color: #218838;
+    background-color: var(--el-color-success-dark-2); /* از متغیر Element Plus */
 }
 
 /* استایل دکمه انصراف */
 .cancel-button {
-     background-color: #6c757d;
-     color: white;
+     background-color: var(--color-text-tertiary); /* تغییر کرد */
+     color: var(--el-color-white);
 }
 .cancel-button:hover:not(:disabled) {
-     background-color: #5a6268;
+     background-color: var(--color-text-secondary); /* تغییر کرد */
 }
 
 </style>

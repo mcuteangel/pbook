@@ -1000,7 +1000,7 @@ const confirmDeleteContact = async (contactId) => {
 
 h2 {
     text-align: center;
-    color: #333;
+    color: var(--color-text-primary); /* تغییر کرد */
     margin-bottom: 20px;
 }
 
@@ -1023,17 +1023,19 @@ h2 {
 /* استایل عمومی برای Input و Select در کنترل‌ها */
 .control-input, .control-select {
     padding: 8px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border-medium); /* تغییر کرد */
     border-radius: 4px;
     font-size: 1em;
+    background-color: var(--color-background-light); /* تغییر کرد */
+    color: var(--color-text-primary); /* تغییر کرد */
 }
 
 /* استایل دکمه نمایش/پنهان‌سازی فیلتر */
 .toggle-filter-button {
-  background-color: #f0f0f0;
-  color: #333;
+  background-color: var(--color-background-darker-light); /* تغییر کرد */
+  color: var(--color-text-primary); /* تغییر کرد */
   padding: 8px 15px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border-medium); /* تغییر کرد */
   border-radius: 4px;
   cursor: pointer;
   font-size: 1em;
@@ -1042,23 +1044,23 @@ h2 {
 }
 
 .toggle-filter-button:hover {
-  background-color: #e0e0e0;
+  background-color: var(--color-border-light); /* تغییر کرد */
 }
 
 /* **استایل بخش قابل گسترش فیلتر پیشرفته** */
 .advanced-filter-section {
-    border: 1px solid #eee;
+    border: 1px solid var(--color-border-light); /* تغییر کرد */
     padding: 15px;
     border-radius: 8px;
-    background-color: #f9f9f9;
+    background-color: var(--color-background-darker-light); /* تغییر کرد */
     margin-bottom: 20px;
 }
 
 .advanced-filter-section h3 {
     margin-top: 0;
     margin-bottom: 15px;
-    color: #555;
-    border-bottom: 1px dashed #ccc;
+    color: var(--color-text-secondary); /* تغییر کرد */
+    border-bottom: 1px dashed var(--color-border-medium); /* تغییر کرد */
     padding-bottom: 10px;
 }
 
@@ -1070,42 +1072,38 @@ h2 {
     align-items: center;
     margin-bottom: 15px;
     padding: 10px;
-    border: 1px dashed #ccc;
+    border: 1px dashed var(--color-border-medium); /* تغییر کرد */
     border-radius: 4px;
-    background-color: #fff;
+    background-color: var(--color-background-light); /* تغییر کرد */
 }
 
 .add-rule-form h4 {
     width: 100%;
     margin: 0 0 10px 0;
-    color: #333;
+    color: var(--color-text-primary); /* تغییر کرد */
 }
 
 /* استایل عمومی برای Input و Select در فرم افزودن قانون */
-/* Element Plus components generate their own classes like el-select, el-input, el-date-editor */
 .advanced-filter-section .el-select,
 .advanced-filter-section .el-input,
 .advanced-filter-section .el-date-editor,
- .advanced-filter-section .vpd-input { /* اضافه شد */
+.advanced-filter-section .vpd-input {
     flex-basis: 180px;
     flex-grow: 1;
+    /* Element Plus خودش استایل‌های مربوط به تم رو اعمال می‌کنه */
 }
-
-/* استایل دکمه افزودن قانون */
-/* .add-rule-form .el-button { }  این بلوک خالی باعث خطا میشد و پاک شد */
-
 
 /* استایل placeholder وقتی فیلدی انتخاب نشده */
 .rule-control-placeholder {
     flex-basis: 180px;
     flex-grow: 1;
-    padding: 8px 12px; /* هم اندازه با پدینگ input ها */
-    color: #a8a8a8; /* رنگ خاکستری ملایم */
-    border: 1px solid #dcdfe6; /* حاشیه پیش‌فرض Element Plus Input */
+    padding: 8px 12px;
+    color: var(--color-text-tertiary); /* تغییر کرد */
+    border: 1px solid var(--color-border-light); /* تغییر کرد (استایل پیش‌فرض Element Plus ممکنه اینو override کنه) */
     border-radius: 4px;
-    background-color: #fff;
+    background-color: var(--color-background-light); /* تغییر کرد */
     font-size: 0.9em;
-    line-height: 1.5; /* هم اندازه با lineHeight Input */
+    line-height: 1.5;
 }
 
 
@@ -1113,17 +1111,16 @@ h2 {
 .current-rules-list {
     margin-top: 15px;
     padding-top: 15px;
-    /*border-top: 1px dashed #ccc;*/ /* از خط جداکننده جداگانه استفاده می‌کنیم */
 }
 
 .current-rules-list h4 {
     margin: 0 0 10px 0;
-    color: #333;
+    color: var(--color-text-primary); /* تغییر کرد */
 }
 
 .no-rules-message {
     text-align: center;
-    color: #777;
+    color: var(--color-text-secondary); /* تغییر کرد */
     font-style: italic;
     margin-top: 10px;
 }
@@ -1135,37 +1132,38 @@ h2 {
     gap: 10px;
     margin-bottom: 10px;
     padding: 8px;
-    border: 1px solid #eee;
+    border: 1px solid var(--color-border-light); /* تغییر کرد */
     border-radius: 4px;
-    background-color: #fff;
+    background-color: var(--color-background-light); /* تغییر کرد */
     flex-wrap: wrap;
-    justify-content: space-between; /* فاصله بین متن قانون و دکمه حذف */
+    justify-content: space-between;
+    box-shadow: 0 1px 3px var(--color-shadow); /* اضافه شد برای عمق بیشتر */
 }
 
 .filter-rule-item p {
      margin: 0;
-     flex-grow: 1; /* متن قانون فضای بیشتری بگیرد */
+     flex-grow: 1;
      word-break: break-word;
 }
 
 .rule-field-label {
     font-weight: bold;
-    color: #007bff;
+    color: var(--color-link-primary); /* تغییر کرد */
 }
 
 .rule-operator-label {
     font-style: italic;
-    color: #555;
+    color: var(--color-text-secondary); /* تغییر کرد */
 }
 
 .rule-value {
     font-weight: bold;
-    color: #333;
+    color: var(--color-text-primary); /* تغییر کرد */
 }
 
 .rule-value-none {
      font-style: italic;
-     color: #777;
+     color: var(--color-text-tertiary); /* تغییر کرد */
 }
 
 
@@ -1174,13 +1172,13 @@ h2 {
     display: flex;
     gap: 10px;
     margin-top: 20px;
-    justify-content: flex-end; /* چیدن دکمه‌ها در سمت راست */
+    justify-content: flex-end;
 }
 
 .filter-section-separator {
     margin: 15px 0;
     border: none;
-    border-top: 1px dashed #ccc; /* خط جداکننده نقطه‌چین */
+    border-top: 1px dashed var(--color-border-medium); /* تغییر کرد */
 }
 
 
@@ -1188,7 +1186,7 @@ h2 {
 .separator {
   margin: 20px 0;
   border: none;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border-light); /* تغییر کرد */
 }
 
 
@@ -1201,21 +1199,21 @@ h2 {
 }
 
 .status-message.loading {
-    background-color: #e9f7ef;
-    color: #28a745;
-    border: 1px solid #d0e9c6;
+    background-color: var(--el-color-success-light-9); /* از متغیر Element Plus */
+    color: var(--el-color-success); /* از متغیر Element Plus */
+    border: 1px solid var(--el-color-success-light-7); /* از متغیر Element Plus */
 }
 
 .status-message.error {
-    background-color: #f8d7da;
-    color: #dc3545;
-    border: 1px solid #f5c6cb;
+    background-color: var(--el-color-danger-light-9); /* از متغیر Element Plus */
+    color: var(--el-color-danger); /* از متغیر Element Plus */
+    border: 1px solid var(--el-color-danger-light-7); /* از متغیر Element Plus */
 }
 
 .status-message.no-results {
-     background-color: #fff3cd;
-     color: #856404;
-     border: 1px solid #ffeeba;
+     background-color: var(--el-color-warning-light-9); /* از متغیر Element Plus */
+     color: var(--el-color-warning); /* از متغیر Element Plus */
+     border: 1px solid var(--el-color-warning-light-7); /* از متغیر Element Plus */
 }
 
 
@@ -1228,17 +1226,17 @@ h2 {
 
 /* **استایل هر آیتم مخاطب (li)** */
 .contact-item {
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border-medium); /* تغییر کرد */
     padding: 15px 20px;
     margin-bottom: 15px;
     border-radius: 8px;
-    background-color: #fff;
+    background-color: var(--color-background-light); /* تغییر کرد */
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     flex-wrap: wrap;
     gap: 15px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px var(--color-shadow); /* تغییر کرد */
 }
 
 /* کانتینر اطلاعات مخاطب */
@@ -1249,7 +1247,7 @@ h2 {
 
 /* استایل لینک نام مخاطب */
 .contact-name-link {
-  color: #007bff;
+  color: var(--color-link-primary); /* تغییر کرد */
   text-decoration: none;
   font-weight: bold;
   cursor: pointer;
@@ -1266,13 +1264,13 @@ h2 {
 .contact-item p {
   margin: 3px 0;
   font-size: 0.9em;
-  color: #555;
+  color: var(--color-text-secondary); /* تغییر کرد */
   word-break: break-word;
 }
 
 /* استایل عنوان‌های فیلد */
 .contact-item p strong {
-  color: #333;
+  color: var(--color-text-primary); /* تغییر کرد */
   margin-left: 5px;
 }
 
@@ -1280,13 +1278,13 @@ h2 {
 .additional-info {
     margin-top: 10px;
     padding-top: 10px;
-    border-top: 1px dashed #eee;
+    border-top: 1px dashed var(--color-border-light); /* تغییر کرد */
 }
 
 .additional-info strong {
     display: block;
     margin-bottom: 5px;
-    color: #333;
+    color: var(--color-text-primary); /* تغییر کرد */
 }
 
 .additional-info ul {
@@ -1298,7 +1296,7 @@ h2 {
 
 .additional-info ul li {
   font-size: 0.9em;
-  color: #555;
+  color: var(--color-text-secondary); /* تغییر کرد */
   margin-bottom: 3px;
   word-break: break-word;
 }
@@ -1306,12 +1304,13 @@ h2 {
 /* استایل برای بخش یادداشت مخاطب */
 .contact-notes {
     font-style: italic;
+    color: var(--color-text-secondary); /* اضافه شد */
 }
 
 /* استایل برای تاریخ‌های ایجاد و ویرایش */
 .date-info {
     font-size: 0.8em;
-    color: #777;
+    color: var(--color-text-tertiary); /* تغییر کرد */
 }
 
 /* کانتینر دکمه‌های ویرایش و حذف */
@@ -1340,20 +1339,20 @@ h2 {
 
 /* استایل مخصوص دکمه ویرایش */
 .edit-button {
-  background-color: #ffc107;
-  color: #212529;
+  background-color: var(--el-color-warning); /* از متغیر Element Plus */
+  color: var(--el-color-black); /* Element Plus default text color for warning */
 }
 .edit-button:hover:not(:disabled) {
-  background-color: #e0a800;
+  background-color: var(--el-color-warning-dark-2); /* از متغیر Element Plus */
 }
 
 /* استایل مخصوص دکمه حذف */
 .delete-button {
-  background-color: #dc3545;
-  color: white;
+  background-color: var(--el-color-danger); /* از متغیر Element Plus */
+  color: var(--el-color-white); /* Element Plus default text color for danger */
 }
 .delete-button:hover:not(:disabled) {
-  background-color: #c82333;
+  background-color: var(--el-color-danger-dark-2); /* از متغیر Element Plus */
 }
 
 /* **استایل کنترل‌های صفحه‌بندی** */
@@ -1364,14 +1363,15 @@ h2 {
   margin-top: 20px;
   gap: 10px;
   flex-wrap: wrap;
-  direction: rtl;
+  direction: rtl; /* حفظ جهت rtl */
 }
 
 /* استایل عمومی دکمه‌های صفحه‌بندی */
 .pagination-button, .page-number-button {
    padding: 8px 15px;
-   border: 1px solid #ccc;
-   background-color: #f0f0f0;
+   border: 1px solid var(--color-border-medium); /* تغییر کرد */
+   background-color: var(--color-background-darker-light); /* تغییر کرد */
+   color: var(--color-text-primary); /* تغییر کرد */
    cursor: pointer;
    border-radius: 5px;
    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
@@ -1379,25 +1379,30 @@ h2 {
 }
 
 .pagination-button:hover:not(:disabled), .page-number-button:hover:not(:disabled) {
-  background-color: #e0e0e0;
-  border-color: #b0b0b0;
+  background-color: var(--color-border-light); /* تغییر کرد */
+  border-color: var(--color-link-primary); /* تغییر کرد */
+  color: var(--color-text-primary); /* برای حفظ رنگ متن در هاور */
 }
 
 .pagination-button:disabled, .page-number-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  background-color: var(--color-background-darker-light); /* تغییر کرد */
+  color: var(--color-text-tertiary); /* تغییر کرد */
+  border-color: var(--color-border-light); /* تغییر کرد */
 }
 
 /* استایل دکمه صفحه فعال */
 .page-number-button.active {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
+  background-color: var(--color-link-primary); /* تغییر کرد */
+  color: white; /* این ثابت می‌مونه */
+  border-color: var(--color-link-primary); /* تغییر کرد */
 }
 
 .pagination-controls span {
   font-weight: bold;
   margin: 0 5px;
+  color: var(--color-text-primary); /* اضافه شد */
 }
 
 /* کانتینر شماره صفحات */
@@ -1441,7 +1446,7 @@ h2 {
      .search-control input[type='text'], .sort-controls select,
      .advanced-filter-section .el-select, .advanced-filter-section .el-input,
      .advanced-filter-section .el-date-editor,
-      .advanced-filter-section .vpd-input { /* اضافه شد */
+      .advanced-filter-section .vpd-input {
          width: 100%;
          flex-basis: auto;
      }

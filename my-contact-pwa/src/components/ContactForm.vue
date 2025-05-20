@@ -504,70 +504,70 @@ const handleSubmit = async () => {
 
 <style scoped>
 .additional-phones-section {
-  border: 1px dashed #ccc; /* کادر نقطه‌چین */
+  border: 1px dashed var(--color-border-medium); /* تغییر کرد */
   padding: 15px;
   border-radius: 8px;
   margin-bottom: 15px;
-  background-color: #f1f1f1; /* پس زمینه کمی خاکستری */
+  background-color: var(--color-background-darker-light); /* تغییر کرد */
 }
 
 .additional-phones-section > label {
-  /* استایل Label اصلی بخش */
   display: block;
   margin-bottom: 10px;
   font-weight: bold;
-  border-bottom: 1px solid #ccc;
+  color: var(--color-text-primary); /* اضافه شد */
+  border-bottom: 1px solid var(--color-border-medium); /* تغییر کرد */
   padding-bottom: 5px;
 }
 
 .additional-phone-input {
-  display: flex; /* نمایش Input و دکمه در یک سطر */
-  gap: 10px; /* فاصله بین Input و دکمه */
+  display: flex;
+  gap: 10px;
   margin-bottom: 10px;
-  align-items: center; /* هم‌تراز کردن عمودی آیتم‌ها */
+  align-items: center;
 }
 
-/* استایل Select Box و Input در بخش شماره‌های اضافی */
 .additional-phone-input select,
 .additional-phone-input input[type='text'] {
-  flex-grow: 1; /* فضا رو پر کنن */
-  margin-bottom: 0; /* فاصله پایین رو بردار */
+  flex-grow: 1;
+  margin-bottom: 0;
+  background-color: var(--color-background-light); /* اضافه شد */
+  color: var(--color-text-primary); /* اضافه شد */
+  border: 1px solid var(--color-border-medium); /* اضافه شد */
 }
 
 .additional-phone-input select {
-  flex-basis: 100px; /* عرض پایه برای Select (می‌تونی تنظیم کنی) */
-  flex-grow: 0; /* از رشد بی‌رویه جلوگیری می‌کنه */
+  flex-basis: 100px;
+  flex-grow: 0;
 }
 
-/* استایل دکمه حذف کنار شماره اضافی */
 .remove-phone-button {
-  background-color: #dc3545; /* قرمز */
-  color: white;
-  width: 30px; /* عرض ثابت برای دکمه X */
-  height: 30px; /* ارتفاع ثابت */
-  padding: 0; /* پدینگ رو برمیداریم */
-  border-radius: 50%; /* دایره‌ای کردن دکمه */
+  background-color: var(--el-color-danger); /* از متغیر Element Plus */
+  color: var(--el-color-white);
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-shrink: 0; /* از کوچک شدن دکمه جلوگیری می‌کنه */
+  flex-shrink: 0;
 }
 
 .remove-phone-button:hover {
-  background-color: #c82333;
+  background-color: var(--el-color-danger-dark-2); /* از متغیر Element Plus */
 }
 
-/* استایل دکمه افزودن شماره اضافی */
 .add-phone-button {
-  background-color: #28a745; /* سبز */
-  color: white;
-  width: auto; /* عرض اتوماتیک بر اساس متن */
-  padding: 8px 15px; /* پدینگ مناسب */
-  align-self: flex-start; /* چسباندن دکمه به سمت چپ */
+  background-color: var(--el-color-success); /* از متغیر Element Plus */
+  color: var(--el-color-white);
+  width: auto;
+  padding: 8px 15px;
+  align-self: flex-start;
 }
 
 .add-phone-button:hover {
-  background-color: #218838;
+  background-color: var(--el-color-success-dark-2); /* از متغیر Element Plus */
 }
 
 form {
@@ -575,10 +575,12 @@ form {
   flex-direction: column;
   gap: 15px;
   padding: 20px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border-medium); /* تغییر کرد */
   border-radius: 8px;
   max-width: 400px;
   margin: 20px auto;
+  background-color: var(--color-background-darker-light); /* اضافه شد */
+  box-shadow: 0 2px 8px var(--color-shadow); /* اضافه شد */
 }
 
 div {
@@ -589,27 +591,29 @@ div {
 label {
   margin-bottom: 5px;
   font-weight: bold;
+  color: var(--color-text-primary); /* اضافه شد */
 }
 
 input[type='text'],
 select,
 textarea {
-  /* استایل input, select و textarea */
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border-medium); /* تغییر کرد */
   border-radius: 4px;
-  width: 100%; /* عرض کامل */
-  box-sizing: border-box; /* padding و border جزو عرض حساب بشن */
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--color-background-light); /* اضافه شد */
+  color: var(--color-text-primary); /* اضافه شد */
 }
 
 textarea {
-  resize: vertical; /* فقط اجازه تغییر اندازه عمودی */
-  min-height: 80px; /* حداقل ارتفاع */
+  resize: vertical;
+  min-height: 80px;
 }
 
 button {
   padding: 10px 15px;
-  background-color: #007bff;
+  background-color: var(--color-link-primary); /* تغییر کرد */
   color: white;
   border: none;
   border-radius: 4px;
@@ -619,100 +623,108 @@ button {
 }
 
 button:hover:not(:disabled) {
-  background-color: #0056b3;
+  background-color: var(--color-link-hover); /* تغییر کرد */
 }
 
 button:disabled {
-  background-color: #cccccc;
+  background-color: var(--color-button-disabled-bg); /* تغییر کرد */
   cursor: not-allowed;
+  color: var(--color-button-disabled-text); /* اضافه شد */
 }
 
 button[type='button'] {
-  background-color: #6c757d;
+  background-color: var(--color-text-tertiary); /* تغییر کرد */
   color: white;
 }
 
 button[type='button']:hover:not(:disabled) {
-  background-color: #5a6268;
+  background-color: var(--color-text-secondary); /* تغییر کرد */
 }
-/* استایل برای فیلد ورودی اسم گروه جدید */
+
 .new-group-input {
   margin-top: 10px;
-  display: flex;
-  flex-direction: column;
+  padding: 10px;
+  background-color: var(--color-background-darker-light); /* تغییر کرد */
+  border-radius: 5px;
+  border: 1px solid var(--color-border-light); /* اضافه شد */
 }
 
 .new-group-input label {
   margin-bottom: 5px;
   font-weight: bold;
-  font-size: 0.9em; /* کوچکتر از label اصلی */
+  font-size: 0.9em;
+  color: var(--color-text-primary); /* اضافه شد */
 }
 
 .new-group-input input[type='text'] {
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border-medium); /* تغییر کرد */
   border-radius: 4px;
+  background-color: var(--color-background-light); /* اضافه شد */
+  color: var(--color-text-primary); /* اضافه شد */
 }
+
 .addresses-section {
-  border: 1px dashed #a0a0a0; /* کادر نقطه‌چین */
+  border: 1px dashed var(--color-border-medium); /* تغییر کرد */
   padding: 15px;
   border-radius: 8px;
   margin-bottom: 15px;
-  background-color: #f8f8f8; /* پس زمینه کمی خاکستری روشن */
+  background-color: var(--color-background-darker-light); /* تغییر کرد */
 }
 
 .addresses-section > label {
-  /* استایل Label اصلی بخش */
   display: block;
   margin-bottom: 10px;
   font-weight: bold;
-  border-bottom: 1px solid #a0a0a0;
+  color: var(--color-text-primary); /* اضافه شد */
+  border-bottom: 1px solid var(--color-border-medium); /* تغییر کرد */
   padding-bottom: 5px;
 }
 
 .address-input-block {
-  border: 1px solid #ddd; /* کادر برای هر بلوک آدرس */
+  border: 1px solid var(--color-border-medium); /* تغییر کرد */
   padding: 15px;
   margin-bottom: 15px;
   border-radius: 8px;
-  background-color: #fff; /* پس زمینه سفید برای هر آدرس */
-  position: relative; /* برای موقعیت‌دهی دکمه حذف */
+  background-color: var(--color-background-light); /* تغییر کرد */
+  position: relative;
+  box-shadow: 0 1px 3px var(--color-shadow-light); /* اضافه شد */
 }
 
 .address-inputs {
-  display: grid; /* استفاده از Grid برای چیدمان فیلدهای آدرس */
-  gap: 10px; /* فاصله بین فیلدها */
-  /* تعریف ستون‌ها - می‌تونی بر اساس نیاز و طراحی تغییر بدی */
+  display: grid;
+  gap: 10px;
   grid-template-columns: repeat(
     auto-fit,
     minmax(150px, 1fr)
-  ); /* حداقل عرض 150px، هر چقدر جا بود ستون اضافه کنه */
-  margin-bottom: 10px; /* فاصله پایین از دکمه حذف */
+  );
+  margin-bottom: 10px;
 }
 
 .address-inputs select,
 .address-inputs input[type='text'],
 .address-inputs textarea {
-  width: 100%; /* عرض کامل در سلول گرید */
+  width: 100%;
   box-sizing: border-box;
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border-medium); /* تغییر کرد */
   border-radius: 4px;
+  background-color: var(--color-background-light); /* اضافه شد */
+  color: var(--color-text-primary); /* اضافه شد */
 }
 
 .address-inputs textarea {
-  grid-column: span 2; /* Textarea دو ستون رو بگیره (میتونی تنظیم کنی) */
+  grid-column: span 2;
   min-height: 60px;
   resize: vertical;
 }
 
-/* استایل دکمه حذف کنار هر بلوک آدرس */
 .remove-address-button {
-  position: absolute; /* موقعیت مطلق */
-  top: 5px; /* فاصله از بالا */
-  left: 5px; /* فاصله از چپ (برای زبان RTL) */
-  background-color: #dc3545;
-  color: white;
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  background-color: var(--el-color-danger); /* از متغیر Element Plus */
+  color: var(--el-color-white);
   width: 25px;
   height: 25px;
   padding: 0;
@@ -723,17 +735,16 @@ button[type='button']:hover:not(:disabled) {
   cursor: pointer;
   border: none;
   font-size: 0.8em;
-  line-height: 1; /* برای هم‌تراز شدن متن X */
+  line-height: 1;
 }
 
 .remove-address-button:hover {
-  background-color: #c82333;
+  background-color: var(--el-color-danger-dark-2); /* از متغیر Element Plus */
 }
 
-/* استایل دکمه افزودن آدرس جدید */
 .add-address-button {
-  background-color: #17a2b8; /* رنگ آبی فیروزه‌ای */
-  color: white;
+  background-color: var(--el-color-info); /* از متغیر Element Plus */
+  color: var(--el-color-white);
   width: auto;
   padding: 8px 15px;
   border: none;
@@ -743,22 +754,23 @@ button[type='button']:hover:not(:disabled) {
 }
 
 .add-address-button:hover {
-  background-color: #138496;
+  background-color: var(--el-color-info-dark-2); /* از متغیر Element Plus */
 }
+
 .contact-form {
   max-width: 600px;
   margin: 20px auto;
   padding: 25px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--color-border-medium); /* تغییر کرد */
   border-radius: 10px;
-  background-color: #f9f9f9;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  background-color: var(--color-background-darker-light); /* تغییر کرد */
+  box-shadow: 0 2px 8px var(--color-shadow); /* تغییر کرد */
 }
 
 .contact-form h2 {
   text-align: center;
   margin-bottom: 25px;
-  color: #333;
+  color: var(--color-text-primary); /* تغییر کرد */
 }
 
 .form-group {
@@ -769,47 +781,50 @@ button[type='button']:hover:not(:disabled) {
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
-  color: #555;
+  color: var(--color-text-secondary); /* تغییر کرد */
   font-size: 0.95em;
 }
 
 .form-input,
 .form-select,
 .form-textarea,
-.form-datepicker /* کلاس برای input داخل datepicker */
+.form-datepicker
  {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border-medium); /* تغییر کرد */
   border-radius: 6px;
   box-sizing: border-box;
   font-size: 1em;
   transition: border-color 0.2s ease-in-out;
+  background-color: var(--color-background-light); /* اضافه شد */
+  color: var(--color-text-primary); /* اضافه شد */
 }
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
-  border-color: #007bff;
+  border-color: var(--color-link-primary); /* تغییر کرد */
   outline: none;
-  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+  box-shadow: 0 0 0 0.2rem var(--color-shadow-focus); /* تغییر کرد */
 }
 
-.form-datepicker { /* استایل برای خود کامپوننت date-picker */
+.form-datepicker {
     width: 100%;
 }
-/* اگر می‌خواهید input درون date-picker هم استایل بگیرد: */
 :deep(.form-datepicker .vpd-input-group input) {
     padding: 10px 12px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border-medium); /* تغییر کرد */
     border-radius: 6px;
     font-size: 1em;
-     width: 100%;
+    width: 100%;
     box-sizing: border-box;
+    background-color: var(--color-background-light); /* اضافه شد */
+    color: var(--color-text-primary); /* اضافه شد */
 }
 :deep(.form-datepicker .vpd-input-group input:focus){
-    border-color: #007bff;
+    border-color: var(--color-link-primary); /* تغییر کرد */
     outline: none;
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    box-shadow: 0 0 0 0.2rem var(--color-shadow-focus); /* تغییر کرد */
 }
 
 
@@ -818,57 +833,50 @@ button[type='button']:hover:not(:disabled) {
   align-items: center;
 }
 .form-checkbox {
-  margin-right: 8px; /* یا margin-left برای فارسی */
+  margin-right: 8px;
   width: auto;
   transform: scale(1.2);
 }
 .checkbox-label {
     margin-bottom: 0;
     font-weight: normal;
+    color: var(--color-text-primary); /* اضافه شد */
 }
 
 
 .custom-fields-wrapper {
   margin-top: 25px;
   padding-top: 20px;
-  border-top: 1px dashed #ddd;
+  border-top: 1px dashed var(--color-border-medium); /* تغییر کرد */
 }
 .custom-fields-wrapper h3 {
   margin-bottom: 15px;
   font-size: 1.2em;
-  color: #444;
+  color: var(--color-text-primary); /* تغییر کرد */
 }
 .custom-field-group {
-    background-color: #fff;
+    background-color: var(--color-background-light); /* تغییر کرد */
     padding: 15px;
     border-radius: 6px;
-    border: 1px solid #e7e7e7;
+    border: 1px solid var(--color-border-light); /* تغییر کرد */
     margin-bottom: 15px;
-}
-
-.new-group-input {
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #e9ecef;
-  border-radius: 5px;
-}
-.new-group-input label{
-    font-size: 0.9em;
+    box-shadow: 0 1px 3px var(--color-shadow-light); /* اضافه شد */
 }
 
 
 .form-section {
     margin-top: 20px;
     padding: 15px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--color-border-medium); /* تغییر کرد */
     border-radius: 8px;
-    background-color: #fff;
+    background-color: var(--color-background-light); /* تغییر کرد */
+    box-shadow: 0 1px 3px var(--color-shadow-light); /* اضافه شد */
 }
 .form-section h4 {
     margin-top: 0;
     margin-bottom: 15px;
-    color: #333;
-    border-bottom: 1px solid #eee;
+    color: var(--color-text-primary); /* تغییر کرد */
+    border-bottom: 1px solid var(--color-border-light); /* تغییر کرد */
     padding-bottom: 10px;
 }
 .item-block {
@@ -878,36 +886,44 @@ button[type='button']:hover:not(:disabled) {
     align-items: center;
     margin-bottom: 15px;
     padding-bottom: 10px;
-    border-bottom: 1px dotted #f0f0f0;
+    border-bottom: 1px dotted var(--color-border-light); /* تغییر کرد */
 }
 .item-block:last-child {
     border-bottom: none;
     margin-bottom: 0;
 }
 .item-select {
-    flex-basis: 120px; /* عرض پایه برای select */
+    flex-basis: 120px;
     padding: 8px;
     border-radius: 4px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border-medium); /* تغییر کرد */
+    background-color: var(--color-background-light); /* اضافه شد */
+    color: var(--color-text-primary); /* اضافه شد */
 }
 .item-input {
-    flex-grow: 1; /* فیلد اصلی شماره یا خیابان، فضای بیشتری بگیرد */
+    flex-grow: 1;
     min-width: 150px;
     padding: 8px;
     border-radius: 4px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border-medium); /* تغییر کرد */
+    background-color: var(--color-background-light); /* اضافه شد */
+    color: var(--color-text-primary); /* اضافه شد */
 }
 .item-input-sml {
-    flex-basis: 100px; /* برای فیلدهای کوچکتر مثل شهر، استان */
+    flex-basis: 100px;
     padding: 8px;
     border-radius: 4px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border-medium); /* تغییر کرد */
+    background-color: var(--color-background-light); /* اضافه شد */
+    color: var(--color-text-primary); /* اضافه شد */
 }
 .item-textarea {
-    flex-basis: 100%; /* textarea عرض کامل بگیرد */
+    flex-basis: 100%;
     padding: 8px;
     border-radius: 4px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border-medium); /* تغییر کرد */
+    background-color: var(--color-background-light); /* اضافه شد */
+    color: var(--color-text-primary); /* اضافه شد */
 }
 
 .add-item-btn, .remove-item-btn {
@@ -918,20 +934,20 @@ button[type='button']:hover:not(:disabled) {
     font-size: 0.9em;
 }
 .add-item-btn {
-    background-color: #28a745; /* سبز */
-    color: white;
+    background-color: var(--el-color-success); /* از متغیر Element Plus */
+    color: var(--el-color-white);
 }
 .remove-item-btn {
-    background-color: #dc3545; /* قرمز */
-    color: white;
-    margin-right: auto; /* برای زبان فارسی، دکمه حذف به سمت راست برود */
+    background-color: var(--el-color-danger); /* از متغیر Element Plus */
+    color: var(--el-color-white);
+    margin-right: auto;
 }
 
 
 .form-actions {
   margin-top: 30px;
   display: flex;
-  justify-content: flex-end; /* دکمه‌ها در سمت راست */
+  justify-content: flex-end;
   gap: 10px;
 }
 
@@ -944,34 +960,35 @@ button[type='button']:hover:not(:disabled) {
   transition: background-color 0.2s ease;
 }
 .submit-btn {
-  background-color: #007bff;
+  background-color: var(--color-link-primary); /* تغییر کرد */
   color: white;
 }
 .submit-btn:hover:not(:disabled) {
-  background-color: #0056b3;
+  background-color: var(--color-link-hover); /* تغییر کرد */
 }
 .submit-btn:disabled {
-  background-color: #a0c3e6;
+  background-color: var(--color-button-disabled-bg); /* تغییر کرد */
+  color: var(--color-button-disabled-text); /* اضافه شد */
 }
 .cancel-btn {
-  background-color: #6c757d;
+  background-color: var(--color-text-tertiary); /* تغییر کرد */
   color: white;
 }
 .cancel-btn:hover {
-  background-color: #545b62;
+  background-color: var(--color-text-secondary); /* تغییر کرد */
 }
 
 .error-message {
-  color: #e74c3c;
-  background-color: #fdeded;
-  border: 1px solid #f5c6cb;
+  color: var(--color-error-text); /* تغییر کرد */
+  background-color: var(--el-color-danger-light-9); /* از متغیر Element Plus */
+  border: 1px solid var(--el-color-danger-light-7); /* از متغیر Element Plus */
   padding: 10px;
   border-radius: 5px;
   margin-top: 15px;
   text-align: center;
 }
 .unsupported-field-type {
-    color: #777;
+    color: var(--color-text-tertiary); /* تغییر کرد */
     font-style: italic;
 }
 

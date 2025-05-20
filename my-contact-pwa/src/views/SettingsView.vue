@@ -226,63 +226,59 @@ const handleImport = async (event) => {
 </script>
 
 <style scoped>
-/* استایل‌های قبلی شما */
 .settings-container {
   padding: 20px;
   max-width: 600px;
   margin: 20px auto;
-  background-color: #f9f9f9;
+  background-color: var(--color-background-darker-light); /* تغییر کرد */
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--color-shadow); /* تغییر کرد */
 }
 
 .settings-container h2, .settings-container h3 {
-  color: #333;
-  border-bottom: 1px solid #eee;
+  color: var(--color-text-primary); /* تغییر کرد */
+  border-bottom: 1px solid var(--color-border-light); /* تغییر کرد */
   padding-bottom: 10px;
   margin-bottom: 20px;
 }
 
-/* استایل جدید برای بخش تنظیمات نمایش */
 .display-settings-section {
     margin-bottom: 30px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border-medium); /* تغییر کرد */
     padding: 15px;
     border-radius: 8px;
-    background-color: #fff;
+    background-color: var(--color-background-light); /* تغییر کرد */
 }
 
 .display-settings-section h3 {
     margin-top: 0;
     padding-bottom: 5px;
-    border-bottom: 1px dashed #eee;
+    border-bottom: 1px dashed var(--color-border-light); /* تغییر کرد */
 }
 
 .display-settings-section .el-checkbox-group {
-  display: flex; /* استفاده از فلکس باکس برای چیدمان چک‌باکس‌ها */
-  flex-wrap: wrap; /* اجازه شکستن خط */
-  gap: 10px; /* فاصله بین چک‌باکس‌ها */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-bottom: 15px;
 }
 
-/* استایل برای چک‌باکس‌های تکی Element Plus با border=true */
 .display-settings-section .el-checkbox.is-bordered {
-    margin-right: 0 !important; /* خنثی کردن margin راست پیش‌فرض Element Plus */
-    flex-basis: calc(50% - 5px); /* هر چک‌باکس نصف عرض کانتینر + فاصله */
-    box-sizing: border-box; /* محاسبه padding و border در عرض */
-    display: flex; /* برای تراز کردن محتوا داخل چک‌باکس */
-    justify-content: flex-start; /* محتوا از چپ شروع بشه */
-    align-items: center; /* محتوا در مرکز عمودی قرار بگیره */
+    margin-right: 0 !important;
+    flex-basis: calc(50% - 5px);
+    box-sizing: border-box;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
 }
 
 .display-settings-section .el-checkbox.is-bordered .el-checkbox__label {
-    flex-grow: 1; /* لیبل فضای موجود رو پر کنه */
-    padding-left: 5px; /* فاصله بین چک‌باکس و لیبل */
+    flex-grow: 1;
+    padding-left: 5px;
 }
 
-
 .loading-message {
-    color: #007bff;
+    color: var(--color-link-primary); /* تغییر کرد */
     font-style: italic;
     margin-bottom: 15px;
 }
@@ -291,38 +287,34 @@ const handleImport = async (event) => {
     margin-top: 10px;
 }
 
-
-/* استایل‌های قبلی شما برای Export/Import */
 .backup-section, .restore-section {
   margin-bottom: 30px;
 }
 
 .settings-container button {
-  /* این استایل برای دکمه‌های Export و احتمالا Import استفاده میشه */
-  background-color: #007bff;
-  color: white;
+  background-color: var(--color-link-primary); /* تغییر کرد */
+  color: white; /* این میتونه ثابت باشه یا تغییر کنه به یک متغیر برای دکمه‌های با رنگ ثابت */
   padding: 10px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-size: 1em;
   transition: background-color 0.2s ease;
-  display: inline-flex; /* استفاده از فلکس باکس برای کنار هم قرار دادن آیکون و متن */
-  align-items: center; /* تراز عمودی */
-  gap: 5px; /* فاصله بین آیکون و متن */
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .settings-container button:hover {
-  background-color: #0056b3;
+  background-color: var(--color-link-hover); /* تغییر کرد */
 }
 
-/* استایل برای input type="file" */
 .settings-container input[type="file"] {
     margin-top: 10px;
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border-medium); /* تغییر کرد */
     border-radius: 5px;
-    background-color: #fff;
+    background-color: var(--color-background-light); /* تغییر کرد */
     cursor: pointer;
     display: block;
     width: 100%;
