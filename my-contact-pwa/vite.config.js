@@ -58,21 +58,85 @@ export default defineConfig({
           }
         ]
       },
-      workbox: { // تنظیمات Workbox برای Service Worker
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,vue,woff,woff2,ttf,eot,json,webmanifest}'], // فایل‌هایی که باید توسط سرویس ورکر کش بشن
-        // runtimeCaching: [ // این بخش رو بعداً برای کش کردن داده‌های API (در اینجا IndexedDB) کامل می‌کنیم
-        //   {
-        //     urlPattern: ({ url }) => url.pathname.startsWith('/api'), // برای مثال
-        //     handler: 'NetworkFirst',
-        //     options: {
-        //       cacheName: 'api-cache',
-        //       expiration: {
-        //         maxEntries: 10,
-        //         maxAgeSeconds: 60 * 60 * 24 // 1 روز
-        //       }
-        //     }
-        //   }
-        // ]
+       workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'], // .vue, .json, و فونت‌ها معمولا توسط globPatterns اصلی مدیریت میشن یا در باندل نهایی js/css قرار میگیرن
+                                                                 // .vue نباید اینجا باشه چون به js تبدیل میشه. json و webmanifest هم درسته.
+                                                                 // فونت‌ها (woff, woff2, ttf, eot) هم اگه در public باشن و مستقیم استفاده بشن، اینجا لازمن.
+                                                                 // اگه از طریق import در CSS یا JS لود میشن، در باندل نهایی قرار میگیرن.
+                                                                 // فعلا برای سادگی، فرمت‌های ویدیویی و صوتی رو اضافه نکردم.
+        
+        // اضافه کردن runtimeCaching
+        runtimeCaching: [
+          {
+            // استراتژی برای تصاویر: اول کش، بعد شبکه
+            // برای فایل‌های تصویری که به صورت داینامیک هم لود میشن یا از public میان
+            urlPattern: /\.(?:png|gif|jpg|jpeg|svg|webp)$/, // Regex برای پیدا کردن فایل‌های تصویری
+            handler: 'CacheFirst', // اول از کش بخون
+            options: {
+              cacheName: 'image-cache', // اسم کش برای این نوع فایل‌ها
+              expiration: {
+                maxEntries: 60,         // حداکثر 60 تصویر در این کش نگه دار
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 روز اعتبار کش
+              },
+              cacheableResponse: { // فقط پاسخ‌های موفق (status 200) یا از کش خود مرورگر (status 0) رو کش کن
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            // استراتژی برای فونت‌ها: اول کش، بعد شبکه
+            // خیلی شبیه تصاویر، چون فونت‌ها هم معمولاً تغییر نمی‌کنن
+            urlPattern: /\.(?:woff|woff2|ttf|eot)$/, // Regex برای فایل‌های فونت
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'font-cache',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 24 * 60 * 60, // 60 روز اعتبار کش
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            // استراتژی برای فایل‌های JS و CSS (مخصوصاً chunk ها یا فایل‌هایی که از CDN میان)
+            // `globPatterns` فایل‌های اصلی js/css رو precache می‌کنه.
+            // این برای حالتیه که بخوایم کنترل بیشتری روی runtime داشته باشیم یا برای فایل‌های خارج از precache.
+            // StaleWhileRevalidate انتخاب خوبیه: سریع از کش میده، در پس‌زمینه آپدیت می‌کنه.
+            urlPattern: /\.(?:js|css)$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'static-resources-cache',
+              expiration: {
+                maxEntries: 60,
+                maxAgeSeconds: 24 * 60 * 60 // 1 روز، چون این فایل‌ها ممکنه بیشتر آپدیت بشن
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            // استراتژی برای ناوبری (HTML) - برای معماری SPA مهمه
+            // این تضمین می‌کنه که خود اپ همیشه در دسترسه، حتی آفلاین
+            // `index.html` ما توسط globPatterns پیش‌کش شده، اما این قاعده برای اطمینان بیشتره
+            // و همچنین برای زمانی که از سرور، HTML های مختلفی برای مسیرهای مختلف میومد (که اینجا اینطور نیست)
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'StaleWhileRevalidate', // یا NetworkFirst، اگه تازگی index.html خیلی حیاتی‌تر از سرعت اولیه باشه
+            options: {
+              cacheName: 'navigation-cache',
+              // اگر خواستیم، می‌تونیم یه fallback تعریف کنیم که اگر شبکه و کش همزمان نبودن چی نشون بده
+              // اما چون index.html پیش‌کش شده، معمولاً نیازی نیست
+              // networkTimeoutSeconds: 3, // (اختیاری) اگه شبکه در 3 ثانیه جواب نداد، برو سراغ کش
+              // plugins: [
+              //   new PrecacheFallbackPlugin({
+              //     fallbackURL: '/index.html', // اگر index.html به هر دلیلی در دسترس نبود
+              //   })
+              // ]
+            }
+          }
+        ]
       }
     })
   ],
