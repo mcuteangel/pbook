@@ -15,8 +15,7 @@ export const useSettingsStore = defineStore('settings', {
     ],
     // وضعیت لودینگ برای نشون دادن اینکه آیا تنظیمات در حال بارگذاری هستن یا نه
     isLoading: false,
-    // اینجا میتونیم تنظیمات دیگه مثل تم، زبان و ... رو هم اضافه کنیم
-    // theme: 'light',
+    theme: 'light',
   }),
   getters: {
     // Getter برای دریافت لیست ستون‌هایی که باید نمایش داده بشن
@@ -24,13 +23,22 @@ export const useSettingsStore = defineStore('settings', {
     // Getter برای دریافت وضعیت لودینگ
     getIsLoading: (state) => state.isLoading,
     // Getter برای دریافت کل تنظیمات (اگر لازم باشه)
+    getCurrentTheme: (state) => state.theme,
+     
     getAllSettings: (state) => ({
         displayColumns: state.displayColumns,
-        // theme: state.theme,
+        theme: state.theme,
     }),
   },
   actions: {
-    // Action برای تنظیم ستون‌های نمایشی و ذخیره آن‌ها
+// Helper action (معمولاً با _ شروع میشه) برای اعمال تم به DOM
+_applyThemeToDOM(themeValue) {
+if (themeValue === 'dark') {
+document.documentElement.classList.add('dark');
+} else {
+document.documentElement.classList.remove('dark');
+}
+    },
     async setDisplayColumns(columns) {
       this.displayColumns = columns;
       // بعد از تغییر وضعیت، تنظیمات رو در دیتابیس ذخیره می‌کنیم
@@ -39,65 +47,77 @@ export const useSettingsStore = defineStore('settings', {
     },
 
     // Action برای ذخیره کل تنظیمات جاری در دیتابیس
-  async saveSettings() {
-    try {
-      // ** استفاده از spread syntax برای ساختن یک کپی ساده (Plain) از آرایه Reactive **
-      await db.settings.put({
-        id: 'appSettings',
-        displayColumns: [...this.displayColumns], // <-- اینجا تغییرش دادیم
-        // هر تنظیمات دیگه‌ای که به state اضافه می‌کنی رو اینجا هم باید ذخیره کنی
-        // theme: this.theme,
-      });
-      console.log('Settings saved to IndexedDB');
-    } catch (error) {
-      // لاگ کردن کامل خطا برای debugging
-      console.error('Failed to save settings:', error);
-      // می‌توانید اینجا یه پیام خطا هم به کاربر نشون بدی
-    }
-  },
-    // Action برای بارگذاری تنظیمات از دیتابیس هنگام شروع برنامه
-  async loadSettings() {
-    this.isLoading = true; // شروع لودینگ
-    try {
-      // تلاش برای خواندن رکورد تنظیمات با id 'appSettings'
-      const settings = await db.settings.get('appSettings');
-
-      if (settings) {
-        // اگر تنظیمات در دیتابیس پیدا شد، وضعیت Store رو با اون آپدیت می‌کنیم
-        console.log('Settings loaded from IndexedDB:', settings);
-        // مطمئن میشیم فقط پراپرتی‌هایی رو آپدیت می‌کنیم که توی شیء خونده شده وجود دارن
-        if (settings.displayColumns !== undefined) {
-           // ** استفاده از spread syntax برای اطمینان از اینکه آرایه Reactive Pinia با یک آرایه Plain از دیتابیس پر میشه **
-           this.displayColumns = [...settings.displayColumns]; // <-- اینجا هم کپی می‌گیریم
-        }
-        // اگر تنظیمات دیگه ای داشتی هم اینجا باید آپدیتشون کنی
-        // if (settings.theme !== undefined) {
-        //   this.theme = settings.theme;
-        // }
-      } else {
-         // اگر رکوردی با id 'appSettings' پیدا نشد (اولین بار یا بعد از حذف دیتابیس)
-         // وضعیت پیش‌فرض که توی state تعریف شده استفاده میشه.
-         console.log('No existing settings record found in IndexedDB. Using default state.');
-         // ** نکته مهم: حالا تنظیمات پیش‌فرض رو بلافاصله در دیتابیس ذخیره می‌کنیم تا رکوردش ساخته بشه **
-         // این کار اطمینان میده که در اجراهای بعدی، رکورد پیدا میشه.
-         // چون در saveSettings هم از put استفاده میکنیم، اگه upgrade هم همزمان رکورد رو اضافه کنه، تداخلی پیش نمیاد.
-         await this.saveSettings(); // <-- صدا زدن saveSettings برای ایجاد رکورد پیش فرض
-         console.log('Default settings saved to IndexedDB on first load.'); // لاگ اضافه
+ async saveSettings() {
+      try {
+        await db.settings.put({
+          id: 'appSettings',
+          displayColumns: [...this.displayColumns],
+          theme: this.theme, // <-- 4. ذخیره کردن تم فعلی در دیتابیس
+        });
+        console.log('Settings (including theme) saved to IndexedDB. Current theme:', this.theme);
+      } catch (error) {
+        console.error('Failed to save settings:', error);
       }
-    } catch (error) {
-      console.error('Failed to load settings:', error);
-      // اگر خطایی در لود کردن پیش اومد، وضعیت پیش‌فرض حفظ میشه
-    } finally {
-      this.isLoading = false; // پایان لودینگ
-    }
-  },
+    },
+    // Action برای بارگذاری تنظیمات از دیتابیس هنگام شروع برنامه
+ async loadSettings() {
+      this.isLoading = true;
+      let loadedTheme = 'light'; // مقدار پیش‌فرض اولیه برای تم
+      try {
+        const settings = await db.settings.get('appSettings');
+
+        if (settings) {
+          console.log('Settings loaded from IndexedDB:', settings);
+          if (settings.displayColumns !== undefined) {
+            this.displayColumns = [...settings.displayColumns];
+          }
+          if (settings.theme !== undefined) { // <-- 5. خوندن تم از دیتابیس
+            this.theme = settings.theme;
+            loadedTheme = settings.theme; // برای استفاده در _applyThemeToDOM
+          }
+        } else {
+          console.log('No existing settings record found. Using default state and saving defaults.');
+          // this.theme از state مقدار 'light' رو داره.
+          // displayColumns هم مقدار پیش‌فرض state رو داره.
+          await this.saveSettings(); // ذخیره تنظیمات پیش‌فرض (شامل تم 'light')
+        }
+        
+        // اعمال تم خوانده شده (یا پیش‌فرض) به DOM
+        this._applyThemeToDOM(this.theme); // یا میتونی از loadedTheme استفاده کنی
+        console.log('Theme applied to DOM on load:', this.theme);
+
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+        // در صورت خطا، تم پیش‌فرض 'light' که در state هست اعمال میشه
+        this._applyThemeToDOM('light'); // اطمینان از اعمال تم حتی در صورت خطا
+      } finally {
+        this.isLoading = false;
+      }
+    },
+ 
+ async toggleTheme() {
+const newTheme = this.theme === 'light' ? 'dark' : 'light';
+this.theme = newTheme; // آپدیت وضعیت تم در store
+this._applyThemeToDOM(newTheme); // اعمال تم جدید به DOM
+await this.saveSettings(); // ذخیره تم جدید در دیتابیس
+console.log('Theme toggled to:', newTheme);
+},
+ 
     // Action اختیاری برای برگرداندن تنظیمات به حالت پیش‌فرض
     resetToDefaults() {
-       // تنظیم state به مقادیر پیش‌فرض اولیه
-       this.$reset(); // Pinia's built-in method to reset state to initial value
-       // سپس این وضعیت پیش‌فرض رو هم ذخیره می‌کنیم
-       this.saveSettings();
-       console.log('Settings reset to defaults and save requested');
+      // مقادیر پیش‌فرض اولیه رو مستقیماً ست میکنیم
+      this.displayColumns = [
+        'name',
+        'lastName',
+        'phone',
+        'gender',
+        'group',
+      ];
+      this.theme = 'light'; // برگرداندن تم به پیش‌فرض
+
+      this._applyThemeToDOM(this.theme); // اعمال تم پیش‌فرض به DOM
+      this.saveSettings(); // ذخیره تنظیمات پیش‌فرض
+      console.log('Settings reset to defaults (including theme) and save requested');
     }
   },
 });

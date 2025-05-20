@@ -1,6 +1,13 @@
 <template>
   <div class="settings-container">
-    <h2>تنظیمات و پشتیبان‌گیری</h2>
+    <h2>تنظیمات </h2>
+  <el-form label-position="top">
+  <el-form-item label="تم برنامه">
+    <el-switch 
+    v-model="isDarkMode"
+    active-text="تاریک"
+    inactive-text="روشن" />
+  </el-form-item>
 
     <section class="display-settings-section">
       <h3>تنظیمات نمایش لیست مخاطبین</h3>
@@ -46,6 +53,8 @@
       <p>برای بازیابی اطلاعات از فایل پشتیبان JSON، فایل مورد نظر را انتخاب کنید.</p>
       <input type="file" accept=".json" @change="handleImport">
       </section>
+
+  </el-form>
   </div>
 </template>
 
@@ -67,6 +76,10 @@ const groupStore = useGroupStore();
 const customFieldStore = useCustomFieldStore();
 const settingsStore = useSettingsStore(); // <-- گرفتن نمونه settings Store
 
+const isDarkMode = computed({
+    get: () => settingsStore.theme === 'dark',
+    set: () => settingsStore.toggleTheme()
+  });
 // گرفتن تعریف فیلدهای سفارشی به صورت reactive از store
 const { fieldDefinitions } = storeToRefs(customFieldStore); // فرض بر این است که fieldDefinitions در customFieldStore وجود دارد
 
