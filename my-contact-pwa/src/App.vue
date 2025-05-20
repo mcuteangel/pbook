@@ -19,6 +19,16 @@
           تنظیمات
         </RouterLink>
       </nav>
+      <!-- دکمه نصب اپلیکیشن -->
+      <el-button 
+        v-if="showInstallButton" 
+        @click="handleInstallClick" 
+        type="success" 
+        icon="Download" 
+        circle
+        title="نصب اپلیکیشن"
+        class="install-button"
+      />
     </header>
 
     <hr />
@@ -28,84 +38,137 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
-// ایمپورت کردن از @ که به src اشاره داره، روش استاندارد Vite/Vue هست
+// از onMounted و ref و onUnmounted استفاده می‌کنیم
+import { ref, onMounted, onUnmounted } from 'vue'
+import { RouterLink, RouterView } from 'vue-router' // مطمئن شو RouterLink و RouterView ایمپورت شدند
 import { useContactStore } from '@/store/contacts'
 import { useGroupStore } from '@/store/groups'
 import { useCustomFieldStore } from '@/store/customFields';
 
+// --- شروع منطق پرامپت نصب ---
+const deferredPrompt = ref(null);
+const showInstallButton = ref(false);
+
+const beforeInstallPromptHandler = (e) => {
+  // جلوگیری از نمایش پرامپت پیش‌فرض مرورگر
+  e.preventDefault();
+  // ذخیره رویداد برای استفاده بعدی
+  deferredPrompt.value = e;
+  // نمایش دکمه نصب سفارشی ما
+  showInstallButton.value = true;
+  console.log('beforeinstallprompt event fired, install button shown.');
+};
+
+const handleInstallClick = async () => {
+  if (!deferredPrompt.value) {
+    console.log('No deferredPrompt available.');
+    return;
+  }
+  // نمایش پرامپت نصب مرورگر
+  deferredPrompt.value.prompt();
+  console.log('Install prompt shown to user.');
+
+  // منتظر پاسخ کاربر می‌مانیم
+  const { outcome } = await deferredPrompt.value.userChoice;
+  console.log(`User response to the install prompt: ${outcome}`);
+
+  // رویداد فقط یکبار قابل استفاده است
+  deferredPrompt.value = null;
+  // مخفی کردن دکمه نصب ما
+  showInstallButton.value = false;
+
+  if (outcome === 'accepted') {
+    console.log('User accepted the A2HS prompt');
+    // اینجا می‌تونی کاری انجام بدی اگه کاربر نصب رو پذیرفت
+    // مثلا یه پیام تشکر نشون بدی یا یه رویداد ثبت کنی
+  } else {
+    console.log('User dismissed the A2HS prompt');
+  }
+};
+
+// --- پایان منطق پرامپت نصب ---
 
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
 const customFieldStore = useCustomFieldStore();
 
-
-// لود کردن اطلاعات اولیه در زمان mount شدن برنامه
 onMounted(async () => {
   console.log('App mounted, loading data...');
   await contactStore.loadContacts();
   await groupStore.loadGroups();
   await customFieldStore.loadFieldDefinitions();
   console.log('Loading finished.');
+
+  // اضافه کردن event listener برای beforeinstallprompt
+  window.addEventListener('beforeinstallprompt', beforeInstallPromptHandler);
+  console.log('Event listener for beforeinstallprompt added.');
+});
+
+onUnmounted(() => {
+  // پاک کردن event listener وقتی کامپوننت از بین میره
+  window.removeEventListener('beforeinstallprompt', beforeInstallPromptHandler);
+  console.log('Event listener for beforeinstallprompt removed.');
 });
 </script>
 
 <style scoped>
-/* استایل‌های بهبود یافته برای هدر و ناوبری */
+/* استایل‌های قبلی ... */
 .app-header {
-  background-color: #f8f9fa; /* رنگ پس‌زمینه روشن برای هدر */
-  padding: 15px 20px; /* فاصله داخلی */
-  border-bottom: 1px solid #e7e7e7; /* خط جداکننده پایین هدر */
-  display: flex; /* استفاده از فلکس‌باکس برای چیدمان افقی */
-  justify-content: space-between; /* پخش کردن عناصر با فاصله مساوی */
-  align-items: center; /* تراز عمودی عناصر در وسط */
-  flex-wrap: wrap; /* اجازه شکست خط در صفحات کوچک */
-  gap: 10px; /* فاصله بین آیتم‌های فلکس (عنوان و nav) */
+  background-color: #f8f9fa;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e7e7e7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px; 
 }
 
 .app-header h1 {
-  margin: 0; /* حذف margin پیش‌فرض h1 */
-  font-size: 1.6em; /* اندازه فونت عنوان */
-  color: #333; /* رنگ عنوان */
+  margin: 0;
+  font-size: 1.6em;
+  color: #333;
 }
 
 .app-header nav {
-  display: flex; /* استفاده از فلکس‌باکس برای لینک‌های ناوبری */
-  gap: 20px; /* فاصله بین لینک‌ها */
-  flex-wrap: wrap; /* اجازه شکست خط لینک‌ها */
-  padding: 0; /* حذف padding پیش‌فرض nav */
-  margin: 0; /* حذف margin پیش‌فرض nav */
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 0;
+  margin: 0;
 }
 
 .app-header nav a {
-  text-decoration: none; /* حذف خط زیر لینک */
-  color: #007bff; /* رنگ اصلی لینک */
-  font-weight: bold; /* فونت پررنگ */
-  padding-bottom: 3px; /* فاصله برای خط زیر فعال */
-  border-bottom: 2px solid transparent; /* خط زیر نامرئی برای انیمیشن */
-  transition: color 0.2s ease, border-bottom-color 0.2s ease; /* انیمیشن برای تغییر رنگ و خط زیر */
+  text-decoration: none;
+  color: #007bff;
+  font-weight: bold;
+  padding-bottom: 3px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease, border-bottom-color 0.2s ease;
 }
 
 .app-header nav a:hover {
-  color: #0056b3; /* رنگ لینک در حالت هاور */
-  border-bottom-color: #0056b3; /* نمایش خط زیر در حالت هاور */
+  color: #0056b3;
+  border-bottom-color: #0056b3;
 }
 
 .app-header nav a.active-link {
-  color: #0056b3; /* رنگ لینک فعال */
-  border-bottom-color: #007bff; /* رنگ خط زیر لینک فعال */
+  color: #0056b3;
+  border-bottom-color: #007bff;
 }
 
-/* اضافه کردن padding به محتوای اصلی صفحه برای فاصله با هدر */
-.app-main {
-  padding: 20px;
+/* استایل برای دکمه نصب */
+.install-button {
+  /* می‌تونی اینجا استایل‌های خاصی برای دکمه نصب بدی اگه لازم شد */
+  /* مثلاً کمی margin اگه به nav چسبیده باشه */
+  margin-left: 15px; /* مثال */
 }
 
-/* اگر hr رو نگه داشتی، می‌تونی استایلشو اینجا تنظیم کنی */
 hr {
-  margin: 0; /* حذف margin پیش‌فرض hr */
+  margin: 0;
   border: none;
-  border-top: 1px solid #e7e7e7; /* خط هم‌رنگ با border هدر */
+  border-top: 1px solid #e7e7e7;
 }
 
+/* کامنت: .app-main رو اینجا نمی‌بینم استفاده شده باشه، اگه جای دیگه‌ای هست که نیازه، بگو */
 </style>
