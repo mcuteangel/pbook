@@ -180,7 +180,7 @@ onUnmounted(() => {
 
 /* ناوبری دسکتاپ */
 .app-nav-desktop {
-  display: flex; /* در دسکتاپ نمایش داده شود */
+  display: flex; /* پیش فرض: نمایش افقی برای دسکتاپ */
   flex-wrap: wrap;
   justify-content: center;
   gap: 25px;
@@ -223,44 +223,45 @@ onUnmounted(() => {
   background-color: var(--color-background-content);
   border-radius: 10px;
   box-shadow: 0 4px 15px var(--color-shadow);
-  margin-bottom: 80px; /* فضای کافی برای ناوبری پایین صفحه */
+  /* این margin-bottom برای دسکتاپ شاید نیاز نباشه اما برای یکپارچگی نگهش میداریم یا میتونی حذفش کنی */
+  margin-bottom: 20px; /* برای دسکتاپ کمترش کردم */
 }
+
 
 /* ناوبری موبایل (پایین صفحه) */
 .app-nav-mobile {
-  display: none; /* در دسکتاپ مخفی شود */
+  display: none; /* پیش فرض: در دسکتاپ مخفی شود */
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   width: 100%;
-  background-color: var(--color-background-header); /* پس‌زمینه مشابه هدر */
-  box-shadow: 0 -4px 15px var(--color-shadow-strong); /* سایه به سمت بالا */
+  background-color: var(--color-background-header);
+  box-shadow: 0 -4px 15px var(--color-shadow-strong);
   z-index: 1000;
   padding: 10px 0;
-  display: flex; /* استفاده از فلکس باکس برای چیدمان آیتم‌ها */
-  justify-content: space-around; /* توزیع یکنواخت فضای بین آیتم‌ها */
+  justify-content: space-around;
   align-items: center;
 }
 
 .app-nav-mobile .mobile-nav-item {
   display: flex;
-  flex-direction: column; /* آیکون بالا، متن پایین */
+  flex-direction: column;
   align-items: center;
   text-decoration: none;
-  color: var(--color-link-header); /* رنگ لینک‌ها */
-  font-size: 0.8em; /* فونت کوچک‌تر برای موبایل */
+  color: var(--color-link-header);
+  font-size: 0.8em;
   font-weight: 600;
   padding: 5px;
   transition: color 0.3s ease, background-color 0.3s ease;
-  flex-grow: 1; /* هر آیتم فضای مساوی بگیرد */
+  flex-grow: 1;
   text-align: center;
-  border-radius: 8px; /* کمی گردتر */
+  border-radius: 8px;
 }
 
 .app-nav-mobile .mobile-nav-item .el-icon {
-  font-size: 1.5em; /* آیکون‌های بزرگ‌تر برای لمس آسان‌تر */
-  margin-bottom: 3px; /* فاصله بین آیکون و متن */
+  font-size: 1.5em;
+  margin-bottom: 3px;
 }
 
 .app-nav-mobile .mobile-nav-item:hover {
@@ -279,13 +280,13 @@ onUnmounted(() => {
     padding: 10px 15px;
     gap: 10px;
   }
-
+  
   .header-content {
     flex-direction: column;
     align-items: center;
     gap: 10px;
     padding-bottom: 5px;
-    border-bottom: none; /* در موبایل نیازی به خط جداکننده زیر عنوان نیست */
+    border-bottom: none;
   }
 
   .app-title {
@@ -298,19 +299,22 @@ onUnmounted(() => {
     margin: 0;
   }
 
+  /* در موبایل، ناوبری دسکتاپ را مخفی کن */
   .app-nav-desktop {
-    display: none; /* در موبایل مخفی شود */
+    display: none; 
   }
 
+  /* در موبایل، ناوبری موبایل (پایین صفحه) را نمایش بده */
   .app-nav-mobile {
-    display: flex; /* در موبایل نمایش داده شود */
+    display: flex; /* این خط را به flex تغییر دادم */
   }
 
   .app-main {
     padding: 15px;
-    margin: 15px 10px 70px 10px; /* کاهش Margin افقی و تنظیم Margin پایین برای ناوبری موبایل */
+    margin: 15px 10px; /* Margin افقی */
+    margin-bottom: 70px; /* 👈 این خط رو تغییر بده / اضافه کن برای فضای پایین */
     border-radius: 8px;
-    box-shadow: none; /* حذف سایه در موبایل برای سادگی */
+    box-shadow: none;
   }
 }
 

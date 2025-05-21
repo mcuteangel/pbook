@@ -1,29 +1,31 @@
 /* src/assets/styles/theme.css */
 
-body {
-    /* رنگ پس‌زمینه اصلی برنامه را از متغیرهای تم می‌گیرد */
-    background-color: var(--color-background-primary);
-    /* برای انیمیشن روان هنگام تغییر تم (روشن/تاریک) */
-    transition: background-color 0.3s ease, color 0.3s ease;
-    /* تنظیم فونت سراسری برای کل برنامه */
-    font-family: 'Vazirmatn', sans-serif;
-    /* تنظیم جهت نوشتار برای کل برنامه */
-    direction: rtl;
-    /* حذف Margin پیش‌فرض مرورگر */
+html, body { /* اینو به html, body تغییر دادم تا مطمئن بشیم ریشه اعمال میشه */
     margin: 0;
-    /* تنظیم رنگ متن پیش‌فرض برای کل برنامه */
+    padding: 0; /* پدینگ پیش‌فرض مرورگر رو هم حذف کنیم */
+    width: 100%;
+    height: 100%;
+    font-family: 'Vazirmatn', sans-serif;
+    direction: rtl; /* این خط حیاتیه و روی ریشه html/body اعمال میشه */
+    background-color: var(--color-background-primary);
     color: var(--color-text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* این بخش برای اطمینان از RTL روی کامپوننت‌های Element Plus */
+/* این بخش رو هم برای اطمینان بیشتر برای کامپوننت‌های Element Plus اضافه کن */
+/* نیازی به !important برای direction: rtl اینجا نیست، چون Element Plus خودش مدیریت می‌کنه */
 .el-overlay, .el-message-box, .el-notification, .el-loading-mask,
 .el-dropdown-menu, .el-picker-panel, .el-date-editor,
 .el-popover, .el-tooltip__popper,
-.el-input__inner, .el-textarea__inner { /* چند تا دیگه هم اضافه کردم که ممکنه نیاز باشه */
-    font-family: 'Vazirmatn', sans-serif !important;
-    direction: rtl !important;
+.el-input__inner, .el-textarea__inner,
+.el-table,
+.el-form-item__label, /* برای لیبل فرم‌ها */
+.el-select, .el-input, .el-textarea, /* برای فیلدهای ورودی */
+.el-button { /* برای دکمه‌ها */
+  font-family: 'Vazirmatn', sans-serif !important;
+  /* جهت برای Element Plus بهتره از طریق config خود Element Plus یا صرفاً تنظیم روی body هندل بشه */
+  /* اگر بعد از این باز هم مشکل داشتی، میشه اینجا direction: rtl !important; رو به صورت موقت تست کرد */
 }
-
 
 :root {
   /* Light Theme Variables */

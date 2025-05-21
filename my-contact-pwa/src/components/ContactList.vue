@@ -33,9 +33,18 @@
         </select>
       </div>
 
-      <button class="toggle-filter-button" @click="toggleFilterSection">
-        فیلتر پیشرفته {{ isFilterSectionVisible ? '▲ بستن' : '▼ باز کردن' }}
-      </button>
+     <el-button 
+    type="info" 
+    plain 
+    @click="toggleAdvancedFilters" 
+    class="advanced-filter-button"
+>
+    فیلتر پیشرفته
+    <el-icon class="el-icon--right">
+        <template v-if="!showAdvancedFilters"><ArrowDown /></template>
+        <template v-else><ArrowUp /></template>
+    </el-icon>
+</el-button>
     </div>
 
     <div v-if="isFilterSectionVisible" class="advanced-filter-section">
@@ -231,13 +240,10 @@
            ویرایش
          </button>
 
-         <button
-           class="button delete-button"
-           @click="confirmDeleteContact(contactItem.contact.id)"
-           :disabled="contactStore.loading"
-         >
-           حذف
-         </button>
+         <el-button type="danger">
+  <el-icon><Delete /></el-icon>
+  حذف
+</el-button>
        </div>
      </li>
    </ul>
@@ -1320,6 +1326,22 @@ h2 {
     gap: 8px;
     align-items: flex-end;
 }
+
+.advanced-filter-button {
+  margin-top: 15px; /* کمی فاصله از بالا */
+  width: 100%; /* تمام عرض کانتینر را بگیرد */
+  font-weight: bold;
+  justify-content: center; /* متن و آیکون وسط‌چین */
+}
+
+/* استایل‌های موبایل اگر نیاز بود */
+@media (max-width: 768px) {
+    .advanced-filter-button {
+        padding: 10px 15px; /* پدینگ مناسب‌تر در موبایل */
+        font-size: 0.9em; /* فونت کمی کوچکتر */
+    }
+}
+
 
 /* استایل عمومی برای دکمه‌ها */
 .button {
