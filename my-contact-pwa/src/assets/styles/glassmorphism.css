@@ -1,0 +1,288 @@
+/* پایه گلس مورفیسم برای فرم و بخش‌های اصلی */
+.glass {
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-radius: 18px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  transition:
+    box-shadow 0.3s,
+    border 0.3s,
+    background 0.3s;
+}
+.glass:focus-within,
+.glass:hover {
+  box-shadow: 0 12px 32px 0 rgba(31, 38, 135, 0.22);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+}
+
+/* افکت میکرو برای اینپوت و دکمه */
+.flat-input:focus,
+.flat-select:focus {
+  box-shadow: 0 0 0 4px rgba(100, 180, 255, 0.13);
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+.submit-btn:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(100, 180, 255, 0.18);
+  transition: all 0.2s;
+}
+
+/* انیمیشن fade برای پیام‌ها */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Glassmorphism Animated Blurred Background --- */
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  background: linear-gradient(
+    120deg,
+    rgba(120, 180, 255, 0.45) 0%,
+    rgba(255, 180, 220, 0.35) 50%,
+    rgba(180, 255, 220, 0.45) 100%
+  );
+  animation: glass-gradient-move 12s ease-in-out infinite alternate;
+  filter: blur(32px) saturate(160%);
+  transition: background 0.5s;
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-bg {
+    background: linear-gradient(
+      120deg,
+      rgba(40, 60, 90, 0.65) 0%,
+      rgba(60, 40, 80, 0.55) 50%,
+      rgba(30, 60, 80, 0.65) 100%
+    );
+  }
+}
+
+@keyframes glass-gradient-move {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+/* --- Header & Nav: Glassmorphism Glow & Inner Shadow --- */
+.app-header.glass,
+.app-nav-mobile.glass {
+  box-shadow:
+    0 2px 24px 0 rgba(31, 38, 135, 0.1),
+    0 1.5px 0 0 rgba(255, 255, 255, 0.18) inset;
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(180%);
+  border-radius: 18px;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  transition:
+    box-shadow 0.3s,
+    background 0.3s;
+}
+
+.app-header.glass:hover,
+.app-nav-mobile.glass:hover {
+  box-shadow:
+    0 4px 32px 0 rgba(31, 38, 135, 0.18),
+    0 2px 0 0 rgba(255, 255, 255, 0.22) inset;
+}
+
+/* --- Menu & Icon Micro-Interactions --- */
+.app-header .el-icon,
+.app-nav-desktop .el-icon,
+.app-nav-mobile .el-icon {
+  transition:
+    color 0.25s,
+    filter 0.25s,
+    transform 0.18s;
+  filter: drop-shadow(0 1px 2px rgba(31, 38, 135, 0.1));
+}
+
+.app-header .el-icon:hover,
+.app-nav-desktop .nav-item:hover .el-icon,
+.app-nav-mobile .mobile-nav-item:hover .el-icon {
+  color: var(--accent-color, #6c63ff);
+  filter: drop-shadow(0 0 6px var(--accent-color, #6c63ff));
+  transform: scale(1.18) rotate(-6deg);
+}
+
+.app-nav-desktop .nav-item:active,
+.app-nav-mobile .mobile-nav-item:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 8px 0 rgba(31, 38, 135, 0.1);
+}
+
+/* --- Accent Color --- */
+:root {
+  --accent-color: #6c63ff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent-color: #a7a3ff;
+  }
+}
+
+/* --- Glassmorphism Buttons --- */
+.el-button,
+.glass-btn {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--accent-color, #6c63ff);
+  border: 1.5px solid var(--accent-color, #6c63ff);
+  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.1);
+  border-radius: 16px;
+  font-family: 'Inter', 'Poppins', 'Vazirmatn', sans-serif;
+  font-weight: 600;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    box-shadow 0.2s,
+    transform 0.12s;
+  -webkit-backdrop-filter: blur(8px) saturate(180%);
+  backdrop-filter: blur(8px) saturate(180%);
+  overflow: hidden;
+  position: relative;
+}
+.el-button.primary,
+.glass-btn.primary {
+  background: linear-gradient(120deg, var(--accent-color, #6c63ff) 60%, #fff0 100%);
+  color: #fff;
+  border: none;
+}
+.el-button.secondary,
+.glass-btn.secondary {
+  background: transparent;
+  color: var(--accent-color, #6c63ff);
+  border: 1.5px solid var(--accent-color, #6c63ff);
+}
+.el-button:disabled,
+.glass-btn:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.el-button:hover:not(:disabled),
+.glass-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.28);
+  color: var(--accent-color, #6c63ff);
+  box-shadow: 0 4px 18px 0 rgba(31, 38, 135, 0.18);
+  transform: scale(1.04);
+}
+.el-button:active:not(:disabled),
+.glass-btn:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 1px 4px 0 rgba(31, 38, 135, 0.1);
+  transform: scale(0.97);
+}
+
+/* Ripple effect for buttons */
+.el-button::after,
+.glass-btn::after {
+  content: '';
+  display: block;
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+  left: 50%;
+  top: 50%;
+  background: rgba(108, 99, 255, 0.18);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.4s;
+  opacity: 0;
+}
+.el-button:active::after,
+.glass-btn:active::after {
+  width: 180%;
+  height: 180%;
+  opacity: 0.25;
+  transition: 0s;
+}
+
+/* --- Glassmorphism Input Fields --- */
+.el-input__wrapper,
+.glass-input {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  border: 1.5px solid rgba(108, 99, 255, 0.18);
+  box-shadow: 0 1px 6px 0 rgba(31, 38, 135, 0.08);
+  font-family: 'Inter', 'Poppins', 'Vazirmatn', sans-serif;
+  font-size: 1em;
+  color: var(--color-text, #222);
+  transition:
+    border 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
+  padding: 0.5em 1em;
+  -webkit-backdrop-filter: blur(6px) saturate(180%);
+  backdrop-filter: blur(6px) saturate(180%);
+}
+.el-input__wrapper:focus-within,
+.glass-input:focus-within {
+  border: 1.5px solid var(--accent-color, #6c63ff);
+  box-shadow: 0 2px 12px 0 rgba(108, 99, 255, 0.18);
+  background: rgba(255, 255, 255, 0.28);
+}
+.el-input__inner::placeholder,
+.glass-input::placeholder {
+  color: #888;
+  opacity: 0.7;
+  font-weight: 400;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+.el-input__wrapper:focus-within .el-input__inner::placeholder,
+.glass-input:focus-within::placeholder {
+  opacity: 0.4;
+  transform: translateY(-4px) scale(0.96);
+}
+
+/* --- Modern Typography --- */
+body,
+.app-container,
+.glass,
+.el-input__wrapper,
+.el-button,
+.glass-btn {
+  font-family: 'Inter', 'Poppins', 'Vazirmatn', sans-serif;
+  letter-spacing: -0.2px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.app-title {
+  font-family: 'Inter', 'Poppins', 'Vazirmatn', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}

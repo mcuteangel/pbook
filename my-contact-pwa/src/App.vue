@@ -1,13 +1,14 @@
 <template>
   <div class="app-container">
-    <header class="app-header">
+    <div class="app-bg"></div>
+    <header class="app-header glass fade-in">
       <div class="header-content">
         <h1 class="app-title">دفترچه مخاطبین هوشمند</h1>
-        <el-button 
-          v-if="showInstallButton" 
-          @click="handleInstallClick" 
-          type="primary" 
-          icon="Download" 
+        <el-button
+          v-if="showInstallButton"
+          @click="handleInstallClick"
+          type="primary"
+          icon="Download"
           round
           title="نصب اپلیکیشن"
           class="install-button"
@@ -28,7 +29,11 @@
           <el-icon><Grid /></el-icon>
           <span>گروه‌ها</span>
         </RouterLink>
-        <RouterLink :to="{ name: 'custom-field-manager' }" active-class="active-link" class="nav-item">
+        <RouterLink
+          :to="{ name: 'custom-field-manager' }"
+          active-class="active-link"
+          class="nav-item"
+        >
           <el-icon><List /></el-icon>
           <span>فیلدها</span>
         </RouterLink>
@@ -39,28 +44,48 @@
       </nav>
     </header>
 
-    <main class="app-main">
+    <main class="app-main glass fade-in">
       <RouterView></RouterView>
     </main>
 
-    <nav class="app-nav-mobile">
-      <RouterLink :to="{ name: 'contact-list' }" class="mobile-nav-item" active-class="active-mobile-link">
+    <nav class="app-nav-mobile glass fade-in">
+      <RouterLink
+        :to="{ name: 'contact-list' }"
+        class="mobile-nav-item"
+        active-class="active-mobile-link"
+      >
         <el-icon><User /></el-icon>
         <span>مخاطبین</span>
       </RouterLink>
-      <RouterLink :to="{ name: 'add-contact' }" class="mobile-nav-item" active-class="active-mobile-link">
+      <RouterLink
+        :to="{ name: 'add-contact' }"
+        class="mobile-nav-item"
+        active-class="active-mobile-link"
+      >
         <el-icon><CirclePlus /></el-icon>
         <span>افزودن</span>
       </RouterLink>
-      <RouterLink :to="{ name: 'group-manager' }" class="mobile-nav-item" active-class="active-mobile-link">
+      <RouterLink
+        :to="{ name: 'group-manager' }"
+        class="mobile-nav-item"
+        active-class="active-mobile-link"
+      >
         <el-icon><Grid /></el-icon>
         <span>گروه‌ها</span>
       </RouterLink>
-      <RouterLink :to="{ name: 'custom-field-manager' }" class="mobile-nav-item" active-class="active-mobile-link">
+      <RouterLink
+        :to="{ name: 'custom-field-manager' }"
+        class="mobile-nav-item"
+        active-class="active-mobile-link"
+      >
         <el-icon><List /></el-icon>
         <span>فیلدها</span>
       </RouterLink>
-      <RouterLink :to="{ name: 'settings' }" class="mobile-nav-item" active-class="active-mobile-link">
+      <RouterLink
+        :to="{ name: 'settings' }"
+        class="mobile-nav-item"
+        active-class="active-mobile-link"
+      >
         <el-icon><Setting /></el-icon>
         <span>تنظیمات</span>
       </RouterLink>
@@ -69,66 +94,68 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { RouterLink, RouterView } from 'vue-router';
-import { useContactStore } from '@/store/contacts';
-import { useGroupStore } from '@/store/groups';
-import { useCustomFieldStore } from '@/store/customFields';
-import { User, CirclePlus, Grid, List, Setting, Download } from '@element-plus/icons-vue'; // ایمپورت آیکون‌ها
+import { ref, onMounted, onUnmounted } from 'vue'
+import { RouterLink, RouterView } from 'vue-router'
+import { useContactStore } from '@/store/contacts'
+import { useGroupStore } from '@/store/groups'
+import { useCustomFieldStore } from '@/store/customFields'
+import { User, CirclePlus, Grid, List, Setting, Download } from '@element-plus/icons-vue' // ایمپورت آیکون‌ها
+import './assets/styles/glassmorphism.css'
+import './assets/styles/theme.css'
 
 // --- شروع منطق پرامپت نصب ---
-const deferredPrompt = ref(null);
-const showInstallButton = ref(false);
+const deferredPrompt = ref(null)
+const showInstallButton = ref(false)
 
 const beforeInstallPromptHandler = (e) => {
-  e.preventDefault();
-  deferredPrompt.value = e;
-  showInstallButton.value = true;
-  console.log('beforeinstallprompt event fired, install button shown.');
-};
+  e.preventDefault()
+  deferredPrompt.value = e
+  showInstallButton.value = true
+  console.log('beforeinstallprompt event fired, install button shown.')
+}
 
 const handleInstallClick = async () => {
   if (!deferredPrompt.value) {
-    console.log('No deferredPrompt available.');
-    return;
+    console.log('No deferredPrompt available.')
+    return
   }
-  deferredPrompt.value.prompt();
-  console.log('Install prompt shown to user.');
+  deferredPrompt.value.prompt()
+  console.log('Install prompt shown to user.')
 
-  const { outcome } = await deferredPrompt.value.userChoice;
-  console.log(`User response to the install prompt: ${outcome}`);
+  const { outcome } = await deferredPrompt.value.userChoice
+  console.log(`User response to the install prompt: ${outcome}`)
 
-  deferredPrompt.value = null;
-  showInstallButton.value = false;
+  deferredPrompt.value = null
+  showInstallButton.value = false
 
   if (outcome === 'accepted') {
-    console.log('User accepted the A2HS prompt');
+    console.log('User accepted the A2HS prompt')
   } else {
-    console.log('User dismissed the A2HS prompt');
+    console.log('User dismissed the A2HS prompt')
   }
-};
+}
 
 // --- پایان منطق پرامپت نصب ---
 
-const contactStore = useContactStore();
-const groupStore = useGroupStore();
-const customFieldStore = useCustomFieldStore();
+const contactStore = useContactStore()
+const groupStore = useGroupStore()
+const customFieldStore = useCustomFieldStore()
 
 onMounted(async () => {
-  console.log('App mounted, loading data...');
-  await contactStore.loadContacts();
-  await groupStore.loadGroups();
-  await customFieldStore.loadFieldDefinitions();
-  console.log('Loading finished.');
+  console.log('App mounted, loading data...')
+  await contactStore.loadContacts()
+  await groupStore.loadGroups()
+  await customFieldStore.loadFieldDefinitions()
+  console.log('Loading finished.')
 
-  window.addEventListener('beforeinstallprompt', beforeInstallPromptHandler);
-  console.log('Event listener for beforeinstallprompt added.');
-});
+  window.addEventListener('beforeinstallprompt', beforeInstallPromptHandler)
+  console.log('Event listener for beforeinstallprompt added.')
+})
 
 onUnmounted(() => {
-  window.removeEventListener('beforeinstallprompt', beforeInstallPromptHandler);
-  console.log('Event listener for beforeinstallprompt removed.');
-});
+  window.removeEventListener('beforeinstallprompt', beforeInstallPromptHandler)
+  console.log('Event listener for beforeinstallprompt removed.')
+})
 </script>
 
 <style scoped>
@@ -136,6 +163,30 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+.app-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: var(--glass-bg, rgba(255, 255, 255, 0.18));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: glass-bg-animation 10s infinite alternate;
+}
+
+@keyframes glass-bg-animation {
+  from {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1.1);
+    opacity: 1;
+  }
 }
 
 .app-header {
@@ -150,6 +201,13 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 15px;
+}
+
+.app-header.glass {
+  background: none !important;
+  box-shadow: none !important;
+  /* افکت گلس سراسری */
+  /* سایر ویژگی‌های glass از glassmorphism.css اعمال می‌شود */
 }
 
 .header-content {
@@ -194,7 +252,10 @@ onUnmounted(() => {
   font-weight: 600;
   padding: 10px 18px;
   border-radius: 8px;
-  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.2s ease;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -215,18 +276,36 @@ onUnmounted(() => {
   box-shadow: 0 2px 6px var(--color-shadow-medium);
 }
 
+/* حذف پس‌زمینه و box-shadow پیش‌فرض برای اعمال بهتر گلس‌مورفیسم */
 .app-main {
   flex-grow: 1;
   padding: 20px;
   max-width: 1200px;
   margin: 20px auto;
-  background-color: var(--color-background-content);
+  background: none !important;
+  box-shadow: none !important;
   border-radius: 10px;
-  box-shadow: 0 4px 15px var(--color-shadow);
-  /* این margin-bottom برای دسکتاپ شاید نیاز نباشه اما برای یکپارچگی نگهش میداریم یا میتونی حذفش کنی */
   margin-bottom: 20px; /* برای دسکتاپ کمترش کردم */
 }
 
+/* اعمال افکت گلس‌مورفیسم با اولویت بالا */
+.app-main.glass {
+  background: var(--glass-bg, rgba(255, 255, 255, 0.18));
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-radius: 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  transition:
+    box-shadow 0.3s,
+    background 0.3s;
+}
+
+/* میکرواینترکشن: هاور روی گلس */
+.app-main.glass:hover {
+  box-shadow: 0 12px 32px 0 rgba(31, 38, 135, 0.28);
+  background: var(--glass-bg-hover, rgba(255, 255, 255, 0.24));
+}
 
 /* ناوبری موبایل (پایین صفحه) */
 .app-nav-mobile {
@@ -244,6 +323,12 @@ onUnmounted(() => {
   align-items: center;
 }
 
+.app-nav-mobile.glass {
+  background: none !important;
+  box-shadow: none !important;
+  /* افکت گلس سراسری */
+}
+
 .app-nav-mobile .mobile-nav-item {
   display: flex;
   flex-direction: column;
@@ -253,7 +338,9 @@ onUnmounted(() => {
   font-size: 0.8em;
   font-weight: 600;
   padding: 5px;
-  transition: color 0.3s ease, background-color 0.3s ease;
+  transition:
+    color 0.3s ease,
+    background-color 0.3s ease;
   flex-grow: 1;
   text-align: center;
   border-radius: 8px;
@@ -265,13 +352,13 @@ onUnmounted(() => {
 }
 
 .app-nav-mobile .mobile-nav-item:hover {
-    background-color: var(--color-link-hover-header);
-    color: var(--color-link-hover-text-header);
+  background-color: var(--color-link-hover-header);
+  color: var(--color-link-hover-text-header);
 }
 
 .app-nav-mobile .mobile-nav-item.active-mobile-link {
-    color: var(--color-link-active-text-header);
-    background-color: var(--color-link-active-header);
+  color: var(--color-link-active-text-header);
+  background-color: var(--color-link-active-header);
 }
 
 /* واکنش‌گرایی: تغییر نمایش بر اساس عرض صفحه */
@@ -280,7 +367,7 @@ onUnmounted(() => {
     padding: 10px 15px;
     gap: 10px;
   }
-  
+
   .header-content {
     flex-direction: column;
     align-items: center;
@@ -301,7 +388,7 @@ onUnmounted(() => {
 
   /* در موبایل، ناوبری دسکتاپ را مخفی کن */
   .app-nav-desktop {
-    display: none; 
+    display: none;
   }
 
   /* در موبایل، ناوبری موبایل (پایین صفحه) را نمایش بده */
@@ -315,6 +402,22 @@ onUnmounted(() => {
     margin-bottom: 70px; /* 👈 این خط رو تغییر بده / اضافه کن برای فضای پایین */
     border-radius: 8px;
     box-shadow: none;
+  }
+}
+
+/* fade-in animation for glass sections */
+.fade-in {
+  animation: glass-fade-in 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes glass-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 

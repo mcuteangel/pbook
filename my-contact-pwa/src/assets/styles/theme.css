@@ -1,15 +1,21 @@
 /* src/assets/styles/theme.css */
 
-html, body { /* اینو به html, body تغییر دادم تا مطمئن بشیم ریشه اعمال میشه */
-    margin: 0;
-    padding: 0; /* پدینگ پیش‌فرض مرورگر رو هم حذف کنیم */
-    width: 100%;
-    height: 100%;
-    font-family: 'Vazirmatn', sans-serif;
-    direction: rtl; /* این خط حیاتیه و روی ریشه html/body اعمال میشه */
-    background-color: var(--color-background-primary);
-    color: var(--color-text-primary);
-    transition: background-color 0.3s ease, color 0.3s ease;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&display=swap');
+
+html,
+body {
+  /* اینو به html, body تغییر دادم تا مطمئن بشیم ریشه اعمال میشه */
+  margin: 0;
+  padding: 0; /* پدینگ پیش‌فرض مرورگر رو هم حذف کنیم */
+  width: 100%;
+  height: 100%;
+  font-family: 'Vazirmatn', sans-serif;
+  direction: rtl; /* این خط حیاتیه و روی ریشه html/body اعمال میشه */
+  background-color: var(--color-background-primary);
+  color: var(--color-text-primary);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 /* این بخش رو هم برای اطمینان بیشتر برای کامپوننت‌های Element Plus اضافه کن */
@@ -21,7 +27,8 @@ html, body { /* اینو به html, body تغییر دادم تا مطمئن ب�
 .el-table,
 .el-form-item__label, /* برای لیبل فرم‌ها */
 .el-select, .el-input, .el-textarea, /* برای فیلدهای ورودی */
-.el-button { /* برای دکمه‌ها */
+.el-button {
+  /* برای دکمه‌ها */
   font-family: 'Vazirmatn', sans-serif !important;
   /* جهت برای Element Plus بهتره از طریق config خود Element Plus یا صرفاً تنظیم روی body هندل بشه */
   /* اگر بعد از این باز هم مشکل داشتی، میشه اینجا direction: rtl !important; رو به صورت موقت تست کرد */
@@ -54,6 +61,19 @@ html, body { /* اینو به html, body تغییر دادم تا مطمئن ب�
   --color-shadow-medium: rgba(0, 0, 0, 0.1); /* سایه متوسط */
   --color-shadow-strong: rgba(0, 0, 0, 0.15); /* سایه قوی */
   --color-shadow-focus: rgba(0, 123, 255, 0.25); /* سایه در حالت فوکوس */
+  --accent-color: #6c63ff;
+  --glass-bg: rgba(255, 255, 255, 0.18);
+  --glass-bg-hover: rgba(255, 255, 255, 0.24);
+  --color-text: #222;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent-color: #a7a3ff;
+    --glass-bg: rgba(40, 60, 90, 0.38);
+    --glass-bg-hover: rgba(40, 60, 90, 0.48);
+    --color-text: #f2f2f2;
+  }
 }
 
 html.dark {
