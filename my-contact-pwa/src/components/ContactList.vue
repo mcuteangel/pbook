@@ -1,116 +1,85 @@
 <template>
   <div class="contact-list-wrapper">
-    <h2>
-      <el-icon><Sort /></el-icon> لیست مخاطبین
-    </h2>
+    <h2><span style="margin-left: 6px">🔎</span> لیست مخاطبین</h2>
 
     <div class="controls-container">
       <div class="search-control">
-        <label for="search"
-          ><el-icon><Search /></el-icon> جستجو:</label
-        >
-        <el-input
+        <label for="search"> <span style="margin-left: 2px">🔍</span> جستجو: </label>
+        <input
           id="search"
           v-model="contactStore.searchQuery"
           placeholder="جستجو در مخاطبین..."
-          class="control-input"
-          clearable
-        >
-          <template #prefix>
-            <el-icon><Search /></el-icon>
-          </template>
-        </el-input>
+          class="control-input flat-input"
+          type="text"
+        />
       </div>
 
       <div class="sort-controls">
-        <label for="sortField"
-          ><el-icon><Sort /></el-icon> مرتب‌سازی بر اساس:</label
-        >
-        <select id="sortField" v-model="contactStore.sortField" class="control-select">
+        <label for="sortField"> <span style="margin-left: 2px">↕️</span> مرتب‌سازی بر اساس: </label>
+        <select id="sortField" v-model="contactStore.sortField" class="control-select flat-select">
           <option v-for="option in sortOptions" :key="option.value" :value="option.value">
             {{ option.label }}
           </option>
         </select>
 
         <label for="sortOrder">ترتیب:</label>
-        <select id="sortOrder" v-model="contactStore.sortOrder" class="control-select">
+        <select id="sortOrder" v-model="contactStore.sortOrder" class="control-select flat-select">
           <option value="asc">صعودی</option>
           <option value="desc">نزولی</option>
         </select>
       </div>
 
-      <el-button type="info" plain @click="toggleFilterSection" class="advanced-filter-button">
-        <el-icon class="el-icon--left">
-          <Sort />
-        </el-icon>
+      <button type="button" @click="toggleFilterSection" class="advanced-filter-button flat-input">
+        <span style="margin-left: 4px">⚙️</span>
         فیلتر پیشرفته
-        <el-icon class="el-icon--right">
-          <template v-if="!isFilterSectionVisible"><ArrowDown /></template>
-          <template v-else><ArrowUp /></template>
-        </el-icon>
-      </el-button>
+        <span v-if="!isFilterSectionVisible">⬇️</span>
+        <span v-else>⬆️</span>
+      </button>
     </div>
 
     <div v-if="isFilterSectionVisible" class="advanced-filter-section">
       <h3>
-        <el-icon><Sort /></el-icon> قوانین فیلتر
+        <span style="margin-left: 4px">📋</span> قوانین فیلتر
       </h3>
 
       <div class="add-rule-form">
         <h4>افزودن قانون جدید:</h4>
-        <ElSelect
+        <select
           v-model="newRule.field"
-          placeholder="انتخاب فیلد"
-          class="rule-control"
-          filterable
-          clearable
+          class="rule-control flat-select"
         >
-          <ElOption
-            v-for="field in filterableFields"
-            :key="field.value"
-            :label="field.label"
-            :value="field.value"
-          ></ElOption>
-        </ElSelect>
-
-        <ElSelect
+          <option value="" disabled>انتخاب فیلد</option>
+          <option v-for="field in filterableFields" :key="field.value" :value="field.value">
+            {{ field.label }}
+          </option>
+        </select>
+        <select
           v-model="newRule.operator"
-          placeholder="انتخاب عملگر"
-          class="rule-control"
+          class="rule-control flat-select"
           :disabled="!newRule.field"
-          clearable
         >
-          <ElOption
-            v-for="operator in availableOperators"
-            :key="operator.value"
-            :label="operator.label"
-            :value="operator.value"
-          ></ElOption>
-        </ElSelect>
-
+          <option value="" disabled>انتخاب عملگر</option>
+          <option v-for="operator in availableOperators" :key="operator.value" :value="operator.value">
+            {{ operator.label }}
+          </option>
+        </select>
         <template v-if="selectedNewRuleFieldDefinition">
-          <ElInput
+          <input
             v-if="['text', 'textarea'].includes(selectedNewRuleFieldDefinition.type)"
             v-model="newRule.value"
             :placeholder="`مقدار فیلتر (${selectedNewRuleFieldDefinition.label})`"
-            class="rule-control"
-            :disabled="
-              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
-            "
-            :type="selectedNewRuleFieldDefinition.type === 'textarea' ? 'textarea' : 'text'"
-          ></ElInput>
-
-          <ElInput
+            class="rule-control flat-input"
+            :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
+            :type="selectedNewRuleFieldDefinition.type === 'textarea' ? 'text' : 'text'"
+          />
+          <input
             v-else-if="selectedNewRuleFieldDefinition.type === 'number'"
             v-model.number="newRule.value"
             :placeholder="`مقدار فیلتر عددی (${selectedNewRuleFieldDefinition.label})`"
-            class="rule-control"
-            :disabled="
-              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
-            "
+            class="rule-control flat-input"
+            :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
             type="number"
-          ></ElInput>
-
+          />
           <vue-persian-datetime-picker
             v-else-if="selectedNewRuleFieldDefinition.type === 'date'"
             v-model="newRule.value"
@@ -118,58 +87,39 @@
             display-format="jYYYY/jM/jD"
             type="date"
             placeholder="انتخاب تاریخ شمسی"
-            :disabled="
-              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
-            "
+            :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
             clearable
             class="rule-control"
           ></vue-persian-datetime-picker>
-
-          <ElSelect
-            v-else-if="
-              ['select', 'boolean', 'gender', 'group'].includes(selectedNewRuleFieldDefinition.type)
-            "
+          <select
+            v-else-if="['select', 'boolean', 'gender', 'group'].includes(selectedNewRuleFieldDefinition.type)"
             v-model="newRule.value"
-            :placeholder="`انتخاب مقدار (${selectedNewRuleFieldDefinition.label})`"
-            class="rule-control"
-            :disabled="
-              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
-            "
-            clearable
+            class="rule-control flat-select"
+            :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
           >
-            <ElOption
-              v-for="option in valueSelectOptions"
-              :key="option.value"
-              :label="option.label"
-              :value="option.value"
-            ></ElOption>
-          </ElSelect>
-
-          <ElInput
+            <option value="" disabled>انتخاب مقدار</option>
+            <option v-for="option in valueSelectOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <input
             v-else
             v-model="newRule.value"
             placeholder="مقدار فیلتر (نوع نامشخص)"
-            class="rule-control"
-            :disabled="
-              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
-            "
-          ></ElInput>
+            class="rule-control flat-input"
+            :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
+            type="text"
+          />
         </template>
         <span v-else class="rule-control-placeholder"> فیلد را انتخاب کنید </span>
-
-        <ElButton
-          type="primary"
+        <button
+          type="button"
+          class="button add-rule-btn"
           @click="addNewRule"
-          :disabled="
-            !newRule.field ||
-            !newRule.operator ||
-            (newRule.operator !== 'isNull' &&
-              newRule.operator !== 'isNotNull' &&
-              (newRule.value === null || newRule.value === ''))
-          "
+          :disabled="!newRule.field || !newRule.operator || (newRule.operator !== 'isNull' && newRule.operator !== 'isNotNull' && (newRule.value === null || newRule.value === ''))"
         >
-          افزودن قانون
-        </ElButton>
+          ➕ افزودن قانون
+        </button>
       </div>
 
       <div class="current-rules-list">
@@ -185,12 +135,7 @@
             </span>
             <span class="rule-operator-label"> {{ getRuleOperatorLabel(rule) }} </span>
             <span
-              v-if="
-                rule.value !== null &&
-                rule.operator !== 'isNull' &&
-                rule.operator !== 'isNotNull' &&
-                rule.value !== ''
-              "
+              v-if="rule.value !== null && rule.operator !== 'isNull' && rule.operator !== 'isNotNull' && rule.value !== ''"
               class="rule-value"
             >
               "{{ formatRuleValue(rule) }}"
@@ -202,33 +147,29 @@
               (بدون نیاز به مقدار)
             </span>
           </p>
-          <ElButton type="danger" size="small" @click="removeRule(index)">حذف</ElButton>
+          <button type="button" class="button delete-button" @click="removeRule(index)">🗑️ حذف</button>
         </div>
       </div>
 
       <hr v-if="currentFilterRules.length > 0" class="filter-section-separator" />
 
       <div class="filter-actions">
-        <ElButton type="success" @click="applyFilters" :disabled="currentFilterRules.length === 0"
-          >اعمال فیلتر</ElButton
-        >
-        <ElButton type="danger" @click="clearFilters" :disabled="currentFilterRules.length === 0"
-          >پاک کردن همه</ElButton
-        >
+        <button type="button" class="button apply-filter-btn" @click="applyFilters" :disabled="currentFilterRules.length === 0">✔️ اعمال فیلتر</button>
+        <button type="button" class="button clear-filter-btn" @click="clearFilters" :disabled="currentFilterRules.length === 0">❌ پاک کردن همه</button>
       </div>
     </div>
 
     <hr class="separator" />
     <div v-if="contactStore.loading" class="status-message loading">
-      <el-icon><Loading /></el-icon>
+      <span style="font-size:1.2em;">⏳</span>
       در حال بارگذاری مخاطبین...
     </div>
     <div v-else-if="contactStore.error" class="status-message error">
-      <el-icon><CircleCloseFilled /></el-icon>
+      <span style="font-size:1.2em;">❗</span>
       {{ contactStore.error }}
     </div>
     <div v-else-if="paginatedContacts.length === 0" class="status-message no-results">
-      <el-icon><WarningFilled /></el-icon>
+      <span style="font-size:1.2em;">⚠️</span>
       هیچ مخاطبی یافت نشد.
       <span
         v-if="
@@ -251,7 +192,7 @@
             :to="{ name: 'contact-detail', params: { id: contactItem.contact.id } }"
             class="contact-name-link"
           >
-            <el-icon><Edit /></el-icon>
+            ✏️
             {{ contactItem.contact.name }} {{ contactItem.contact.lastName }}
           </router-link>
 
@@ -298,46 +239,45 @@
         </div>
 
         <div class="contact-actions">
-          <el-button
-            class="edit-button"
-            type="warning"
+          <button
+            class="button edit-button"
+            type="button"
             @click="startEditingContact(contactItem.contact)"
             :disabled="contactStore.loading"
           >
-            <el-icon><Edit /></el-icon>
-            ویرایش
-          </el-button>
+            ✏️ ویرایش
+          </button>
 
-          <el-button type="danger">
-            <el-icon><Delete /></el-icon>
-            حذف
-          </el-button>
+          <button
+            class="button delete-button"
+            type="button"
+            @click="confirmDeleteContact(contactItem.contact.id)"
+          >
+            🗑️ حذف
+          </button>
         </div>
       </li>
     </ul>
 
     <div v-if="totalPages > 1" class="pagination-controls">
-      <el-button @click="prevPage" :disabled="currentPage === 1" class="pagination-button">
-        <el-icon><ArrowLeft /></el-icon>
-        قبلی
-      </el-button>
+      <button @click="prevPage" :disabled="currentPage === 1" class="pagination-button">
+        ⬅️ قبلی
+      </button>
       <span>صفحه {{ currentPage }} از {{ totalPages }}</span>
-      <el-button @click="nextPage" :disabled="currentPage === totalPages" class="pagination-button">
-        بعدی
-        <el-icon><ArrowRight /></el-icon>
-      </el-button>
+      <button @click="nextPage" :disabled="currentPage === totalPages" class="pagination-button">
+        بعدی ➡️
+      </button>
 
       <div class="page-numbers">
-        <el-button
+        <button
           v-for="page in totalPages"
           :key="page"
           @click="goToPage(page)"
-          :class="{ active: currentPage === page }"
-          class="page-number-button"
+          :class="['page-number-button', { active: currentPage === page }]"
         >
-          <el-icon v-if="currentPage === page"><Sort /></el-icon>
+          <span v-if="currentPage === page">🔵</span>
           {{ page }}
-        </el-button>
+        </button>
       </div>
     </div>
 
@@ -355,21 +295,6 @@ import { useCustomFieldStore } from '@/store/customFields'
 import { useGroupStore } from '@/store/groups'
 import { useSettingsStore } from '@/store/settings'
 import { useRouter } from 'vue-router'
-import { ElButton, ElInput, ElSelect, ElOption, ElMessageBox, ElIcon } from 'element-plus'
-import {
-  Search,
-  Sort,
-  ArrowDown,
-  ArrowUp,
-  Edit,
-  Delete,
-  ArrowLeft,
-  ArrowRight,
-  Loading,
-  WarningFilled,
-  CircleCloseFilled,
-} from '@element-plus/icons-vue'
-
 import {
   formatGregorianDateToShamsi,
   parseJalaaliStringToGregorianMoment,
@@ -1215,17 +1140,28 @@ h2 {
 
 /* **استایل هر آیتم مخاطب (li)** */
 .contact-item {
-  border: 1px solid var(--color-border-medium); /* تغییر کرد */
-  padding: 15px 20px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  background-color: var(--color-background-light); /* تغییر کرد */
+  background: var(--glass-bg, rgba(255, 255, 255, 0.18));
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-radius: 18px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  transition:
+    box-shadow 0.3s,
+    border 0.3s,
+    background 0.3s;
+  margin-bottom: 18px;
+  padding: 18px 22px;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
   flex-wrap: wrap;
-  gap: 15px;
-  box-shadow: 0 2px 4px var(--color-shadow); /* تغییر کرد */
+  gap: 18px;
+  align-items: flex-start;
+  position: relative;
+}
+.contact-item:hover {
+  box-shadow: 0 12px 32px 0 rgba(31, 38, 135, 0.22);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  background: var(--glass-bg-hover, rgba(255, 255, 255, 0.24));
 }
 
 /* کانتینر اطلاعات مخاطب */
