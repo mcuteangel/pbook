@@ -247,31 +247,47 @@ const handleImport = async (event) => {
   margin-bottom: 15px;
 }
 
+/* Button Styles */
+.settings-container button {
+  background: linear-gradient(120deg, var(--accent-color) 60%, transparent 100%);
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 1em;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.1);
+}
+
+.settings-container button:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(var(--accent-color-rgb, 108, 99, 255), 0.18);
+}
+
+.settings-container button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .reset-button {
-  margin-top: 10px;
+  background: linear-gradient(120deg, var(--color-danger) 60%, transparent 100%) !important;
+  margin-top: var(--spacing-sm);
+}
+
+.reset-button:hover {
+  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.2) !important;
 }
 
 .backup-section,
 .restore-section {
   margin-bottom: 30px;
-}
-
-.settings-container button {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1em;
-  transition: background-color 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.settings-container button:hover {
-  background-color: #0056b3;
 }
 
 .settings-container input[type='file'] {

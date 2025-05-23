@@ -2,9 +2,7 @@
   <div class="contact-detail-container">
     <h2>جزئیات مخاطب</h2>
 
-      <div v-if="loading" class="loading-message">
-      در حال بارگذاری اطلاعات مخاطب...
-    </div>
+    <div v-if="loading" class="loading-message">در حال بارگذاری اطلاعات مخاطب...</div>
     <div v-else-if="error" class="error-message">
       <p>{{ error }}</p>
       <button @click="loadContactDetail(parseInt(contactId))">تلاش مجدد</button>
@@ -17,191 +15,228 @@
 
       <div class="detail-section">
         <h4>اطلاعات اصلی</h4>
-<p><strong>تلفن اصلی:</strong> 
-  <a :href="'tel:' + cleanPhoneNumber(contact.phone)" class="phone-link">{{ contact.phone }}</a>
-</p>
+        <p>
+          <strong>تلفن اصلی:</strong>
+          <a :href="'tel:' + cleanPhoneNumber(contact.phone)" class="phone-link">{{
+            contact.phone
+          }}</a>
+        </p>
         <p v-if="contact.gender"><strong>جنسیت:</strong> {{ displayGender(contact.gender) }}</p>
         <p v-if="contact.group"><strong>گروه:</strong> {{ contact.group }}</p>
-        <p v-if="contact.birthDate"><strong>تاریخ تولد:</strong> {{ formatGregorianDateToShamsi(contact.birthDate) }}</p>
+        <p v-if="contact.birthDate">
+          <strong>تاریخ تولد:</strong> {{ formatGregorianDateToShamsi(contact.birthDate) }}
+        </p>
       </div>
 
-      <div v-if="contact.additionalPhones && contact.additionalPhones.length > 0" class="detail-section">
-  <h4>شماره‌های اضافی</h4>
-  <ul>
-    <li v-for="(item, index) in contact.additionalPhones" :key="'phone-' + index">
-      <strong>{{ displayPhoneType(item.type) }}:</strong> 
-      <a :href="'tel:' + cleanPhoneNumber(item.number)" class="phone-link">{{ item.number }}</a>
-    </li>
-  </ul>
-</div>
+      <div
+        v-if="contact.additionalPhones && contact.additionalPhones.length > 0"
+        class="detail-section"
+      >
+        <h4>شماره‌های اضافی</h4>
+        <ul>
+          <li v-for="(item, index) in contact.additionalPhones" :key="'phone-' + index">
+            <strong>{{ displayPhoneType(item.type) }}:</strong>
+            <a :href="'tel:' + cleanPhoneNumber(item.number)" class="phone-link">{{
+              item.number
+            }}</a>
+          </li>
+        </ul>
+      </div>
 
-     <div v-if="contact.addresses && contact.addresses.length > 0" class="detail-section">
-  <h4>آدرس‌ها</h4>
-  <ul>
-    <li v-for="(address, index) in contact.addresses" :key="'address-' + index" class="address-item">
-      <p><strong>{{ displayAddressType(address.type) }}:</strong></p>
-      <a :href="getMapUrl(address)" target="_blank" rel="noopener noreferrer" class="address-link">
-        <p v-if="address.street">{{ address.street }}</p>
-        <p>
-          <span v-if="address.city">{{ address.city }}</span>
-          <span v-if="address.city && address.province">، </span>
-          <span v-if="address.province">{{ address.province }}</span>
-        </p>
-        <p v-if="address.country">{{ address.country }}</p>
-        <p v-if="address.postalCode">کد پستی: {{ address.postalCode }}</p>
-      </a>
-      <p v-if="address.notes" class="address-notes"><em>یادداشت: {{ address.notes }}</em></p>
-    </li>
-  </ul>
-</div>
+      <div v-if="contact.addresses && contact.addresses.length > 0" class="detail-section">
+        <h4>آدرس‌ها</h4>
+        <ul>
+          <li
+            v-for="(address, index) in contact.addresses"
+            :key="'address-' + index"
+            class="address-item"
+          >
+            <p>
+              <strong>{{ displayAddressType(address.type) }}:</strong>
+            </p>
+            <a
+              :href="getMapUrl(address)"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="address-link"
+            >
+              <p v-if="address.street">{{ address.street }}</p>
+              <p>
+                <span v-if="address.city">{{ address.city }}</span>
+                <span v-if="address.city && address.province">، </span>
+                <span v-if="address.province">{{ address.province }}</span>
+              </p>
+              <p v-if="address.country">{{ address.country }}</p>
+              <p v-if="address.postalCode">کد پستی: {{ address.postalCode }}</p>
+            </a>
+            <p v-if="address.notes" class="address-notes">
+              <em>یادداشت: {{ address.notes }}</em>
+            </p>
+          </li>
+        </ul>
+      </div>
 
       <div v-if="contact.notes" class="detail-section">
         <h4>یادداشت/توضیحات</h4>
         <p class="notes-text">{{ contact.notes }}</p>
       </div>
 
-<div v-if="displayedCustomFields.length > 0" class="mt-6 border-t pt-4">
-  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">فیلدهای سفارشی</h3>
-  <div class="space-y-2">
-    <div v-for="field in displayedCustomFields" :key="field.id" class="flex items-center">
-      <p class="text-sm font-medium text-gray-700 dark:text-gray-300 w-1/3">{{ field.label }}:</p>
-      <p class="text-sm text-gray-800 dark:text-gray-200 w-2/3">{{ field.formattedValue }}</p>
-    </div>
-  </div>
-</div>
-
+      <div v-if="displayedCustomFields.length > 0" class="mt-6 border-t pt-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">فیلدهای سفارشی</h3>
+        <div class="space-y-2">
+          <div v-for="field in displayedCustomFields" :key="field.id" class="flex items-center">
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 w-1/3">
+              {{ field.label }}:
+            </p>
+            <p class="text-sm text-gray-800 dark:text-gray-200 w-2/3">{{ field.formattedValue }}</p>
+          </div>
+        </div>
+      </div>
 
       <div class="meta-info detail-section">
         <h4>اطلاعات سیستمی</h4>
-        <p v-if="contact.createdAt"><strong>تاریخ ایجاد:</strong> {{ formatGregorianDateToShamsi(contact.createdAt, true) }}</p>
-        <p v-if="contact.updatedAt"><strong>آخرین ویرایش:</strong> {{ formatGregorianDateToShamsi(contact.updatedAt, true) }}</p>
+        <p v-if="contact.createdAt">
+          <strong>تاریخ ایجاد:</strong> {{ formatGregorianDateToShamsi(contact.createdAt, true) }}
+        </p>
+        <p v-if="contact.updatedAt">
+          <strong>آخرین ویرایش:</strong> {{ formatGregorianDateToShamsi(contact.updatedAt, true) }}
+        </p>
       </div>
 
-    <div class="actions">
-      <button @click="startEditingCurrentContact" class="edit-button">ویرایش این مخاطب</button>
-      <button @click="goBack">برگشت به لیست</button>
+      <div class="actions">
+        <button @click="startEditingCurrentContact" class="edit-button">ویرایش این مخاطب</button>
+        <button @click="goBack">برگشت به لیست</button>
+      </div>
+    </div>
+    <div v-else class="no-contact-message">
+      <p>مخاطبی برای نمایش انتخاب نشده است یا یافت نشد.</p>
     </div>
   </div>
-  <div v-else class="no-contact-message">
-    <p>مخاطبی برای نمایش انتخاب نشده است یا یافت نشد.</p>
-  </div>
-  </div>
-
 </template>
 
 <script setup>
-import { ref, onMounted,computed, watch } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 // برای دسترسی به route و پارامترها و ناوبری
 import { useRoute, useRouter } from 'vue-router'
-import { useCustomFieldStore } from '@/store/customFields'; // این رو اضافه کن
+import { useCustomFieldStore } from '@/store/customFields' // این رو اضافه کن
 
 // برای دسترسی به Store مخاطبین و لود اطلاعات
 import { useContactStore } from '../store/contacts'
-import { formatGregorianDateToShamsi, formatCustomFieldValue, displayGender, displayPhoneType, displayAddressType } from '@/utils/formatters';
-import { db } from '../db' 
+import {
+  formatGregorianDateToShamsi,
+  formatCustomFieldValue,
+  displayGender,
+  displayPhoneType,
+  displayAddressType,
+} from '@/utils/formatters'
+import { db } from '../db'
 
 const route = useRoute() // دسترسی به اطلاعات route فعلی
 const router = useRouter() // برای ناوبری (مثلاً برگشت به صفحه قبل)
-const contactStore = useContactStore()// دسترسی به Store مخاطبین
-const customFieldStore = useCustomFieldStore(); // استور فیلدهای سفارشی رو هم اضافه کن
+const contactStore = useContactStore() // دسترسی به Store مخاطبین
+const customFieldStore = useCustomFieldStore() // استور فیلدهای سفارشی رو هم اضافه کن
 
-const isLoading = ref(true); 
+const isLoading = ref(true)
 const contactId = ref(null) // متغیری برای نگهداری ID مخاطب فعلی
 const contact = ref(null) // متغیری برای نگهداری اطلاعات مخاطب لود شده
 const loading = ref(false) // وضعیت لودینگ این صفحه
 const error = ref(null) // پیام خطا در این صفحه
 // تابع برای تمیز کردن شماره تلفن از کاراکترهای اضافی
 const cleanPhoneNumber = (number) => {
-  if (!number) return '';
+  if (!number) return ''
   // فقط ارقام رو نگه می‌داره
-  return String(number).replace(/\D/g, '');
-};
+  return String(number).replace(/\D/g, '')
+}
 
 // تابع برای ساخت لینک نقشه گوگل از آبجکت آدرس
 const getMapUrl = (address) => {
-  if (!address) return '#';
-  const addressParts = [];
-  if (address.street) addressParts.push(address.street);
-  if (address.city) addressParts.push(address.city);
-  if (address.province) addressParts.push(address.province);
-  if (address.country) addressParts.push(address.country);
-  if (address.postalCode) addressParts.push(address.postalCode);
+  if (!address) return '#'
+  const addressParts = []
+  if (address.street) addressParts.push(address.street)
+  if (address.city) addressParts.push(address.city)
+  if (address.province) addressParts.push(address.province)
+  if (address.country) addressParts.push(address.country)
+  if (address.postalCode) addressParts.push(address.postalCode)
 
-  const fullAddress = addressParts.join(', ');
-  if (!fullAddress.trim()) return '#'; // اگر آدرس خالی بود، لینک نده
-  
+  const fullAddress = addressParts.join(', ')
+  if (!fullAddress.trim()) return '#' // اگر آدرس خالی بود، لینک نده
+
   // استفاده از Google Maps Search API
   // encodeURIComponent برای اطمینان از اینکه کاراکترهای خاص در URL مشکلی ایجاد نکنند
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
-};
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`
+}
 
 // یه کامپیوتد پروپرتی برای فیلدهای سفارشیِ اون مخاطب خاص تعریف می‌کنیم
 // src/views/ContactDetail.vue - بخش script setup - Computed Property displayedCustomFields با لاگ‌های دیباگ
 
 const displayedCustomFields = computed(() => {
   if (!contact.value || !customFieldStore.fieldDefinitions) {
-    return [];
+    return []
   }
 
   const result = customFieldStore.fieldDefinitions
-    .map(fieldDef => {
+    .map((fieldDef) => {
       // پیدا کردن مقدار این فیلد سفارشی در مخاطب
-      const existingCustomField = contact.value.customFields?.find(cf => cf.fieldId === fieldDef.id);
-      const value = existingCustomField ? existingCustomField.value : undefined; // مقدار واقعی
+      const existingCustomField = contact.value.customFields?.find(
+        (cf) => cf.fieldId === fieldDef.id,
+      )
+      const value = existingCustomField ? existingCustomField.value : undefined // مقدار واقعی
 
       // چک می‌کنیم که آیا فیلد مقداری دارد که باید نمایش داده شود
       // (undefined، null، یا رشته خالی/whitespace را نادیده می‌گیریم مگر اینکه نوع بولین باشد که undefined/null هم مهم باشد)
-      const hasDisplayableValue = value !== undefined && value !== null && (typeof value === 'string' ? value.trim() !== '' : true);
+      const hasDisplayableValue =
+        value !== undefined &&
+        value !== null &&
+        (typeof value === 'string' ? value.trim() !== '' : true)
 
       if (hasDisplayableValue) {
         // ** اینجا مقدار را با استفاده از formatCustomFieldValue فرمت می‌کنیم **
-        const formatted = formatCustomFieldValue(value, fieldDef.type, fieldDef.options);
+        const formatted = formatCustomFieldValue(value, fieldDef.type, fieldDef.options)
 
         return {
           ...fieldDef, // کپی کردن خصوصیات تعریف فیلد (مثل id, label, type, options)
           value: value, // ذخیره مقدار خام هم (اختیاری)
-          formattedValue: formatted // ** ذخیره مقدار فرمت شده برای نمایش در Template **
-        };
+          formattedValue: formatted, // ** ذخیره مقدار فرمت شده برای نمایش در Template **
+        }
       }
 
-      return null; // اگر مقداری نداشت، این آیتم را در نهایت فیلتر می‌کنیم
+      return null // اگر مقداری نداشت، این آیتم را در نهایت فیلتر می‌کنیم
     })
-    .filter(field => field !== null); // حذف آیتم‌های null (فیلدهایی که مقداری نداشتند)
+    .filter((field) => field !== null) // حذف آیتم‌های null (فیلدهایی که مقداری نداشتند)
 
-  return result;
-});
+  return result
+})
 // --- Hook برای بارگذاری داده‌ها هنگام mount شدن کامپوننت ---
 onMounted(async () => {
-  isLoading.value = true;
+  isLoading.value = true
 
-  await contactStore.loadContacts();
-  await customFieldStore.loadFieldDefinitions();
+  await contactStore.loadContacts()
+  await customFieldStore.loadFieldDefinitions()
 
   // اینجا contact.value توسط watch و loadContactDetail پر میشه
   // صبر میکنیم تا contact.value مقدار بگیره (اگر هنوز نگرفته)
-  await new Promise(resolve => {
+  await new Promise((resolve) => {
     if (contact.value) {
-      resolve();
+      resolve()
     } else {
       const unwatch = watch(contact, (newContact) => {
         if (newContact) {
-          unwatch(); // Stop watching once loaded
-          resolve();
+          unwatch() // Stop watching once loaded
+          resolve()
         }
-      });
+      })
     }
-  });
+  })
 
-  isLoading.value = false;
-});
-
+  isLoading.value = false
+})
 
 const startEditingCurrentContact = () => {
   if (contact.value) {
-    contactStore.setContactToEdit(contact.value);
-    router.push({ name: 'add-contact' });
+    contactStore.setContactToEdit(contact.value)
+    router.push({ name: 'add-contact' })
   }
-};
+}
 
 // تابعی برای لود کردن اطلاعات مخاطب بر اساس ID
 const loadContactDetail = async (id) => {
@@ -248,7 +283,6 @@ watch(
   },
   { immediate: true }, // این باعث میشه Watcher بلافاصله بعد از mount هم اجرا بشه
 )
-
 </script>
 
 <style scoped>
@@ -291,8 +325,14 @@ watch(
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .contact-header {
@@ -389,40 +429,42 @@ watch(
   cursor: pointer;
   font-size: 1em;
   font-weight: bold;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
   margin: 0 10px;
 }
 
 .actions button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 2px 6px var(--color-shadow); /* تغییر کرد */
+  box-shadow: 0 2px 6px var(--color-shadow);
 }
 
 .back-button {
-  background-color: var(--color-text-tertiary); /* تغییر کرد */
-  color: white; /* این ثابت می‌مونه */
+  background-color: var(--color-text-tertiary);
+  color: white;
 }
 
 .back-button:hover {
-  background-color: var(--color-text-secondary); /* تغییر کرد */
+  background-color: var(--color-text-secondary);
 }
 
 .edit-button {
-  background-color: var(--el-color-warning); /* از متغیر Element Plus استفاده می‌کنیم */
+  background-color: var(--color-warning);
   color: white;
 }
 
 .edit-button:hover {
-  background-color: var(--el-color-warning-dark-2); /* از متغیر Element Plus استفاده می‌کنیم */
+  background-color: var(--color-warning-dark);
 }
 
 .error-message button {
-   background-color: var(--color-link-primary); /* تغییر کرد */
-   color: white;
-   padding: 8px 15px;
-   border-radius: 4px;
-   border: none;
-   cursor: pointer;
+  background-color: var(--color-link-primary); /* تغییر کرد */
+  color: white;
+  padding: 8px 15px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
 }
 .error-message button:hover {
   background-color: var(--color-link-hover); /* تغییر کرد */

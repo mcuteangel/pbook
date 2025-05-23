@@ -5,7 +5,7 @@
         class="form-title-icon"
         title="{{ contactStore.contactToEdit ? 'ویرایش مخاطب' : 'افزودن مخاطب جدید' }}"
       >
-        👤
+        <i class="fa-solid fa-user-edit"></i>
       </span>
       {{ contactStore.contactToEdit ? 'ویرایش مخاطب' : 'افزودن مخاطب جدید' }}
     </h2>
@@ -14,7 +14,7 @@
       <div class="main-fields-grid">
         <div class="form-group">
           <label for="name">
-            <span title="نام الزامی است">✏️</span>
+            <span title="نام الزامی است"><i class="fa-solid fa-signature"></i></span>
             نام:
             <span class="required-star" title="فیلد اجباری">*</span>
           </label>
@@ -23,7 +23,7 @@
         </div>
         <div class="form-group">
           <label for="lastName">
-            <span title="نام خانوادگی الزامی است">✏️</span>
+            <span title="نام خانوادگی الزامی است"><i class="fa-solid fa-signature"></i></span>
             نام خانوادگی:
             <span class="required-star" title="فیلد اجباری">*</span>
           </label>
@@ -39,7 +39,9 @@
         </div>
         <div class="form-group">
           <label for="phone">
-            <span title="شماره تلفن فقط باید شامل عدد و فاصله و + باشد">📞</span>
+            <span title="شماره تلفن فقط باید شامل عدد و فاصله و + باشد"
+              ><i class="fa-solid fa-phone"></i
+            ></span>
             تلفن اصلی:
             <span class="required-star" title="فیلد اجباری">*</span>
           </label>
@@ -55,14 +57,14 @@
         </div>
         <div class="form-group">
           <label for="title">
-            <span>💼</span>
+            <span><i class="fa-solid fa-briefcase"></i></span>
             سمت/تخصص:
           </label>
           <input id="title" v-model="title" class="flat-input" type="text" />
         </div>
         <div class="form-group">
           <label for="gender">
-            <span>👤</span>
+            <span><i class="fa-solid fa-venus-mars"></i></span>
             جنسیت:
           </label>
           <select id="gender" v-model="gender" class="flat-select">
@@ -75,7 +77,7 @@
         </div>
         <div class="form-group">
           <label for="group">
-            <span>🗂️</span>
+            <span><i class="fa-solid fa-layer-group"></i></span>
             گروه:
           </label>
           <select id="group" v-model="contactGroup" class="flat-select">
@@ -87,7 +89,7 @@
           </select>
           <div v-if="isCreatingNewGroup" class="new-group-input">
             <label for="newGroupName">
-              <span>➕</span>
+              <span><i class="fa-solid fa-plus"></i></span>
               نام گروه جدید:
             </label>
             <input
@@ -101,7 +103,7 @@
         </div>
         <div class="form-group">
           <label for="birthDate">
-            <span>🎂</span>
+            <span><i class="fa-solid fa-cake-candles"></i></span>
             تاریخ تولد:
           </label>
           <date-picker
@@ -120,7 +122,7 @@
 
     <div v-if="sortedCustomFieldDefinitions.length > 0" class="custom-fields-wrapper">
       <h3>
-        <span>⚙️</span>
+        <span><i class="fa-solid fa-cogs"></i></span>
         فیلدهای سفارشی
       </h3>
       <div
@@ -129,11 +131,11 @@
         class="form-group custom-field-group"
       >
         <label :for="'custom-field-' + fieldDef.id">
-          <span v-if="fieldDef.type === 'date'">📅</span>
-          <span v-else-if="fieldDef.type === 'number'">🔢</span>
-          <span v-else-if="fieldDef.type === 'boolean'">🔘</span>
-          <span v-else-if="fieldDef.type === 'select'">📋</span>
-          <span v-else>✏️</span>
+          <span v-if="fieldDef.type === 'date'"><i class="fa-solid fa-calendar-days"></i></span>
+          <span v-else-if="fieldDef.type === 'number'"><i class="fa-solid fa-hashtag"></i></span>
+          <span v-else-if="fieldDef.type === 'boolean'"><i class="fa-solid fa-toggle-on"></i></span>
+          <span v-else-if="fieldDef.type === 'select'"><i class="fa-solid fa-list"></i></span>
+          <span v-else><i class="fa-solid fa-pen"></i></span>
           {{ fieldDef.label }}:
         </label>
         <input
@@ -197,7 +199,7 @@
     </div>
     <div class="form-section additional-items-section">
       <h4>
-        <span>📍</span>
+        <span><i class="fa-solid fa-location-dot"></i></span>
         آدرس‌ها
       </h4>
       <div
@@ -207,18 +209,20 @@
       >
         <div class="address-field">
           <label>
-            <span style="margin-left: 2px">📍</span>
+            <span style="margin-left: 2px"><i class="fa-solid fa-location-dot"></i></span>
             نوع آدرس:
           </label>
           <select v-model="address.type" class="flat-select compact-select">
             <option value="">نوع آدرس</option>
-            <option value="home">🏠 منزل</option>
-            <option value="work">💼 محل کار</option>
-            <option value="other">🔗 دیگر</option>
+            <option value="home"><i class="fa-solid fa-house"></i> منزل</option>
+            <option value="work"><i class="fa-solid fa-briefcase"></i> محل کار</option>
+            <option value="other"><i class="fa-solid fa-link"></i> دیگر</option>
           </select>
         </div>
         <div class="address-field">
-          <label><span style="margin-left: 2px">✏️</span>خیابان:</label>
+          <label
+            ><span style="margin-left: 2px"><i class="fa-solid fa-road"></i></span>خیابان:</label
+          >
           <input
             v-model="address.street"
             placeholder="خیابان"
@@ -227,7 +231,9 @@
           />
         </div>
         <div class="address-field">
-          <label><span style="margin-left: 2px">🏙️</span>شهر:</label>
+          <label
+            ><span style="margin-left: 2px"><i class="fa-solid fa-city"></i></span>شهر:</label
+          >
           <input
             v-model="address.city"
             placeholder="شهر"
@@ -236,7 +242,9 @@
           />
         </div>
         <div class="address-field">
-          <label><span style="margin-left: 2px">🌄</span>استان:</label>
+          <label
+            ><span style="margin-left: 2px"><i class="fa-solid fa-mountain"></i></span>استان:</label
+          >
           <input
             v-model="address.province"
             placeholder="استان"
@@ -245,7 +253,10 @@
           />
         </div>
         <div class="address-field">
-          <label><span style="margin-left: 2px">🌍</span>کشور:</label>
+          <label
+            ><span style="margin-left: 2px"><i class="fa-solid fa-earth-americas"></i></span
+            >کشور:</label
+          >
           <input
             v-model="address.country"
             placeholder="کشور"
@@ -254,7 +265,9 @@
           />
         </div>
         <div class="address-field">
-          <label><span style="margin-left: 2px">🏷️</span>کدپستی:</label>
+          <label
+            ><span style="margin-left: 2px"><i class="fa-solid fa-barcode"></i></span>کدپستی:</label
+          >
           <input
             v-model="address.postalCode"
             placeholder="کدپستی"
@@ -263,7 +276,10 @@
           />
         </div>
         <div class="address-field address-notes-field">
-          <label><span style="margin-left: 2px">📝</span>یادداشت آدرس:</label>
+          <label
+            ><span style="margin-left: 2px"><i class="fa-solid fa-note-sticky"></i></span>یادداشت
+            آدرس:</label
+          >
           <textarea
             v-model="address.notes"
             placeholder="یادداشت آدرس"
@@ -292,7 +308,7 @@
 
     <div class="form-section additional-items-section">
       <h4>
-        <span>📞</span>
+        <span><i class="fa-solid fa-phone"></i></span>
         شماره‌های اضافی
       </h4>
       <div
@@ -302,11 +318,11 @@
       >
         <select v-model="phoneItem.type" class="flat-select item-select">
           <option value="">نوع شماره</option>
-          <option value="mobile">📱 موبایل</option>
-          <option value="home">🏠 منزل</option>
-          <option value="work">💼 محل کار</option>
-          <option value="fax">📠 فکس</option>
-          <option value="other">🔗 دیگر</option>
+          <option value="mobile"><i class="fa-solid fa-mobile-alt"></i> موبایل</option>
+          <option value="home"><i class="fa-solid fa-house"></i> منزل</option>
+          <option value="work"><i class="fa-solid fa-briefcase"></i> محل کار</option>
+          <option value="fax"><i class="fa-solid fa-fax"></i> فکس</option>
+          <option value="other"><i class="fa-solid fa-link"></i> دیگر</option>
         </select>
         <input
           type="text"
@@ -769,6 +785,7 @@ const handleSubmit = async () => {
   width: auto !important;
 }
 
+/* Button Styles */
 .add-item-btn,
 .remove-item-btn,
 .submit-btn,
@@ -776,87 +793,60 @@ const handleSubmit = async () => {
   border-radius: var(--radius-md);
   font-size: var(--font-size-base);
   font-weight: 500;
-  min-width: var(--btn-min-width, 110px);
+  min-width: var(--btn-min-width);
   transition: all 0.2s;
+  backdrop-filter: blur(8px);
 }
+
 .add-item-btn {
-  background: var(--accent-color, #6c63ff);
-  color: #fff;
+  background: linear-gradient(120deg, var(--accent-color) 60%, transparent 100%);
+  color: white;
   margin-top: var(--spacing-xs);
+  border: none;
+  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.1);
 }
+
 .add-item-btn:hover {
-  background: #5548c8;
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(var(--accent-color-rgb, 108, 99, 255), 0.18);
 }
+
 .remove-item-btn {
-  background: #fff0f0;
-  color: var(--color-error-text, #dc3545);
-  border: 1px solid var(--color-error-text, #dc3545);
+  background: var(--glass-bg);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
   padding: var(--spacing-xs) var(--spacing-sm);
   margin-top: var(--spacing-xs);
 }
+
 .remove-item-btn:hover {
-  background: #ffeaea;
+  background: rgba(220, 53, 69, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.15);
 }
+
 .submit-btn {
-  background: var(--accent-color, #6c63ff);
-  color: #fff;
+  background: linear-gradient(120deg, var(--accent-color) 60%, transparent 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.1);
 }
+
 .submit-btn:hover {
-  background: #5548c8;
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(var(--accent-color-rgb, 108, 99, 255), 0.18);
 }
+
 .cancel-btn {
-  background: var(--color-button-disabled-bg, #e9ecef);
-  color: var(--color-button-disabled-text, #adb5bd);
+  background: var(--glass-bg);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-medium);
 }
+
 .cancel-btn:hover {
-  background: #d1d1d1;
-}
-
-.custom-field-group {
-  margin-bottom: var(--spacing-md);
-}
-
-@media (max-width: 575px) {
-  .main-fields-grid,
-  .address-grid,
-  .additional-phones-grid {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-xs);
-  }
-  .form-actions {
-    flex-direction: column;
-    gap: var(--spacing-xs);
-    margin-top: var(--spacing-md);
-  }
-  .form-actions .el-button {
-    width: 100%;
-    min-width: auto;
-  }
-}
-
-.custom-fields-wrapper,
-.form-section {
-  margin-top: var(--spacing-lg);
-  padding: var(--spacing-md);
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-md);
-  background-color: var(--color-background-light);
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  width: 100%;
-}
-
-label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  font-size: var(--font-size-base);
-  color: var(--color-text-primary);
-  font-weight: 500;
+  background: var(--glass-bg-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 :deep(.vpd-input-group input) {
@@ -868,7 +858,7 @@ label {
 }
 
 :deep(.vpd-input-group input:hover) {
-  border-color: var(--el-color-primary) !important;
+  border-color: var(--accent-color) !important;
 }
 
 :deep(.vpd-input-group input) {
@@ -916,7 +906,7 @@ label {
     margin-top: var(--spacing-md);
   }
 
-  .form-actions .el-button {
+  .form-actions .btn {
     width: 100%;
     min-width: auto;
   }

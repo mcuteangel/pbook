@@ -1,4 +1,4 @@
-/* پایه گلس مورفیسم برای فرم و بخش‌های اصلی */
+/* Base Glassmorphism */
 .glass {
   background: rgba(255, 255, 255, 0.18);
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
@@ -11,42 +11,29 @@
     border 0.3s,
     background 0.3s;
 }
+
 .glass:focus-within,
 .glass:hover {
   box-shadow: 0 12px 32px 0 rgba(31, 38, 135, 0.22);
   border: 1.5px solid rgba(255, 255, 255, 0.35);
 }
 
-/* افکت میکرو برای اینپوت و دکمه */
+/* Micro-interactions */
 .flat-input:focus,
 .flat-select:focus {
-  box-shadow: 0 0 0 4px rgba(100, 180, 255, 0.13);
+  box-shadow: 0 0 0 4px rgba(var(--accent-color-rgb, 108, 99, 255), 0.13);
   transition:
     box-shadow 0.2s,
     border-color 0.2s;
 }
+
 .submit-btn:hover {
   transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 4px 16px rgba(100, 180, 255, 0.18);
+  box-shadow: 0 4px 16px rgba(var(--accent-color-rgb, 108, 99, 255), 0.18);
   transition: all 0.2s;
 }
 
-/* انیمیشن fade برای پیام‌ها */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.fade-in {
-  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* --- Glassmorphism Animated Blurred Background --- */
+/* Animated Background */
 .app-bg {
   position: fixed;
   inset: 0;
@@ -85,7 +72,7 @@
   }
 }
 
-/* --- Header & Nav: Glassmorphism Glow & Inner Shadow --- */
+/* Header & Navigation */
 .app-header.glass,
 .app-nav-mobile.glass {
   box-shadow:
@@ -107,10 +94,8 @@
     0 2px 0 0 rgba(255, 255, 255, 0.22) inset;
 }
 
-/* --- Menu & Icon Micro-Interactions --- */
-.app-header .el-icon,
-.app-nav-desktop .el-icon,
-.app-nav-mobile .el-icon {
+/* Icon Micro-interactions */
+.icon {
   transition:
     color 0.25s,
     filter 0.25s,
@@ -118,40 +103,21 @@
   filter: drop-shadow(0 1px 2px rgba(31, 38, 135, 0.1));
 }
 
-.app-header .el-icon:hover,
-.app-nav-desktop .nav-item:hover .el-icon,
-.app-nav-mobile .mobile-nav-item:hover .el-icon {
-  color: var(--accent-color, #6c63ff);
-  filter: drop-shadow(0 0 6px var(--accent-color, #6c63ff));
+.icon:hover,
+.nav-item:hover .icon,
+.mobile-nav-item:hover .icon {
+  color: var(--accent-color);
+  filter: drop-shadow(0 0 6px var(--accent-color));
   transform: scale(1.18) rotate(-6deg);
 }
 
-.app-nav-desktop .nav-item:active,
-.app-nav-mobile .mobile-nav-item:active {
-  transform: scale(0.96);
-  box-shadow: 0 2px 8px 0 rgba(31, 38, 135, 0.1);
-}
-
-/* --- Accent Color --- */
-:root {
-  --accent-color: #6c63ff;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --accent-color: #a7a3ff;
-  }
-}
-
-/* --- Glassmorphism Buttons --- */
-.el-button,
-.glass-btn {
+/* Modern Buttons */
+.btn {
   background: rgba(255, 255, 255, 0.18);
-  color: var(--accent-color, #6c63ff);
-  border: 1.5px solid var(--accent-color, #6c63ff);
+  color: var(--accent-color);
+  border: 1.5px solid var(--accent-color);
   box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.1);
   border-radius: 16px;
-  font-family: 'Inter', 'Poppins', 'Vazirmatn', sans-serif;
   font-weight: 600;
   transition:
     background 0.2s,
@@ -163,41 +129,40 @@
   overflow: hidden;
   position: relative;
 }
-.el-button.primary,
-.glass-btn.primary {
-  background: linear-gradient(120deg, var(--accent-color, #6c63ff) 60%, #fff0 100%);
+
+.btn.primary {
+  background: linear-gradient(120deg, var(--accent-color) 60%, transparent 100%);
   color: #fff;
   border: none;
 }
-.el-button.secondary,
-.glass-btn.secondary {
+
+.btn.secondary {
   background: transparent;
-  color: var(--accent-color, #6c63ff);
-  border: 1.5px solid var(--accent-color, #6c63ff);
+  color: var(--accent-color);
+  border: 1.5px solid var(--accent-color);
 }
-.el-button:disabled,
-.glass-btn:disabled {
+
+.btn:disabled {
   opacity: 0.5;
   box-shadow: none;
   cursor: not-allowed;
 }
-.el-button:hover:not(:disabled),
-.glass-btn:hover:not(:disabled) {
+
+.btn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.28);
-  color: var(--accent-color, #6c63ff);
+  color: var(--accent-color);
   box-shadow: 0 4px 18px 0 rgba(31, 38, 135, 0.18);
   transform: scale(1.04);
 }
-.el-button:active:not(:disabled),
-.glass-btn:active:not(:disabled) {
+
+.btn:active:not(:disabled) {
   background: rgba(255, 255, 255, 0.22);
   box-shadow: 0 1px 4px 0 rgba(31, 38, 135, 0.1);
   transform: scale(0.97);
 }
 
-/* Ripple effect for buttons */
-.el-button::after,
-.glass-btn::after {
+/* Button Ripple Effect */
+.btn::after {
   content: '';
   display: block;
   position: absolute;
@@ -207,7 +172,7 @@
   height: 0;
   left: 50%;
   top: 50%;
-  background: rgba(108, 99, 255, 0.18);
+  background: rgba(var(--accent-color-rgb, 108, 99, 255), 0.18);
   transform: translate(-50%, -50%);
   transition:
     width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
@@ -215,61 +180,20 @@
     opacity 0.4s;
   opacity: 0;
 }
-.el-button:active::after,
-.glass-btn:active::after {
+
+.btn:active::after {
   width: 180%;
   height: 180%;
   opacity: 0.25;
   transition: 0s;
 }
 
-/* --- Glassmorphism Input Fields --- */
-.el-input__wrapper,
-.glass-input {
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 12px;
-  border: 1.5px solid rgba(108, 99, 255, 0.18);
-  box-shadow: 0 1px 6px 0 rgba(31, 38, 135, 0.08);
-  font-family: 'Inter', 'Poppins', 'Vazirmatn', sans-serif;
-  font-size: 1em;
-  color: var(--color-text, #222);
-  transition:
-    border 0.2s,
-    box-shadow 0.2s,
-    background 0.2s;
-  padding: 0.5em 1em;
-  -webkit-backdrop-filter: blur(6px) saturate(180%);
-  backdrop-filter: blur(6px) saturate(180%);
-}
-.el-input__wrapper:focus-within,
-.glass-input:focus-within {
-  border: 1.5px solid var(--accent-color, #6c63ff);
-  box-shadow: 0 2px 12px 0 rgba(108, 99, 255, 0.18);
-  background: rgba(255, 255, 255, 0.28);
-}
-.el-input__inner::placeholder,
-.glass-input::placeholder {
-  color: #888;
-  opacity: 0.7;
-  font-weight: 400;
-  transition:
-    opacity 0.2s,
-    transform 0.2s;
-}
-.el-input__wrapper:focus-within .el-input__inner::placeholder,
-.glass-input:focus-within::placeholder {
-  opacity: 0.4;
-  transform: translateY(-4px) scale(0.96);
-}
-
-/* --- Modern Typography --- */
+/* Modern Typography */
 body,
 .app-container,
 .glass,
-.el-input__wrapper,
-.el-button,
-.glass-btn {
-  font-family: 'Inter', 'Poppins', 'Vazirmatn', sans-serif;
+.btn {
+  font-family: 'Vazirmatn', sans-serif;
   letter-spacing: -0.2px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -282,7 +206,7 @@ h4,
 h5,
 h6,
 .app-title {
-  font-family: 'Inter', 'Poppins', 'Vazirmatn', sans-serif;
+  font-family: 'Vazirmatn', sans-serif;
   font-weight: 800;
   letter-spacing: -0.5px;
 }

@@ -2,29 +2,22 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-    plugins: [
+  plugins: [
     vue(),
-       AutoImport({
-      resolvers: [ElementPlusResolver()], // استفاده از Resolver مربوط به Element Plus
-    }),
-    // **تنظیم پلاگین Components**
-    Components({
-      resolvers: [ElementPlusResolver()], // استفاده از Resolver مربوط به Element Plus
-    }),
-    VitePWA({ // <-- پیکربندی پایه پلاگین PWA
+    vueDevTools(),
+    VitePWA({
+      // <-- پیکربندی پایه پلاگین PWA
       registerType: 'autoUpdate', // به محض اینکه سرویس ورکر جدیدی آماده بشه، به طور خودکار آپدیت می‌کنه
       devOptions: {
-        enabled: true // این گزینه مهمه تا بتونی توی حالت dev هم سرویس ورکر رو تست کنی
+        enabled: true, // این گزینه مهمه تا بتونی توی حالت dev هم سرویس ورکر رو تست کنی
       },
-      manifest: { // اینجا تنظیمات Web App Manifest رو انجام میدیم
+      manifest: {
+        // اینجا تنظیمات Web App Manifest رو انجام میدیم
         name: 'دفترچه تلفن پیشرفته', // اسم کامل برنامه
         short_name: 'دفترچه تلفن', // اسم کوتاه (مثلاً برای زیر آیکون)
         description: 'یک برنامه پیشرفته برای مدیریت مخاطبین با قابلیت آفلاین و تاریخ شمسی', // توضیحات برنامه
@@ -33,38 +26,39 @@ export default defineConfig({
         display: 'standalone', // نحوه نمایش برنامه (standalone یعنی مثل یه اپ جدا، بدون UI مرورگر)
         scope: '/', // محدوده ای که PWA کنترل می‌کنه (معمولاً ریشه سایت)
         start_url: '/', // صفحه‌ای که موقع باز شدن PWA از صفحه اصلی لود میشه
-        icons: [ // لیست آیکون‌ها در سایزهای مختلف
+        icons: [
+          // لیست آیکون‌ها در سایزهای مختلف
           {
             src: 'img/icons/pwa-192x192.png', // مسیر آیکون نسبت به پوشه public
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'img/icons/pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'img/icons/pwa-512x512.png', // آیکون برای iOS (apple-touch-icon)
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any' // قبلا maskable بود، any هم برای سازگاری بیشتر خوبه
+            purpose: 'any', // قبلا maskable بود، any هم برای سازگاری بیشتر خوبه
           },
           {
             src: 'img/icons/maskable-icon-512x512.png', // آیکون maskable برای اندروید که شکلش با تم گوشی هماهنگ میشه
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'maskable'
-          }
-        ]
+            purpose: 'maskable',
+          },
+        ],
       },
-       workbox: {
+      workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'], // .vue, .json, و فونت‌ها معمولا توسط globPatterns اصلی مدیریت میشن یا در باندل نهایی js/css قرار میگیرن
-                                                                 // .vue نباید اینجا باشه چون به js تبدیل میشه. json و webmanifest هم درسته.
-                                                                 // فونت‌ها (woff, woff2, ttf, eot) هم اگه در public باشن و مستقیم استفاده بشن، اینجا لازمن.
-                                                                 // اگه از طریق import در CSS یا JS لود میشن، در باندل نهایی قرار میگیرن.
-                                                                 // فعلا برای سادگی، فرمت‌های ویدیویی و صوتی رو اضافه نکردم.
-        
+        // .vue نباید اینجا باشه چون به js تبدیل میشه. json و webmanifest هم درسته.
+        // فونت‌ها (woff, woff2, ttf, eot) هم اگه در public باشن و مستقیم استفاده بشن، اینجا لازمن.
+        // اگه از طریق import در CSS یا JS لود میشن، در باندل نهایی قرار میگیرن.
+        // فعلا برای سادگی، فرمت‌های ویدیویی و صوتی رو اضافه نکردم.
+
         // اضافه کردن runtimeCaching
         runtimeCaching: [
           {
@@ -75,13 +69,14 @@ export default defineConfig({
             options: {
               cacheName: 'image-cache', // اسم کش برای این نوع فایل‌ها
               expiration: {
-                maxEntries: 60,         // حداکثر 60 تصویر در این کش نگه دار
+                maxEntries: 60, // حداکثر 60 تصویر در این کش نگه دار
                 maxAgeSeconds: 30 * 24 * 60 * 60, // 30 روز اعتبار کش
               },
-              cacheableResponse: { // فقط پاسخ‌های موفق (status 200) یا از کش خود مرورگر (status 0) رو کش کن
-                statuses: [0, 200]
-              }
-            }
+              cacheableResponse: {
+                // فقط پاسخ‌های موفق (status 200) یا از کش خود مرورگر (status 0) رو کش کن
+                statuses: [0, 200],
+              },
+            },
           },
           {
             // استراتژی برای فونت‌ها: اول کش، بعد شبکه
@@ -95,9 +90,9 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 24 * 60 * 60, // 60 روز اعتبار کش
               },
               cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
+                statuses: [0, 200],
+              },
+            },
           },
           {
             // استراتژی برای فایل‌های JS و CSS (مخصوصاً chunk ها یا فایل‌هایی که از CDN میان)
@@ -110,12 +105,12 @@ export default defineConfig({
               cacheName: 'static-resources-cache',
               expiration: {
                 maxEntries: 60,
-                maxAgeSeconds: 24 * 60 * 60 // 1 روز، چون این فایل‌ها ممکنه بیشتر آپدیت بشن
+                maxAgeSeconds: 24 * 60 * 60, // 1 روز، چون این فایل‌ها ممکنه بیشتر آپدیت بشن
               },
               cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
+                statuses: [0, 200],
+              },
+            },
           },
           {
             // استراتژی برای ناوبری (HTML) - برای معماری SPA مهمه
@@ -134,15 +129,15 @@ export default defineConfig({
               //     fallbackURL: '/index.html', // اگر index.html به هر دلیلی در دسترس نبود
               //   })
               // ]
-            }
-          }
-        ]
-      }
-    })
+            },
+          },
+        ],
+      },
+    }),
   ],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
 })

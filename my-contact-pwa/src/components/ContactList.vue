@@ -1,10 +1,15 @@
 <template>
   <div class="contact-list-wrapper">
-    <h2><span style="margin-left: 6px">🔎</span> لیست مخاطبین</h2>
+    <h2>
+      <span style="margin-left: 6px"><i class="fa-solid fa-magnifying-glass"></i></span> لیست
+      مخاطبین
+    </h2>
 
     <div class="controls-container">
       <div class="search-control">
-        <label for="search"> <span style="margin-left: 2px">🔍</span> جستجو: </label>
+        <label for="search">
+          <span style="margin-left: 2px"><i class="fa-solid fa-magnifying-glass"></i></span> جستجو:
+        </label>
         <input
           id="search"
           v-model="contactStore.searchQuery"
@@ -15,7 +20,10 @@
       </div>
 
       <div class="sort-controls">
-        <label for="sortField"> <span style="margin-left: 2px">↕️</span> مرتب‌سازی بر اساس: </label>
+        <label for="sortField">
+          <span style="margin-left: 2px"><i class="fa-solid fa-arrow-up-a-z"></i></span> مرتب‌سازی
+          بر اساس:
+        </label>
         <select id="sortField" v-model="contactStore.sortField" class="control-select flat-select">
           <option v-for="option in sortOptions" :key="option.value" :value="option.value">
             {{ option.label }}
@@ -30,24 +38,21 @@
       </div>
 
       <button type="button" @click="toggleFilterSection" class="advanced-filter-button flat-input">
-        <span style="margin-left: 4px">⚙️</span>
+        <span style="margin-left: 4px"><i class="fa-solid fa-sliders"></i></span>
         فیلتر پیشرفته
-        <span v-if="!isFilterSectionVisible">⬇️</span>
-        <span v-else>⬆️</span>
+        <span v-if="!isFilterSectionVisible"><i class="fa-solid fa-chevron-down"></i></span>
+        <span v-else><i class="fa-solid fa-chevron-up"></i></span>
       </button>
     </div>
 
     <div v-if="isFilterSectionVisible" class="advanced-filter-section">
       <h3>
-        <span style="margin-left: 4px">📋</span> قوانین فیلتر
+        <span style="margin-left: 4px"><i class="fa-solid fa-list"></i></span> قوانین فیلتر
       </h3>
 
       <div class="add-rule-form">
         <h4>افزودن قانون جدید:</h4>
-        <select
-          v-model="newRule.field"
-          class="rule-control flat-select"
-        >
+        <select v-model="newRule.field" class="rule-control flat-select">
           <option value="" disabled>انتخاب فیلد</option>
           <option v-for="field in filterableFields" :key="field.value" :value="field.value">
             {{ field.label }}
@@ -59,7 +64,11 @@
           :disabled="!newRule.field"
         >
           <option value="" disabled>انتخاب عملگر</option>
-          <option v-for="operator in availableOperators" :key="operator.value" :value="operator.value">
+          <option
+            v-for="operator in availableOperators"
+            :key="operator.value"
+            :value="operator.value"
+          >
             {{ operator.label }}
           </option>
         </select>
@@ -69,7 +78,9 @@
             v-model="newRule.value"
             :placeholder="`مقدار فیلتر (${selectedNewRuleFieldDefinition.label})`"
             class="rule-control flat-input"
-            :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
+            :disabled="
+              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
+            "
             :type="selectedNewRuleFieldDefinition.type === 'textarea' ? 'text' : 'text'"
           />
           <input
@@ -77,7 +88,9 @@
             v-model.number="newRule.value"
             :placeholder="`مقدار فیلتر عددی (${selectedNewRuleFieldDefinition.label})`"
             class="rule-control flat-input"
-            :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
+            :disabled="
+              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
+            "
             type="number"
           />
           <vue-persian-datetime-picker
@@ -87,15 +100,21 @@
             display-format="jYYYY/jM/jD"
             type="date"
             placeholder="انتخاب تاریخ شمسی"
-            :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
+            :disabled="
+              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
+            "
             clearable
             class="rule-control"
           ></vue-persian-datetime-picker>
           <select
-            v-else-if="['select', 'boolean', 'gender', 'group'].includes(selectedNewRuleFieldDefinition.type)"
+            v-else-if="
+              ['select', 'boolean', 'gender', 'group'].includes(selectedNewRuleFieldDefinition.type)
+            "
             v-model="newRule.value"
             class="rule-control flat-select"
-            :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
+            :disabled="
+              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
+            "
           >
             <option value="" disabled>انتخاب مقدار</option>
             <option v-for="option in valueSelectOptions" :key="option.value" :value="option.value">
@@ -107,7 +126,9 @@
             v-model="newRule.value"
             placeholder="مقدار فیلتر (نوع نامشخص)"
             class="rule-control flat-input"
-            :disabled="!newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'"
+            :disabled="
+              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
+            "
             type="text"
           />
         </template>
@@ -116,7 +137,13 @@
           type="button"
           class="button add-rule-btn"
           @click="addNewRule"
-          :disabled="!newRule.field || !newRule.operator || (newRule.operator !== 'isNull' && newRule.operator !== 'isNotNull' && (newRule.value === null || newRule.value === ''))"
+          :disabled="
+            !newRule.field ||
+            !newRule.operator ||
+            (newRule.operator !== 'isNull' &&
+              newRule.operator !== 'isNotNull' &&
+              (newRule.value === null || newRule.value === ''))
+          "
         >
           ➕ افزودن قانون
         </button>
@@ -135,7 +162,12 @@
             </span>
             <span class="rule-operator-label"> {{ getRuleOperatorLabel(rule) }} </span>
             <span
-              v-if="rule.value !== null && rule.operator !== 'isNull' && rule.operator !== 'isNotNull' && rule.value !== ''"
+              v-if="
+                rule.value !== null &&
+                rule.operator !== 'isNull' &&
+                rule.operator !== 'isNotNull' &&
+                rule.value !== ''
+              "
               class="rule-value"
             >
               "{{ formatRuleValue(rule) }}"
@@ -147,29 +179,45 @@
               (بدون نیاز به مقدار)
             </span>
           </p>
-          <button type="button" class="button delete-button" @click="removeRule(index)">🗑️ حذف</button>
+          <button type="button" class="button delete-button" @click="removeRule(index)">
+            🗑️ حذف
+          </button>
         </div>
       </div>
 
       <hr v-if="currentFilterRules.length > 0" class="filter-section-separator" />
 
       <div class="filter-actions">
-        <button type="button" class="button apply-filter-btn" @click="applyFilters" :disabled="currentFilterRules.length === 0">✔️ اعمال فیلتر</button>
-        <button type="button" class="button clear-filter-btn" @click="clearFilters" :disabled="currentFilterRules.length === 0">❌ پاک کردن همه</button>
+        <button
+          type="button"
+          class="button apply-filter-btn"
+          @click="applyFilters"
+          :disabled="currentFilterRules.length === 0"
+        >
+          ✔️ اعمال فیلتر
+        </button>
+        <button
+          type="button"
+          class="button clear-filter-btn"
+          @click="clearFilters"
+          :disabled="currentFilterRules.length === 0"
+        >
+          ❌ پاک کردن همه
+        </button>
       </div>
     </div>
 
     <hr class="separator" />
     <div v-if="contactStore.loading" class="status-message loading">
-      <span style="font-size:1.2em;">⏳</span>
+      <span style="font-size: 1.2em">⏳</span>
       در حال بارگذاری مخاطبین...
     </div>
     <div v-else-if="contactStore.error" class="status-message error">
-      <span style="font-size:1.2em;">❗</span>
+      <span style="font-size: 1.2em">❗</span>
       {{ contactStore.error }}
     </div>
     <div v-else-if="paginatedContacts.length === 0" class="status-message no-results">
-      <span style="font-size:1.2em;">⚠️</span>
+      <span style="font-size: 1.2em">⚠️</span>
       هیچ مخاطبی یافت نشد.
       <span
         v-if="
@@ -192,7 +240,7 @@
             :to="{ name: 'contact-detail', params: { id: contactItem.contact.id } }"
             class="contact-name-link"
           >
-            ✏️
+            <i class="fa-solid fa-user"></i>
             {{ contactItem.contact.name }} {{ contactItem.contact.lastName }}
           </router-link>
 
@@ -245,7 +293,7 @@
             @click="startEditingContact(contactItem.contact)"
             :disabled="contactStore.loading"
           >
-            ✏️ ویرایش
+            <i class="fa-solid fa-pen-to-square"></i> ویرایش
           </button>
 
           <button
@@ -253,7 +301,7 @@
             type="button"
             @click="confirmDeleteContact(contactItem.contact.id)"
           >
-            🗑️ حذف
+            <i class="fa-solid fa-trash"></i> حذف
           </button>
         </div>
       </li>
@@ -261,11 +309,11 @@
 
     <div v-if="totalPages > 1" class="pagination-controls">
       <button @click="prevPage" :disabled="currentPage === 1" class="pagination-button">
-        ⬅️ قبلی
+        <i class="fa-solid fa-arrow-right"></i> قبلی
       </button>
       <span>صفحه {{ currentPage }} از {{ totalPages }}</span>
       <button @click="nextPage" :disabled="currentPage === totalPages" class="pagination-button">
-        بعدی ➡️
+        بعدی <i class="fa-solid fa-arrow-left"></i>
       </button>
 
       <div class="page-numbers">
@@ -275,7 +323,7 @@
           @click="goToPage(page)"
           :class="['page-number-button', { active: currentPage === page }]"
         >
-          <span v-if="currentPage === page">🔵</span>
+          <span v-if="currentPage === page"><i class="fa-solid fa-circle"></i></span>
           {{ page }}
         </button>
       </div>
@@ -951,19 +999,22 @@ h2 {
 
 /* استایل دکمه نمایش/پنهان‌سازی فیلتر */
 .toggle-filter-button {
-  background-color: var(--color-background-darker-light); /* تغییر کرد */
-  color: var(--color-text-primary); /* تغییر کرد */
+  background: var(--glass-bg);
+  color: var(--color-text-primary);
   padding: 8px 15px;
-  border: 1px solid var(--color-border-medium); /* تغییر کرد */
-  border-radius: 4px;
+  border: 1px solid var(--color-border-medium);
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 1em;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
   font-family: inherit;
+  backdrop-filter: blur(8px);
 }
 
 .toggle-filter-button:hover {
-  background-color: var(--color-border-light); /* تغییر کرد */
+  background: var(--glass-bg-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 /* **استایل بخش قابل گسترش فیلتر پیشرفته** */
@@ -994,12 +1045,17 @@ h2 {
   border: 1px dashed var(--color-border-medium); /* تغییر کرد */
   border-radius: 4px;
   background-color: var(--color-background-light); /* تغییر کرد */
+  flex-direction: column;
 }
 
 .add-rule-form h4 {
   width: 100%;
   margin: 0 0 10px 0;
   color: var(--color-text-primary); /* تغییر کرد */
+}
+
+.add-rule-form .btn {
+  width: 100%;
 }
 
 /* استایل عمومی برای Input و Select در فرم افزودن قانون */
@@ -1052,12 +1108,20 @@ h2 {
   flex-wrap: wrap;
   justify-content: space-between;
   box-shadow: 0 1px 3px var(--color-shadow); /* اضافه شد برای عمق بیشتر */
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .filter-rule-item p {
   margin: 0;
   flex-grow: 1;
   word-break: break-word;
+  margin-bottom: 5px;
+}
+
+.filter-rule-item .btn {
+  width: auto;
+  align-self: flex-end;
 }
 
 .rule-field-label {
@@ -1086,6 +1150,12 @@ h2 {
   gap: 10px;
   margin-top: 20px;
   justify-content: flex-end;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.filter-actions .btn {
+  width: 100%;
 }
 
 .filter-section-separator {
@@ -1153,6 +1223,8 @@ h2 {
   gap: 18px;
   align-items: flex-start;
   position: relative;
+  flex-direction: column;
+  align-items: stretch;
 }
 .contact-item:hover {
   box-shadow: 0 12px 32px 0 rgba(31, 38, 135, 0.22);
@@ -1242,31 +1314,17 @@ h2 {
   align-items: flex-end;
 }
 
-.advanced-filter-button {
-  margin-top: 15px; /* کمی فاصله از بالا */
-  width: 100%; /* تمام عرض کانتینر را بگیرد */
-  font-weight: bold;
-  justify-content: center; /* متن و آیکون وسط‌چین */
-}
-
-/* استایل‌های موبایل اگر نیاز بود */
-@media (max-width: 768px) {
-  .advanced-filter-button {
-    padding: 10px 15px; /* پدینگ مناسب‌تر در موبایل */
-    font-size: 0.9em; /* فونت کمی کوچکتر */
-  }
-}
-
-/* استایل عمومی برای دکمه‌ها */
+/* Button Styles */
 .button {
   padding: 8px 15px;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 0.9em;
   transition:
     background-color 0.3s ease,
-    opacity 0.3s ease;
+    opacity 0.3s ease,
+    transform 0.2s ease;
   font-family: inherit;
 }
 
@@ -1275,23 +1333,84 @@ h2 {
   cursor: not-allowed;
 }
 
-/* استایل مخصوص دکمه ویرایش */
+/* Action Buttons */
 .edit-button {
-  background-color: var(--color-warning); /* تغییر کرد */
-  color: var(--color-black); /* تغییر کرد */
+  background: linear-gradient(120deg, var(--color-warning) 60%, transparent 100%);
+  color: var(--color-black);
+  border: none;
+  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.1);
 }
+
 .edit-button:hover:not(:disabled) {
-  background-color: var(--color-warning-dark); /* تغییر کرد */
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.2);
 }
 
-/* استایل مخصوص دکمه حذف */
 .delete-button {
-  background-color: var(--color-danger); /* تغییر کرد */
-  color: var(--color-white); /* تغییر کرد */
+  background: linear-gradient(120deg, var(--color-danger) 60%, transparent 100%);
+  color: var(--color-white);
+  border: none;
+  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.1);
 }
-.delete-button:hover:not(:disabled) {
 
-  background-color: var(--color-danger-dark); /* تغییر کرد */
+.delete-button:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.2);
+}
+
+/* Filter Rules */
+.add-rule-btn {
+  background: linear-gradient(120deg, var(--accent-color) 60%, transparent 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-rule-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(var(--accent-color-rgb, 108, 99, 255), 0.18);
+}
+
+.add-rule-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Pagination Controls */
+.pagination-button,
+.page-number-button {
+  background: var(--glass-bg);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-medium);
+  padding: 8px 15px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.pagination-button:hover:not(:disabled),
+.page-number-button:hover:not(:disabled) {
+  background: var(--glass-bg-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.pagination-button:disabled,
+.page-number-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* استایل‌های موبایل اگر نیاز بود */
+@media (max-width: 768px) {
+  .advanced-filter-button {
+    padding: 10px 15px; /* پدینگ مناسب‌تر در موبایل */
+    font-size: 0.9em; /* فونت کمی کوچکتر */
+  }
 }
 
 /* **استایل کنترل‌های صفحه‌بندی** */
@@ -1418,7 +1537,7 @@ h2 {
     gap: 10px;
   }
 
-  .add-rule-form .el-button {
+  .add-rule-form .btn {
     width: 100%;
   }
 
@@ -1431,7 +1550,7 @@ h2 {
   .filter-rule-item p {
     margin-bottom: 5px;
   }
-  .filter-rule-item .el-button {
+  .filter-rule-item .btn {
     width: auto;
     align-self: flex-end;
   }
@@ -1442,7 +1561,7 @@ h2 {
     align-items: stretch;
   }
 
-  .filter-actions .el-button {
+  .filter-actions .btn {
     width: 100%;
   }
 

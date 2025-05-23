@@ -212,50 +212,69 @@ const confirmDeleteGroup = async (groupToDelete) => {
   padding: 5px 10px;
   cursor: pointer;
   border: none;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
+  border-radius: var(--radius-base);
+  transition: all 0.3s ease;
   font-size: 0.9em;
-  color: var(--color-white); /* رنگ متن دکمه‌ها */
+  backdrop-filter: blur(8px);
 }
 
-/* استایل دکمه حذف */
+/* Edit Button */
+.edit-button {
+  background: linear-gradient(120deg, var(--color-warning) 60%, transparent 100%);
+  color: var(--color-black);
+  border: none;
+  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.1);
+}
+
+.edit-button:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.2);
+}
+
+/* Delete Button */
 .delete-button {
-  background-color: var(--color-danger-bg); /* تغییر کرد */
-  color: var(--color-danger-text); /* تغییر کرد */
+  background: linear-gradient(120deg, var(--color-danger) 60%, transparent 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.1);
 }
 
 .delete-button:hover:not(:disabled) {
-  background-color: var(--color-danger-hover-bg); /* تغییر کرد */
-  color: var(--color-danger-hover-text); /* تغییر کرد */
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.2);
 }
 
-/* استایل دکمه ویرایش */
-.edit-button {
-  background-color: var(--color-warning-bg); /* تغییر کرد */
-  color: var(--color-warning-text); /* تغییر کرد */
-}
-.edit-button:hover:not(:disabled) {
-  background-color: var(--color-warning-hover-bg); /* تغییر کرد */
-  color: var(--color-warning-hover-text); /* تغییر کرد */
-}
-
-/* استایل دکمه ذخیره */
+/* Save Button */
 .save-button {
-  background-color: var(--color-success-bg); /* تغییر کرد */
-  color: var(--color-success-text); /* تغییر کرد */
-}
-.save-button:hover:not(:disabled) {
-  background-color: var(--color-success-hover-bg); /* تغییر کرد */
-  color: var(--color-success-hover-text); /* تغییر کرد */
+  background: linear-gradient(120deg, var(--color-success) 60%, transparent 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.1);
 }
 
-/* استایل دکمه انصراف */
-.cancel-button {
-  background-color: var(--color-secondary-bg); /* تغییر کرد */
-  color: var(--color-secondary-text); /* تغییر کرد */
+.save-button:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(40, 167, 69, 0.2);
 }
+
+/* Cancel Button */
+.cancel-button {
+  background: var(--glass-bg);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-medium);
+}
+
 .cancel-button:hover:not(:disabled) {
-  background-color: var(--color-secondary-hover-bg); /* تغییر کرد */
-  color: var(--color-secondary-hover-text); /* تغییر کرد */
+  background: var(--glass-bg-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Disabled State */
+.group-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 </style>

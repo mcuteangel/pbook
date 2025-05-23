@@ -4,29 +4,27 @@
     <header class="app-header glass fade-in">
       <div class="header-content">
         <h1 class="app-title">دفترچه مخاطبین هوشمند</h1>
-        <el-button
+        <button
           v-if="showInstallButton"
           @click="handleInstallClick"
-          type="primary"
-          icon="Download"
-          round
+          class="install-button glass-btn"
           title="نصب اپلیکیشن"
-          class="install-button"
         >
+          <i class="fa-solid fa-download"></i>
           نصب
-        </el-button>
+        </button>
       </div>
       <nav class="app-nav-desktop">
         <RouterLink :to="{ name: 'contact-list' }" active-class="active-link" class="nav-item">
-          <el-icon><User /></el-icon>
+          <i class="fa-solid fa-user"></i>
           <span>مخاطبین</span>
         </RouterLink>
         <RouterLink :to="{ name: 'add-contact' }" active-class="active-link" class="nav-item">
-          <el-icon><CirclePlus /></el-icon>
+          <i class="fa-solid fa-user-plus"></i>
           <span>افزودن</span>
         </RouterLink>
         <RouterLink :to="{ name: 'group-manager' }" active-class="active-link" class="nav-item">
-          <el-icon><Grid /></el-icon>
+          <i class="fa-solid fa-layer-group"></i>
           <span>گروه‌ها</span>
         </RouterLink>
         <RouterLink
@@ -34,11 +32,11 @@
           active-class="active-link"
           class="nav-item"
         >
-          <el-icon><List /></el-icon>
+          <i class="fa-solid fa-list"></i>
           <span>فیلدها</span>
         </RouterLink>
         <RouterLink :to="{ name: 'settings' }" active-class="active-link" class="nav-item">
-          <el-icon><Setting /></el-icon>
+          <i class="fa-solid fa-gear"></i>
           <span>تنظیمات</span>
         </RouterLink>
       </nav>
@@ -54,7 +52,7 @@
         class="mobile-nav-item"
         active-class="active-mobile-link"
       >
-        <el-icon><User /></el-icon>
+        <i class="fa-solid fa-user"></i>
         <span>مخاطبین</span>
       </RouterLink>
       <RouterLink
@@ -62,7 +60,7 @@
         class="mobile-nav-item"
         active-class="active-mobile-link"
       >
-        <el-icon><CirclePlus /></el-icon>
+        <i class="fa-solid fa-user-plus"></i>
         <span>افزودن</span>
       </RouterLink>
       <RouterLink
@@ -70,7 +68,7 @@
         class="mobile-nav-item"
         active-class="active-mobile-link"
       >
-        <el-icon><Grid /></el-icon>
+        <i class="fa-solid fa-layer-group"></i>
         <span>گروه‌ها</span>
       </RouterLink>
       <RouterLink
@@ -78,7 +76,7 @@
         class="mobile-nav-item"
         active-class="active-mobile-link"
       >
-        <el-icon><List /></el-icon>
+        <i class="fa-solid fa-list"></i>
         <span>فیلدها</span>
       </RouterLink>
       <RouterLink
@@ -86,7 +84,7 @@
         class="mobile-nav-item"
         active-class="active-mobile-link"
       >
-        <el-icon><Setting /></el-icon>
+        <i class="fa-solid fa-gear"></i>
         <span>تنظیمات</span>
       </RouterLink>
     </nav>
@@ -99,11 +97,10 @@ import { RouterLink, RouterView } from 'vue-router'
 import { useContactStore } from '@/store/contacts'
 import { useGroupStore } from '@/store/groups'
 import { useCustomFieldStore } from '@/store/customFields'
-import { User, CirclePlus, Grid, List, Setting, Download } from '@element-plus/icons-vue' // ایمپورت آیکون‌ها
 import './assets/styles/glassmorphism.css'
 import './assets/styles/theme.css'
+import '@fortawesome/fontawesome-free/css/all.min.css'
 
-// --- شروع منطق پرامپت نصب ---
 const deferredPrompt = ref(null)
 const showInstallButton = ref(false)
 
@@ -134,8 +131,6 @@ const handleInstallClick = async () => {
     console.log('User dismissed the A2HS prompt')
   }
 }
-
-// --- پایان منطق پرامپت نصب ---
 
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
@@ -346,7 +341,7 @@ onUnmounted(() => {
   border-radius: 8px;
 }
 
-.app-nav-mobile .mobile-nav-item .el-icon {
+.app-nav-mobile .mobile-nav-item .fa-solid {
   font-size: 1.5em;
   margin-bottom: 3px;
 }
@@ -421,8 +416,8 @@ onUnmounted(() => {
   }
 }
 
-/* استایل برای آیکون‌های Element Plus */
-.el-icon {
+/* استایل برای آیکون‌های Font Awesome */
+.fa-solid {
   font-size: 1.2em;
 }
 </style>

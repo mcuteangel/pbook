@@ -4,13 +4,12 @@
 
 html,
 body {
-  /* اینو به html, body تغییر دادم تا مطمئن بشیم ریشه اعمال میشه */
   margin: 0;
-  padding: 0; /* پدینگ پیش‌فرض مرورگر رو هم حذف کنیم */
+  padding: 0;
   width: 100%;
   height: 100%;
   font-family: 'Vazirmatn', sans-serif;
-  direction: rtl; /* این خط حیاتیه و روی ریشه html/body اعمال میشه */
+  direction: rtl;
   background-color: var(--color-background-primary);
   color: var(--color-text-primary);
   transition:
@@ -18,55 +17,66 @@ body {
     color 0.3s ease;
 }
 
-/* این بخش رو هم برای اطمینان بیشتر برای کامپوننت‌های Element Plus اضافه کن */
-/* نیازی به !important برای direction: rtl اینجا نیست، چون Element Plus خودش مدیریت می‌کنه */
-.el-overlay, .el-message-box, .el-notification, .el-loading-mask,
-.el-dropdown-menu, .el-picker-panel, .el-date-editor,
-.el-popover, .el-tooltip__popper,
-.el-input__inner, .el-textarea__inner,
-.el-table,
-.el-form-item__label, /* برای لیبل فرم‌ها */
-.el-select, .el-input, .el-textarea, /* برای فیلدهای ورودی */
-.el-button {
-  /* برای دکمه‌ها */
-  font-family: 'Vazirmatn', sans-serif !important;
-  /* جهت برای Element Plus بهتره از طریق config خود Element Plus یا صرفاً تنظیم روی body هندل بشه */
-  /* اگر بعد از این باز هم مشکل داشتی، میشه اینجا direction: rtl !important; رو به صورت موقت تست کرد */
-}
-
+/* Base Theme Variables */
 :root {
-  /* Light Theme Variables */
-  --color-background-primary: #f8f9fa; /* رنگ پس‌زمینه کلی برنامه */
-  --color-background-content: #ffffff; /* رنگ پس‌زمینه کانتینر محتوا */
-  --color-background-header: linear-gradient(to left, #e0eafc, #cfdef3); /* گرادینت برای هدر */
-  --color-text-primary: #343a40; /* متن اصلی */
-  --color-text-secondary: #6c757d; /* متن ثانویه (مثلاً برای لیبل‌ها) */
-  --color-text-tertiary: #adb5bd; /* متن کم‌رنگ‌تر */
-  --color-text-header: #212529; /* رنگ متن کلی هدر */
-  --color-text-header-title: #004d9c; /* رنگ عنوان اصلی هدر */
-  --color-border-light: #e9ecef; /* بوردرهای خیلی کم‌رنگ */
-  --color-border-medium: #dee2e6; /* بوردرهای متوسط */
-  --color-border-header: #ced4da; /* بوردر برای جداکننده هدر */
-  --color-link-primary: #007bff; /* رنگ لینک و دکمه اصلی */
-  --color-link-hover: #0056b3; /* هاور لینک و دکمه اصلی */
-  --color-link-header: #495057; /* رنگ لینک‌های ناوبری در هدر */
-  --color-link-hover-header: rgba(0, 123, 255, 0.1); /* هاور لینک‌های ناوبری */
-  --color-link-hover-text-header: #0056b3; /* متن هاور لینک‌های ناوبری */
-  --color-link-active-header: #007bff; /* لینک فعال در ناوبری */
-  --color-link-active-text-header: #ffffff; /* متن لینک فعال */
-  --color-button-disabled-bg: #e9ecef; /* پس‌زمینه دکمه غیرفعال */
-  --color-button-disabled-text: #adb5bd; /* متن دکمه غیرفعال */
-  --color-error-text: #dc3545; /* متن خطا */
-  --color-shadow-light: rgba(0, 0, 0, 0.05); /* سایه کم‌رنگ */
-  --color-shadow-medium: rgba(0, 0, 0, 0.1); /* سایه متوسط */
-  --color-shadow-strong: rgba(0, 0, 0, 0.15); /* سایه قوی */
-  --color-shadow-focus: rgba(0, 123, 255, 0.25); /* سایه در حالت فوکوس */
+  /* Colors */
+  --color-background-primary: #f8f9fa;
+  --color-background-content: #ffffff;
+  --color-background-header: linear-gradient(to left, #e0eafc, #cfdef3);
+  --color-background-light: #ffffff;
+  --color-background-darker-light: #f8f9fa;
+
+  /* Text Colors */
+  --color-text-primary: #343a40;
+  --color-text-secondary: #6c757d;
+  --color-text-tertiary: #868e96;
+  --color-text-header: #ffffff;
+  --color-text-header-title: #007bff;
+
+  /* Border Colors */
+  --color-border-light: #e9ecef;
+  --color-border-medium: #dee2e6;
+  --color-border-header: #dde4ed;
+
+  /* Link Colors */
+  --color-link-primary: #007bff;
+  --color-link-hover: #0056b3;
+  --color-link-header: #e0e0e0;
+  --color-link-hover-header: rgba(0, 123, 255, 0.1);
+  --color-link-hover-text-header: #007bff;
+  --color-link-active-header: #0056b3;
+  --color-link-active-text-header: #ffffff;
+
+  /* Button Colors */
+  --color-button-disabled-bg: #e9ecef;
+  --color-button-disabled-text: #adb5bd;
+
+  /* Status Colors */
+  --color-success: #28a745;
+  --color-warning: #ffc107;
+  --color-danger: #dc3545;
+  --color-info: #17a2b8;
+
+  --color-success-dark: #1e7e34;
+  --color-warning-dark: #d39e00;
+  --color-danger-dark: #bd2130;
+  --color-info-dark: #117a8b;
+
+  /* Shadows */
+  --color-shadow: rgba(0, 0, 0, 0.1);
+  --color-shadow-light: rgba(0, 0, 0, 0.05);
+  --color-shadow-medium: rgba(0, 0, 0, 0.1);
+  --color-shadow-strong: rgba(0, 0, 0, 0.15);
+  --color-shadow-focus: rgba(0, 123, 255, 0.25);
+
+  /* Glassmorphism */
   --accent-color: #6c63ff;
   --glass-bg: rgba(255, 255, 255, 0.18);
   --glass-bg-hover: rgba(255, 255, 255, 0.24);
+  --glass-bg-active: rgba(255, 255, 255, 0.32);
   --color-text: #222;
 
-  /* Spacing Variables */
+  /* Spacing */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
@@ -78,8 +88,10 @@ body {
   --radius-md: 0.5rem;
   --radius-lg: 1rem;
 
-  /* Shadow */
+  /* Shadows */
+  --shadow-xs: 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-sm: 0 1px 4px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.12);
   --shadow-lg: 0 8px 32px 0 rgba(0, 0, 0, 0.12);
 
   /* Z-Index */
@@ -94,51 +106,114 @@ body {
   --form-section-width: 100%;
 }
 
+/* Dark Theme */
 @media (prefers-color-scheme: dark) {
   :root {
+    --color-background-primary: #2c2c2c;
+    --color-background-content: #3a3a3a;
+    --color-background-header: linear-gradient(to left, #232526, #414345);
+    --color-background-light: #3a3a3a;
+    --color-background-darker-light: #2c2c2c;
+
+    --color-text-primary: #e0e0e0;
+    --color-text-secondary: #b0b0b0;
+    --color-text-tertiary: #888888;
+    --color-text-header: #ffffff;
+    --color-text-header-title: #7bb5f7;
+
+    --color-border-light: #444444;
+    --color-border-medium: #555555;
+    --color-border-header: #666666;
+
+    --color-link-primary: #66b1ff;
+    --color-link-hover: #409eff;
+    --color-link-header: #a0a0a0;
+    --color-link-hover-header: rgba(102, 177, 255, 0.1);
+    --color-link-hover-text-header: #66b1ff;
+    --color-link-active-header: #409eff;
+    --color-link-active-text-header: #ffffff;
+
+    --color-button-disabled-bg: #444444;
+    --color-button-disabled-text: #888888;
+
+    --color-success: #67c23a;
+    --color-warning: #e6a23c;
+    --color-danger: #f56c6c;
+    --color-info: #909399;
+
+    --color-success-dark: #529b2e;
+    --color-warning-dark: #b88230;
+    --color-danger-dark: #c45656;
+    --color-info-dark: #73767a;
+
     --accent-color: #a7a3ff;
     --glass-bg: rgba(40, 60, 90, 0.38);
     --glass-bg-hover: rgba(40, 60, 90, 0.48);
+    --glass-bg-active: rgba(40, 60, 90, 0.58);
     --color-text: #f2f2f2;
+
+    --color-shadow-light: rgba(0, 0, 0, 0.2);
+    --color-shadow-medium: rgba(0, 0, 0, 0.3);
+    --color-shadow-strong: rgba(0, 0, 0, 0.4);
+    --color-shadow-focus: rgba(102, 177, 255, 0.25);
   }
 }
 
-html.dark {
-  /* Dark Theme Variables */
-  --color-background-primary: #2c2c2c;
-  --color-background-content: #3a3a3a;
-  --color-background-header: linear-gradient(to left, #232526, #414345);
-  --color-text-primary: #e0e0e0;
-  --color-text-secondary: #b0b0b0;
-  --color-text-tertiary: #888888;
-  --color-text-header: #ffffff;
-  --color-text-header-title: #7bb5f7;
-  --color-border-light: #444444;
-  --color-border-medium: #555555;
-  --color-border-header: #666666;
-  --color-link-primary: #66b1ff;
-  --color-link-hover: #409eff;
-  --color-link-header: #a0a0a0;
-  --color-link-hover-header: rgba(102, 177, 255, 0.1);
-  --color-link-hover-text-header: #66b1ff;
-  --color-link-active-header: #409eff;
-  --color-link-active-text-header: #ffffff;
-  --color-button-disabled-bg: #444444;
-  --color-button-disabled-text: #888888;
-  --color-error-text: #ff7f7f;
-  --color-shadow-light: rgba(0, 0, 0, 0.2);
-  --color-shadow-medium: rgba(0, 0, 0, 0.3);
-  --color-shadow-strong: rgba(0, 0, 0, 0.4);
-  --color-shadow-focus: rgba(102, 177, 255, 0.25);
+/* Global Font Family */
+.button,
+.input,
+.select,
+.textarea,
+.form-label,
+.dropdown-menu,
+.date-picker,
+.notification,
+.dialog,
+.table {
+  font-family: 'Vazirmatn', sans-serif;
 }
 
+/* Global Styles */
+.flat-input,
+.flat-select,
+.compact-input,
+.compact-select {
+  background: var(--glass-bg);
+  border: 1px solid var(--input-border, #e0e0e0);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
+  padding: 0.5em 1em;
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  outline: none;
+  margin-bottom: 0.3em;
+  transition:
+    border 0.15s,
+    box-shadow 0.15s;
+  width: 100%;
+  min-width: 0;
+}
+
+.flat-input:focus,
+.flat-select:focus {
+  border: 1.5px solid var(--accent-color);
+  box-shadow: var(--shadow-md);
+}
+
+.compact-input,
+.compact-select {
+  padding: 0.35em 0.7em;
+  font-size: 0.97em;
+}
+
+/* Button Styles */
 .add-item-btn,
 .remove-item-btn {
-  background: var(--glass-bg, rgba(255, 255, 255, 0.25));
+  background: var(--glass-bg);
   border: none;
-  border-radius: var(--radius, 12px);
-  box-shadow: var(--shadow-xs, 0 2px 8px rgba(0, 0, 0, 0.04));
-  color: var(--primary, #333);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
+  color: var(--color-text);
   font-size: 1rem;
   padding: 0.5em 1.2em;
   margin: 0.5em 0.2em;
@@ -151,23 +226,27 @@ html.dark {
   position: relative;
   overflow: hidden;
 }
+
 .add-item-btn:active,
 .remove-item-btn:active {
-  background: var(--glass-bg-active, rgba(255, 255, 255, 0.35));
-  box-shadow: var(--shadow-sm, 0 4px 16px rgba(0, 0, 0, 0.08));
+  background: var(--glass-bg-active);
+  box-shadow: var(--shadow-sm);
   transform: scale(0.97);
 }
+
 .add-item-btn:hover,
 .remove-item-btn:hover {
-  background: var(--glass-bg-hover, rgba(255, 255, 255, 0.32));
-  box-shadow: var(--shadow-md, 0 6px 24px rgba(0, 0, 0, 0.12));
+  background: var(--glass-bg-hover);
+  box-shadow: var(--shadow-md);
 }
+
 .add-item-btn {
   display: flex;
   align-items: center;
   gap: 0.5em;
   font-weight: 500;
 }
+
 .remove-item-btn {
   color: #e74c3c;
   font-size: 1.2em;
@@ -180,61 +259,36 @@ html.dark {
     color 0.15s,
     background 0.15s;
 }
+
 .remove-item-btn:hover {
   color: #c0392b;
   background: rgba(255, 0, 0, 0.07);
 }
-.flat-input,
-.flat-select,
-.compact-input,
-.compact-select {
-  background: var(--glass-bg, rgba(255, 255, 255, 0.18));
-  border: 1px solid var(--input-border, #e0e0e0);
-  border-radius: var(--radius, 12px);
-  box-shadow: var(--shadow-xs, 0 2px 8px rgba(0, 0, 0, 0.04));
-  padding: 0.5em 1em;
-  font-size: var(--font-size-base, 1rem);
-  color: var(--primary, #222);
-  outline: none;
-  margin-bottom: 0.3em;
-  transition:
-    border 0.15s,
-    box-shadow 0.15s;
-  width: 100%;
-  min-width: 0;
-}
-.flat-input:focus,
-.flat-select:focus {
-  border: 1.5px solid var(--primary, #3b82f6);
-  box-shadow: var(--shadow-md, 0 6px 24px rgba(0, 0, 0, 0.12));
-  background: var(--glass-bg-hover, rgba(255, 255, 255, 0.32));
-}
-.compact-input,
-.compact-select {
-  padding: 0.35em 0.7em;
-  font-size: 0.97em;
-}
+
 .address-grid,
 .additional-phones-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 0.7em 1em;
   align-items: end;
-  background: var(--glass-bg, rgba(255, 255, 255, 0.13));
-  border-radius: var(--radius, 12px);
-  box-shadow: var(--shadow-xs, 0 2px 8px rgba(0, 0, 0, 0.04));
+  background: var(--glass-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
   margin-bottom: 1em;
   padding: 1em 0.7em 0.7em 0.7em;
   position: relative;
 }
+
 .address-field {
   display: flex;
   flex-direction: column;
   gap: 0.2em;
 }
+
 .address-notes-field {
   grid-column: 1 / -1;
 }
+
 @media (max-width: 700px) {
   .address-grid,
   .additional-phones-grid {
