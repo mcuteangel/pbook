@@ -153,17 +153,21 @@
         class="form-group custom-field-group"
       >
         <label :for="'custom-field-' + fieldDef.id">
-          <span v-if="fieldDef.type === 'date"
-            ><IconWrapper icon="fa-solid fa-calendar-days"
-          /></span>
-          <span v-else-if="fieldDef.type === 'number"
-            ><IconWrapper icon="fa-solid fa-hashtag"
-          /></span>
-          <span v-else-if="fieldDef.type === 'boolean"
-            ><IconWrapper icon="fa-solid fa-toggle-on"
-          /></span>
-          <span v-else-if="fieldDef.type === 'select"><IconWrapper icon="fa-solid fa-list" /></span>
-          <span v-else><IconWrapper icon="fa-solid fa-pen" /></span>
+          <span v-if="fieldDef.type === 'date'">
+            <IconWrapper icon="fa-solid fa-calendar-days" />
+          </span>
+          <span v-else-if="fieldDef.type === 'number'">
+            <IconWrapper icon="fa-solid fa-hashtag" />
+          </span>
+          <span v-else-if="fieldDef.type === 'boolean'">
+            <IconWrapper icon="fa-solid fa-toggle-on" />
+          </span>
+          <span v-else-if="fieldDef.type === 'select'">
+            <IconWrapper icon="fa-solid fa-list" />
+          </span>
+          <span v-else>
+            <IconWrapper icon="fa-solid fa-pen" />
+          </span>
           {{ $t(fieldDef.label) }}:
         </label>
         <input

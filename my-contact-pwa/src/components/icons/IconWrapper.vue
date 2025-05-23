@@ -4,8 +4,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { FontAwesomeIcon } from '@fortawesome/fontawesome-vue'
-
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 const props = defineProps({
   icon: {
     type: [String, Array],

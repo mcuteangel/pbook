@@ -1,14 +1,15 @@
 <template>
   <div class="contact-list-wrapper">
     <h2>
-      <span style="margin-left: 6px"><i class="fa-solid fa-magnifying-glass"></i></span> لیست
+      <span style="margin-left: 6px"><IconWrapper icon="fa-solid fa-magnifying-glass" /></span> لیست
       مخاطبین
     </h2>
 
     <div class="controls-container">
       <div class="search-control">
         <label for="search">
-          <span style="margin-left: 2px"><i class="fa-solid fa-magnifying-glass"></i></span> جستجو:
+          <span style="margin-left: 2px"><IconWrapper icon="fa-solid fa-magnifying-glass" /></span>
+          جستجو:
         </label>
         <input
           id="search"
@@ -21,8 +22,8 @@
 
       <div class="sort-controls">
         <label for="sortField">
-          <span style="margin-left: 2px"><i class="fa-solid fa-arrow-up-a-z"></i></span> مرتب‌سازی
-          بر اساس:
+          <span style="margin-left: 2px"><IconWrapper icon="fa-solid fa-arrow-up-a-z" /></span>
+          مرتب‌سازی بر اساس:
         </label>
         <select id="sortField" v-model="contactStore.sortField" class="control-select flat-select">
           <option v-for="option in sortOptions" :key="option.value" :value="option.value">
@@ -38,16 +39,16 @@
       </div>
 
       <button type="button" @click="toggleFilterSection" class="advanced-filter-button flat-input">
-        <span style="margin-left: 4px"><i class="fa-solid fa-sliders"></i></span>
+        <span style="margin-left: 4px"><IconWrapper icon="fa-solid fa-sliders" /></span>
         فیلتر پیشرفته
-        <span v-if="!isFilterSectionVisible"><i class="fa-solid fa-chevron-down"></i></span>
-        <span v-else><i class="fa-solid fa-chevron-up"></i></span>
+        <span v-if="!isFilterSectionVisible"><IconWrapper icon="fa-solid fa-chevron-down" /></span>
+        <span v-else><IconWrapper icon="fa-solid fa-chevron-up" /></span>
       </button>
     </div>
 
     <div v-if="isFilterSectionVisible" class="advanced-filter-section">
       <h3>
-        <span style="margin-left: 4px"><i class="fa-solid fa-list"></i></span> قوانین فیلتر
+        <span style="margin-left: 4px"><IconWrapper icon="fa-solid fa-list" /></span> قوانین فیلتر
       </h3>
 
       <div class="add-rule-form">
@@ -240,7 +241,7 @@
             :to="{ name: 'contact-detail', params: { id: contactItem.contact.id } }"
             class="contact-name-link"
           >
-            <i class="fa-solid fa-user"></i>
+            <IconWrapper icon="fa-solid fa-user" />
             {{ contactItem.contact.name }} {{ contactItem.contact.lastName }}
           </router-link>
 
@@ -293,7 +294,7 @@
             @click="startEditingContact(contactItem.contact)"
             :disabled="contactStore.loading"
           >
-            <i class="fa-solid fa-pen-to-square"></i> ویرایش
+            <IconWrapper icon="fa-solid fa-pen-to-square" /> ویرایش
           </button>
 
           <button
@@ -301,7 +302,7 @@
             type="button"
             @click="confirmDeleteContact(contactItem.contact.id)"
           >
-            <i class="fa-solid fa-trash"></i> حذف
+            <IconWrapper icon="fa-solid fa-trash" /> حذف
           </button>
         </div>
       </li>
@@ -309,11 +310,11 @@
 
     <div v-if="totalPages > 1" class="pagination-controls">
       <button @click="prevPage" :disabled="currentPage === 1" class="pagination-button">
-        <i class="fa-solid fa-arrow-right"></i> قبلی
+        <IconWrapper icon="fa-solid fa-arrow-right" /> قبلی
       </button>
       <span>صفحه {{ currentPage }} از {{ totalPages }}</span>
       <button @click="nextPage" :disabled="currentPage === totalPages" class="pagination-button">
-        بعدی <i class="fa-solid fa-arrow-left"></i>
+        بعدی <IconWrapper icon="fa-solid fa-arrow-left" />
       </button>
 
       <div class="page-numbers">
@@ -323,7 +324,7 @@
           @click="goToPage(page)"
           :class="['page-number-button', { active: currentPage === page }]"
         >
-          <span v-if="currentPage === page"><i class="fa-solid fa-circle"></i></span>
+          <span v-if="currentPage === page"><IconWrapper icon="fa-solid fa-circle" /></span>
           {{ page }}
         </button>
       </div>
@@ -353,6 +354,7 @@ import {
 } from '@/utils/formatters'
 import moment from 'moment-jalaali'
 import VuePersianDatetimePicker from 'vue3-persian-datetime-picker'
+import IconWrapper from '@/components/icons/IconWrapper.vue'
 
 const contactStore = useContactStore()
 const customFieldStore = useCustomFieldStore()
