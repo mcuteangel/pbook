@@ -3,7 +3,9 @@
     <h2>مدیریت فیلدهای سفارشی</h2>
 
     <div v-if="customFieldStore.loading" class="loading-message">در حال پردازش...</div>
-    <div v-if="customFieldStore.error" class="error-message" style="color: red;">{{ customFieldStore.error }}</div>
+    <div v-if="customFieldStore.error" class="error-message" style="color: red">
+      {{ customFieldStore.error }}
+    </div>
 
     <form @submit.prevent="handleSaveFieldDefinition" class="field-form">
       <h3>{{ editingField ? 'ویرایش فیلد' : 'افزودن فیلد جدید' }}</h3>
@@ -31,7 +33,7 @@
         </div>
         <button type="button" @click="addOption" class="add-option-btn">+ افزودن گزینه</button>
       </div>
-       <div>
+      <div>
         <label for="fieldOrder">ترتیب نمایش (اختیاری):</label>
         <input type="number" id="fieldOrder" v-model.number="currentField.order" />
       </div>
@@ -40,7 +42,12 @@
         <button type="submit" :disabled="customFieldStore.loading">
           {{ editingField ? 'ذخیره تغییرات' : 'افزودن فیلد' }}
         </button>
-        <button type="button" v-if="editingField" @click="cancelEdit" :disabled="customFieldStore.loading">
+        <button
+          type="button"
+          v-if="editingField"
+          @click="cancelEdit"
+          :disabled="customFieldStore.loading"
+        >
           انصراف
         </button>
       </div>
@@ -50,20 +57,34 @@
 
     <h3>لیست فیلدهای تعریف شده</h3>
     <div v-if="!customFieldStore.fieldDefinitions.length && !customFieldStore.loading">
-        هیچ فیلد سفارشی تعریف نشده است.
+      هیچ فیلد سفارشی تعریف نشده است.
     </div>
     <ul v-else class="field-list">
-      <li v-for="field in customFieldStore.sortedFieldDefinitions" :key="field.id" class="field-item">
+      <li
+        v-for="field in customFieldStore.sortedFieldDefinitions"
+        :key="field.id"
+        class="field-item"
+      >
         <div class="field-info">
           <strong>{{ field.label }}</strong> (نوع: {{ displayFieldType(field.type) }})
           <div v-if="field.type === 'select' && field.options && field.options.length">
             <em>گزینه‌ها: {{ field.options.join(', ') }}</em>
           </div>
-           <div v-if="field.order"><em>ترتیب: {{ field.order }}</em></div>
+          <div v-if="field.order">
+            <em>ترتیب: {{ field.order }}</em>
+          </div>
         </div>
         <div class="field-actions">
-          <button @click="startEdit(field)" class="edit-btn" :disabled="customFieldStore.loading">ویرایش</button>
-          <button @click="confirmDeleteField(field.id)" class="delete-btn" :disabled="customFieldStore.loading">حذف</button>
+          <button @click="startEdit(field)" class="edit-btn" :disabled="customFieldStore.loading">
+            ویرایش
+          </button>
+          <button
+            @click="confirmDeleteField(field.id)"
+            class="delete-btn"
+            :disabled="customFieldStore.loading"
+          >
+            حذف
+          </button>
         </div>
       </li>
     </ul>
@@ -71,12 +92,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue';
-import { useCustomFieldStore } from '../store/customFields';
+import { ref, reactive, onMounted, watch } from 'vue'
+import { useCustomFieldStore } from '../store/customFields'
 // اگر قرار است بعد از حذف فیلد، لیست مخاطبین رفرش شود:
 // import { useContactStore } from '../store/contacts';
 
-const customFieldStore = useCustomFieldStore();
+const customFieldStore = useCustomFieldStore()
 // const contactStore = useContactStore(); // در صورت نیاز
 
 const defaultFieldState = () => ({
@@ -85,14 +106,14 @@ const defaultFieldState = () => ({
   type: 'text', // نوع پیش‌فرض
   options: [],
   order: 0,
-});
+})
 
-const currentField = reactive(defaultFieldState());
-const editingField = ref(null); // آبجکت فیلدی که در حال ویرایش است
+const currentField = reactive(defaultFieldState())
+const editingField = ref(null) // آبجکت فیلدی که در حال ویرایش است
 
 onMounted(async () => {
-  await customFieldStore.loadFieldDefinitions();
-});
+  await customFieldStore.loadFieldDefinitions()
+})
 
 const displayFieldType = (type) => {
   const types = {
@@ -102,68 +123,67 @@ const displayFieldType = (type) => {
     date: 'تاریخ',
     boolean: 'بله/خیر',
     select: 'لیست گزینه‌ای',
-  };
-  return types[type] || type;
-};
+  }
+  return types[type] || type
+}
 
 const handleTypeChange = () => {
   // اگر نوع فیلد دیگر 'select' نیست، گزینه‌ها را پاک کن
   if (currentField.type !== 'select') {
-    currentField.options = [];
+    currentField.options = []
   } else if (currentField.options.length === 0) {
     // اگر select شد و گزینه‌ای نداشت، یکی خالی اضافه کن
-    addOption();
+    addOption()
   }
-};
+}
 
 const addOption = () => {
-  currentField.options.push('');
-};
+  currentField.options.push('')
+}
 
 const removeOption = (index) => {
-  currentField.options.splice(index, 1);
-};
+  currentField.options.splice(index, 1)
+}
 
 const resetForm = () => {
-  Object.assign(currentField, defaultFieldState());
-  editingField.value = null;
-  customFieldStore.error = null; // پاک کردن خطای قبلی
-};
+  Object.assign(currentField, defaultFieldState())
+  editingField.value = null
+  customFieldStore.error = null // پاک کردن خطای قبلی
+}
 
 const startEdit = (field) => {
-  editingField.value = field;
-  currentField.id = field.id;
-  currentField.label = field.label;
-  currentField.type = field.type;
-  currentField.options = field.options ? [...field.options] : [];
-  currentField.order = field.order || 0;
-  customFieldStore.error = null;
-};
+  editingField.value = field
+  currentField.id = field.id
+  currentField.label = field.label
+  currentField.type = field.type
+  currentField.options = field.options ? [...field.options] : []
+  currentField.order = field.order || 0
+  customFieldStore.error = null
+}
 
 const cancelEdit = () => {
-  resetForm();
-};
+  resetForm()
+}
 
 const handleSaveFieldDefinition = async () => {
   if (!currentField.label.trim()) {
-    customFieldStore.error = 'برچسب فیلد نمی‌تواند خالی باشد.';
-    return;
+    customFieldStore.error = 'برچسب فیلد نمی‌تواند خالی باشد.'
+    return
   }
-  if (currentField.type === 'select' && currentField.options.every(opt => !opt.trim())) {
-     customFieldStore.error = 'حداقل یک گزینه برای لیست گزینه‌ای باید مقدار داشته باشد.';
-     return;
+  if (currentField.type === 'select' && currentField.options.every((opt) => !opt.trim())) {
+    customFieldStore.error = 'حداقل یک گزینه برای لیست گزینه‌ای باید مقدار داشته باشد.'
+    return
   }
   // پاک کردن گزینه‌های خالی از آرایه options
   if (currentField.type === 'select') {
-    currentField.options = currentField.options.filter(opt => opt.trim() !== '');
-    if(currentField.options.length === 0){
-        customFieldStore.error = 'برای فیلد از نوع گزینه‌ای، حداقل یک گزینه معتبر باید تعریف شود.';
-        return;
+    currentField.options = currentField.options.filter((opt) => opt.trim() !== '')
+    if (currentField.options.length === 0) {
+      customFieldStore.error = 'برای فیلد از نوع گزینه‌ای، حداقل یک گزینه معتبر باید تعریف شود.'
+      return
     }
   }
 
-
-  let success = false;
+  let success = false
   if (editingField.value) {
     // ویرایش
     success = await customFieldStore.updateFieldDefinition(editingField.value.id, {
@@ -171,7 +191,7 @@ const handleSaveFieldDefinition = async () => {
       type: currentField.type,
       options: currentField.options,
       order: currentField.order,
-    });
+    })
   } else {
     // افزودن
     const newFieldId = await customFieldStore.addFieldDefinition({
@@ -179,34 +199,38 @@ const handleSaveFieldDefinition = async () => {
       type: currentField.type,
       options: currentField.options,
       order: currentField.order,
-    });
-    success = !!newFieldId;
+    })
+    success = !!newFieldId
   }
 
   if (success && !customFieldStore.error) {
-    resetForm();
+    resetForm()
     // نیازی به لود مجدد نیست چون خود اکشن‌ها این کار رو انجام میدن
   }
-};
+}
 
 const confirmDeleteField = async (fieldId) => {
-  const fieldToDelete = customFieldStore.fieldDefinitions.find(f => f.id === fieldId);
-  if (fieldToDelete && confirm(`آیا از حذف فیلد سفارشی "${fieldToDelete.label}" مطمئن هستید؟ این عمل، این فیلد را از تمام مخاطبین نیز حذف خواهد کرد.`)) {
-    const success = await customFieldStore.deleteFieldDefinition(fieldId);
-    if(success){
-        alert('فیلد سفارشی با موفقیت حذف شد.');
-        // اگر نیاز به رفرش لیست مخاطبین دارید، اینجا contactStore.loadContacts() را صدا بزنید
-        // await contactStore.loadContacts();
+  const fieldToDelete = customFieldStore.fieldDefinitions.find((f) => f.id === fieldId)
+  if (
+    fieldToDelete &&
+    confirm(
+      `آیا از حذف فیلد سفارشی "${fieldToDelete.label}" مطمئن هستید؟ این عمل، این فیلد را از تمام مخاطبین نیز حذف خواهد کرد.`,
+    )
+  ) {
+    const success = await customFieldStore.deleteFieldDefinition(fieldId)
+    if (success) {
+      alert('فیلد سفارشی با موفقیت حذف شد.')
+      // اگر نیاز به رفرش لیست مخاطبین دارید، اینجا contactStore.loadContacts() را صدا بزنید
+      // await contactStore.loadContacts();
     }
   }
-};
+}
 
 // پاک کردن ارور موقعی که کامپوننت از بین میره
-import { onUnmounted } from 'vue';
+import { onUnmounted } from 'vue'
 onUnmounted(() => {
-  customFieldStore.error = null;
-});
-
+  customFieldStore.error = null
+})
 </script>
 
 <style scoped>
@@ -242,8 +266,8 @@ onUnmounted(() => {
   font-weight: bold;
   color: var(--color-text-secondary); /* اضافه شد */
 }
-.field-form input[type="text"],
-.field-form input[type="number"],
+.field-form input[type='text'],
+.field-form input[type='number'],
 .field-form select {
   width: 100%;
   padding: 10px;
@@ -272,19 +296,20 @@ onUnmounted(() => {
   color: var(--color-text-primary); /* اضافه شد */
   border: 1px solid var(--color-border-medium); /* اضافه شد */
 }
-.remove-option-btn, .add-option-btn {
+.remove-option-btn,
+.add-option-btn {
   padding: 8px 12px;
   border-radius: 4px;
   cursor: pointer;
   border: none; /* تغییر کرد */
 }
 .remove-option-btn {
-  background-color: var(--el-color-danger); /* از متغیر Element Plus */
-  color: var(--el-color-white);
+  background-color: var(--color-danger-bg); /* تغییر کرد */
+  color: var(--color-danger-text); /* تغییر کرد */
 }
 .add-option-btn {
-  background-color: var(--el-color-success); /* از متغیر Element Plus */
-  color: var(--el-color-white);
+  background-color: var(--color-success-bg); /* تغییر کرد */
+  color: var(--color-success-text); /* تغییر کرد */
   display: block;
   margin-top: 5px;
 }
@@ -296,13 +321,13 @@ onUnmounted(() => {
   cursor: pointer;
   margin-right: 10px;
   background-color: var(--color-link-primary); /* تغییر کرد */
-  color: var(--el-color-white); /* اضافه شد */
+  color: var(--color-link-text); /* تغییر کرد */
 }
 .form-actions button:disabled {
   background-color: var(--color-button-disabled-bg); /* تغییر کرد */
   color: var(--color-button-disabled-text); /* اضافه شد */
 }
-.form-actions button[type="button"] {
+.form-actions button[type='button'] {
   background-color: var(--color-text-tertiary); /* تغییر کرد */
 }
 
@@ -337,28 +362,29 @@ onUnmounted(() => {
   border-radius: 4px;
   cursor: pointer;
   margin-left: 8px;
-  color: var(--el-color-white); /* اضافه شد */
+  color: var(--color-button-text); /* تغییر کرد */
 }
 .edit-btn {
-  background-color: var(--el-color-warning); /* از متغیر Element Plus */
-  color: var(--el-color-black); /* Element Plus default text color for warning */
+  background-color: var(--color-warning-bg); /* تغییر کرد */
+  color: var(--color-warning-text); /* تغییر کرد */
 }
 .delete-btn {
-  background-color: var(--el-color-danger); /* از متغیر Element Plus */
-  color: var(--el-color-white);
+  background-color: var(--color-danger-bg); /* تغییر کرد */
+  color: var(--color-danger-text); /* تغییر کرد */
 }
-.loading-message, .error-message {
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 4px;
-    text-align: center;
+.loading-message,
+.error-message {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  text-align: center;
 }
 .loading-message {
-    background-color: var(--el-color-primary-light-9); /* از متغیر Element Plus */
-    color: var(--el-color-primary); /* از متغیر Element Plus */
+  background-color: var(--color-primary-light-bg); /* تغییر کرد */
+  color: var(--color-primary-light-text); /* تغییر کرد */
 }
 .error-message {
-    background-color: var(--el-color-danger-light-9); /* از متغیر Element Plus */
-    color: var(--el-color-danger); /* از متغیر Element Plus */
+  background-color: var(--color-danger-light-bg); /* تغییر کرد */
+  color: var(--color-danger-light-text); /* تغییر کرد */
 }
 </style>

@@ -1003,13 +1003,9 @@ h2 {
 }
 
 /* استایل عمومی برای Input و Select در فرم افزودن قانون */
-.advanced-filter-section .el-select,
-.advanced-filter-section .el-input,
-.advanced-filter-section .el-date-editor,
-.advanced-filter-section .vpd-input {
+.rule-control {
   flex-basis: 180px;
   flex-grow: 1;
-  /* Element Plus خودش استایل‌های مربوط به تم رو اعمال می‌کنه */
 }
 
 /* استایل placeholder وقتی فیلدی انتخاب نشده */
@@ -1018,7 +1014,7 @@ h2 {
   flex-grow: 1;
   padding: 8px 12px;
   color: var(--color-text-tertiary); /* تغییر کرد */
-  border: 1px solid var(--color-border-light); /* تغییر کرد (استایل پیش‌فرض Element Plus ممکنه اینو override کنه) */
+  border: 1px solid var(--color-border-light); /* تغییر کرد */
   border-radius: 4px;
   background-color: var(--color-background-light); /* تغییر کرد */
   font-size: 0.9em;
@@ -1114,21 +1110,21 @@ h2 {
 }
 
 .status-message.loading {
-  background-color: var(--el-color-success-light-9); /* از متغیر Element Plus */
-  color: var(--el-color-success); /* از متغیر Element Plus */
-  border: 1px solid var(--el-color-success-light-7); /* از متغیر Element Plus */
+  background-color: var(--color-success-light); /* تغییر کرد */
+  color: var(--color-success); /* تغییر کرد */
+  border: 1px solid var(--color-success-dark); /* تغییر کرد */
 }
 
 .status-message.error {
-  background-color: var(--el-color-danger-light-9); /* از متغیر Element Plus */
-  color: var(--el-color-danger); /* از متغیر Element Plus */
-  border: 1px solid var(--el-color-danger-light-7); /* از متغیر Element Plus */
+  background-color: var(--color-danger-light); /* تغییر کرد */
+  color: var(--color-danger); /* تغییر کرد */
+  border: 1px solid var(--color-danger-dark); /* تغییر کرد */
 }
 
 .status-message.no-results {
-  background-color: var(--el-color-warning-light-9); /* از متغیر Element Plus */
-  color: var(--el-color-warning); /* از متغیر Element Plus */
-  border: 1px solid var(--el-color-warning-light-7); /* از متغیر Element Plus */
+  background-color: var(--color-warning-light); /* تغییر کرد */
+  color: var(--color-warning); /* تغییر کرد */
+  border: 1px solid var(--color-warning-dark); /* تغییر کرد */
 }
 
 /* **استایل لیست مخاطبین (ul)** */
@@ -1281,20 +1277,21 @@ h2 {
 
 /* استایل مخصوص دکمه ویرایش */
 .edit-button {
-  background-color: var(--el-color-warning); /* از متغیر Element Plus */
-  color: var(--el-color-black); /* Element Plus default text color for warning */
+  background-color: var(--color-warning); /* تغییر کرد */
+  color: var(--color-black); /* تغییر کرد */
 }
 .edit-button:hover:not(:disabled) {
-  background-color: var(--el-color-warning-dark-2); /* از متغیر Element Plus */
+  background-color: var(--color-warning-dark); /* تغییر کرد */
 }
 
 /* استایل مخصوص دکمه حذف */
 .delete-button {
-  background-color: var(--el-color-danger); /* از متغیر Element Plus */
-  color: var(--el-color-white); /* Element Plus default text color for danger */
+  background-color: var(--color-danger); /* تغییر کرد */
+  color: var(--color-white); /* تغییر کرد */
 }
 .delete-button:hover:not(:disabled) {
-  background-color: var(--el-color-danger-dark-2); /* از متغیر Element Plus */
+
+  background-color: var(--color-danger-dark); /* تغییر کرد */
 }
 
 /* **استایل کنترل‌های صفحه‌بندی** */
@@ -1394,11 +1391,7 @@ h2 {
   }
 
   .search-control input[type='text'],
-  .sort-controls select,
-  .advanced-filter-section .el-select,
-  .advanced-filter-section .el-input,
-  .advanced-filter-section .el-date-editor,
-  .advanced-filter-section .vpd-input {
+  .sort-controls select {
     width: 100%;
     flex-basis: auto;
   }
