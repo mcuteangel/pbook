@@ -43,38 +43,7 @@
         </ul>
       </div>
 
-      <div v-if="contact.addresses && contact.addresses.length > 0" class="detail-section">
-        <h4>آدرس‌ها</h4>
-        <ul>
-          <li
-            v-for="(address, index) in contact.addresses"
-            :key="'address-' + index"
-            class="address-item"
-          >
-            <p>
-              <strong>{{ displayAddressType(address.type) }}:</strong>
-            </p>
-            <a
-              :href="getMapUrl(address)"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="address-link"
-            >
-              <p v-if="address.street">{{ address.street }}</p>
-              <p>
-                <span v-if="address.city">{{ address.city }}</span>
-                <span v-if="address.city && address.province">، </span>
-                <span v-if="address.province">{{ address.province }}</span>
-              </p>
-              <p v-if="address.country">{{ address.country }}</p>
-              <p v-if="address.postalCode">کد پستی: {{ address.postalCode }}</p>
-            </a>
-            <p v-if="address.notes" class="address-notes">
-              <em>یادداشت: {{ address.notes }}</em>
-            </p>
-          </li>
-        </ul>
-      </div>
+      <ContactDetailAddresses :addresses="contact.addresses" />
 
       <div v-if="contact.notes" class="detail-section">
         <h4>یادداشت/توضیحات</h4>
@@ -130,6 +99,7 @@ import {
   displayAddressType,
 } from '@/utils/formatters'
 import { db } from '../db'
+import ContactDetailAddresses from '@/components/contact/ContactDetailAddresses.vue'
 
 const route = useRoute() // دسترسی به اطلاعات route فعلی
 const router = useRouter() // برای ناوبری (مثلاً برگشت به صفحه قبل)
