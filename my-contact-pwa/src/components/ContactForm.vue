@@ -3,29 +3,43 @@
     <h2>
       <span
         class="form-title-icon"
-        title="{{ contactStore.contactToEdit ? 'ویرایش مخاطب' : 'افزودن مخاطب جدید' }}"
+        :title="
+          $t(contactStore.contactToEdit ? 'contactForm.editContact' : 'contactForm.addNewContact')
+        "
       >
-        <i class="fa-solid fa-user-edit"></i>
+        <IconWrapper icon="fa-solid fa-user-edit" />
       </span>
-      {{ contactStore.contactToEdit ? 'ویرایش مخاطب' : 'افزودن مخاطب جدید' }}
+      {{ $t(contactStore.contactToEdit ? 'contactForm.editContact' : 'contactForm.addNewContact') }}
     </h2>
 
     <div class="main-fields-section">
       <div class="main-fields-grid">
         <div class="form-group">
           <label for="name">
-            <span title="نام الزامی است"><i class="fa-solid fa-signature"></i></span>
-            نام:
-            <span class="required-star" title="فیلد اجباری">*</span>
+            <span :title="$t('contactForm.nameRequired')"
+              ><IconWrapper icon="fa-solid fa-signature"
+            /></span>
+            {{ $t('contactForm.name') }}:
+            <span class="required-star" :title="$t('contactForm.requiredField')">*</span>
           </label>
-          <input id="name" v-model="name" required maxlength="50" class="flat-input" type="text" />
-          <span v-if="nameError" class="field-error">{{ nameError }}</span>
+          <input
+            id="name"
+            v-model="name"
+            required
+            maxlength="50"
+            class="flat-input"
+            type="text"
+            :placeholder="$t('contactForm.namePlaceholder')"
+          />
+          <span v-if="nameError" class="field-error">{{ $t(nameError) }}</span>
         </div>
         <div class="form-group">
           <label for="lastName">
-            <span title="نام خانوادگی الزامی است"><i class="fa-solid fa-signature"></i></span>
-            نام خانوادگی:
-            <span class="required-star" title="فیلد اجباری">*</span>
+            <span :title="$t('contactForm.lastNameRequired')"
+              ><IconWrapper icon="fa-solid fa-signature"
+            /></span>
+            {{ $t('contactForm.lastName') }}:
+            <span class="required-star" :title="$t('contactForm.requiredField')">*</span>
           </label>
           <input
             id="lastName"
@@ -34,16 +48,17 @@
             maxlength="50"
             class="flat-input"
             type="text"
+            :placeholder="$t('contactForm.lastNamePlaceholder')"
           />
-          <span v-if="lastNameError" class="field-error">{{ lastNameError }}</span>
+          <span v-if="lastNameError" class="field-error">{{ $t(lastNameError) }}</span>
         </div>
         <div class="form-group">
           <label for="phone">
-            <span title="شماره تلفن فقط باید شامل عدد و فاصله و + باشد"
-              ><i class="fa-solid fa-phone"></i
-            ></span>
-            تلفن اصلی:
-            <span class="required-star" title="فیلد اجباری">*</span>
+            <span :title="$t('contactForm.phoneHint')"
+              ><IconWrapper icon="fa-solid fa-phone"
+            /></span>
+            {{ $t('contactForm.phone') }}:
+            <span class="required-star" :title="$t('contactForm.requiredField')">*</span>
           </label>
           <input
             id="phone"
@@ -52,50 +67,57 @@
             maxlength="20"
             class="flat-input"
             type="text"
+            :placeholder="$t('contactForm.phonePlaceholder')"
           />
-          <span v-if="phoneError" class="field-error">{{ phoneError }}</span>
+          <span v-if="phoneError" class="field-error">{{ $t(phoneError) }}</span>
         </div>
         <div class="form-group">
           <label for="title">
-            <span><i class="fa-solid fa-briefcase"></i></span>
-            سمت/تخصص:
+            <span><IconWrapper icon="fa-solid fa-briefcase" /></span>
+            {{ $t('contactForm.title') }}:
           </label>
-          <input id="title" v-model="title" class="flat-input" type="text" />
+          <input
+            id="title"
+            v-model="title"
+            class="flat-input"
+            type="text"
+            :placeholder="$t('contactForm.titlePlaceholder')"
+          />
         </div>
         <div class="form-group">
           <label for="gender">
-            <span><i class="fa-solid fa-venus-mars"></i></span>
-            جنسیت:
+            <span><IconWrapper icon="fa-solid fa-venus-mars" /></span>
+            {{ $t('contactForm.gender') }}:
           </label>
           <select id="gender" v-model="gender" class="flat-select">
-            <option value="">انتخاب کنید</option>
-            <option value="male">♂️ آقا</option>
-            <option value="female">♀️ خانم</option>
-            <option value="other">غیره</option>
-            <option value="not_specified">ترجیح میدهم نگویم</option>
+            <option value="">{{ $t('contactForm.selectOption') }}</option>
+            <option value="male">♂️ {{ $t('contactForm.genderMale') }}</option>
+            <option value="female">♀️ {{ $t('contactForm.genderFemale') }}</option>
+            <option value="other">{{ $t('contactForm.genderOther') }}</option>
+            <option value="not_specified">{{ $t('contactForm.genderNotSpecified') }}</option>
           </select>
         </div>
         <div class="form-group">
           <label for="group">
-            <span><i class="fa-solid fa-layer-group"></i></span>
-            گروه:
+            <span><IconWrapper icon="fa-solid fa-layer-group" /></span>
+            {{ $t('contactForm.group') }}:
           </label>
           <select id="group" v-model="contactGroup" class="flat-select">
-            <option value="">بدون گروه</option>
+            <option value="">{{ $t('contactForm.noGroup') }}</option>
             <option v-for="g in groupStore.sortedGroups" :key="g.id" :value="g.name">
               {{ g.name }}
             </option>
-            <option value="__CREATE_NEW__">--- ایجاد گروه جدید ---</option>
+            <option value="__CREATE_NEW__">--- {{ $t('contactForm.createNewGroup') }} ---</option>
           </select>
           <div v-if="isCreatingNewGroup" class="new-group-input">
             <label for="newGroupName">
-              <span><i class="fa-solid fa-plus"></i></span>
-              نام گروه جدید:
+              <span><IconWrapper icon="fa-solid fa-plus" /></span>
+              {{ $t('contactForm.newGroupName') }}:
             </label>
             <input
               id="newGroupName"
               v-model="newGroupName"
-              placeholder="مثلاً: دوستان"
+              :placeholder="$t('contactForm.newGroupPlaceholder')"
               class="flat-input"
               type="text"
             />
@@ -103,8 +125,8 @@
         </div>
         <div class="form-group">
           <label for="birthDate">
-            <span><i class="fa-solid fa-cake-candles"></i></span>
-            تاریخ تولد:
+            <span><IconWrapper icon="fa-solid fa-cake-candles" /></span>
+            {{ $t('contactForm.birthDate') }}:
           </label>
           <date-picker
             v-model="birthDate"
@@ -112,7 +134,7 @@
             type="date"
             format="jYYYY/jMM/jDD"
             display-format="jYYYY/jMM/jDD"
-            placeholder="تاریخ تولد را انتخاب کنید"
+            :placeholder="$t('contactForm.birthDatePlaceholder')"
             clearable
             class="flat-input"
           ></date-picker>
@@ -122,8 +144,8 @@
 
     <div v-if="sortedCustomFieldDefinitions.length > 0" class="custom-fields-wrapper">
       <h3>
-        <span><i class="fa-solid fa-cogs"></i></span>
-        فیلدهای سفارشی
+        <span><IconWrapper icon="fa-solid fa-cogs" /></span>
+        {{ $t('contactForm.customFields') }}
       </h3>
       <div
         v-for="fieldDef in sortedCustomFieldDefinitions"
@@ -131,12 +153,18 @@
         class="form-group custom-field-group"
       >
         <label :for="'custom-field-' + fieldDef.id">
-          <span v-if="fieldDef.type === 'date'"><i class="fa-solid fa-calendar-days"></i></span>
-          <span v-else-if="fieldDef.type === 'number'"><i class="fa-solid fa-hashtag"></i></span>
-          <span v-else-if="fieldDef.type === 'boolean'"><i class="fa-solid fa-toggle-on"></i></span>
-          <span v-else-if="fieldDef.type === 'select'"><i class="fa-solid fa-list"></i></span>
-          <span v-else><i class="fa-solid fa-pen"></i></span>
-          {{ fieldDef.label }}:
+          <span v-if="fieldDef.type === 'date"
+            ><IconWrapper icon="fa-solid fa-calendar-days"
+          /></span>
+          <span v-else-if="fieldDef.type === 'number"
+            ><IconWrapper icon="fa-solid fa-hashtag"
+          /></span>
+          <span v-else-if="fieldDef.type === 'boolean"
+            ><IconWrapper icon="fa-solid fa-toggle-on"
+          /></span>
+          <span v-else-if="fieldDef.type === 'select"><IconWrapper icon="fa-solid fa-list" /></span>
+          <span v-else><IconWrapper icon="fa-solid fa-pen" /></span>
+          {{ $t(fieldDef.label) }}:
         </label>
         <input
           v-if="fieldDef.type === 'text'"
@@ -144,7 +172,11 @@
           :id="'custom-field-' + fieldDef.id"
           v-model="customFieldValues[fieldDef.id]"
           class="flat-input"
-          :placeholder="fieldDef.placeholder || 'مقدار را وارد کنید'"
+          :placeholder="
+            fieldDef.placeholder
+              ? $t(fieldDef.placeholder)
+              : $t('contactForm.customFieldTextPlaceholder')
+          "
         />
         <textarea
           v-else-if="fieldDef.type === 'textarea'"
@@ -152,7 +184,11 @@
           v-model="customFieldValues[fieldDef.id]"
           class="flat-input"
           rows="3"
-          :placeholder="fieldDef.placeholder || 'متن را وارد کنید'"
+          :placeholder="
+            fieldDef.placeholder
+              ? $t(fieldDef.placeholder)
+              : $t('contactForm.customFieldTextareaPlaceholder')
+          "
         ></textarea>
         <input
           v-else-if="fieldDef.type === 'number'"
@@ -160,7 +196,11 @@
           :id="'custom-field-' + fieldDef.id"
           v-model.number="customFieldValues[fieldDef.id]"
           class="flat-input"
-          :placeholder="fieldDef.placeholder || 'عدد را وارد کنید'"
+          :placeholder="
+            fieldDef.placeholder
+              ? $t(fieldDef.placeholder)
+              : $t('contactForm.customFieldNumberPlaceholder')
+          "
         />
         <date-picker
           v-else-if="fieldDef.type === 'date'"
@@ -169,7 +209,11 @@
           type="date"
           format="YYYY-MM-DD"
           display-format="jYYYY/jMM/jDD"
-          :placeholder="fieldDef.placeholder || 'تاریخ را انتخاب کنید'"
+          :placeholder="
+            fieldDef.placeholder
+              ? $t(fieldDef.placeholder)
+              : $t('contactForm.customFieldDatePlaceholder')
+          "
           class="flat-input"
         ></date-picker>
         <div v-else-if="fieldDef.type === 'boolean'" class="checkbox-wrapper">
@@ -178,29 +222,32 @@
             :id="'custom-field-' + fieldDef.id"
             v-model="customFieldValues[fieldDef.id]"
           />
-          {{ fieldDef.label }}
+          {{ $t(fieldDef.label) }}
         </div>
         <select
           v-else-if="fieldDef.type === 'select'"
           :id="'custom-field-' + fieldDef.id"
           v-model="customFieldValues[fieldDef.id]"
           class="flat-select"
-          :placeholder="fieldDef.placeholder || 'انتخاب کنید...'"
+          :placeholder="
+            fieldDef.placeholder ? $t(fieldDef.placeholder) : $t('contactForm.selectOption')
+          "
         >
-          <option value="">انتخاب کنید...</option>
+          <option value="">{{ $t('contactForm.selectOption') }}</option>
           <option v-for="option in fieldDef.options" :key="option" :value="option">
-            {{ option }}
+            {{ $t(option) }}
           </option>
         </select>
-        <small v-else class="unsupported-field-type"
-          >نوع فیلد "{{ fieldDef.type }}" پشتیبانی نمی‌شود.</small
-        >
+        <small v-else class="unsupported-field-type">{{
+          $t('contactForm.unsupportedFieldType', { type: fieldDef.type })
+        }}</small>
       </div>
     </div>
+
     <div class="form-section additional-items-section">
       <h4>
-        <span><i class="fa-solid fa-location-dot"></i></span>
-        آدرس‌ها
+        <span><IconWrapper icon="fa-solid fa-location-dot" /></span>
+        {{ $t('contactForm.addresses') }}
       </h4>
       <div
         v-for="(address, index) in contactAddresses"
@@ -209,80 +256,90 @@
       >
         <div class="address-field">
           <label>
-            <span style="margin-left: 2px"><i class="fa-solid fa-location-dot"></i></span>
-            نوع آدرس:
+            <span style="margin-left: 2px"><IconWrapper icon="fa-solid fa-location-dot" /></span>
+            {{ $t('contactForm.addressType') }}:
           </label>
           <select v-model="address.type" class="flat-select compact-select">
-            <option value="">نوع آدرس</option>
-            <option value="home"><i class="fa-solid fa-house"></i> منزل</option>
-            <option value="work"><i class="fa-solid fa-briefcase"></i> محل کار</option>
-            <option value="other"><i class="fa-solid fa-link"></i> دیگر</option>
+            <option value="">{{ $t('contactForm.addressTypePlaceholder') }}</option>
+            <option value="home">
+              <IconWrapper icon="fa-solid fa-house" /> {{ $t('contactForm.addressTypeHome') }}
+            </option>
+            <option value="work">
+              <IconWrapper icon="fa-solid fa-briefcase" /> {{ $t('contactForm.addressTypeWork') }}
+            </option>
+            <option value="other">
+              <IconWrapper icon="fa-solid fa-link" /> {{ $t('contactForm.addressTypeOther') }}
+            </option>
           </select>
         </div>
         <div class="address-field">
           <label
-            ><span style="margin-left: 2px"><i class="fa-solid fa-road"></i></span>خیابان:</label
+            ><span style="margin-left: 2px"><IconWrapper icon="fa-solid fa-road" /></span
+            >{{ $t('contactForm.street') }}:</label
           >
           <input
             v-model="address.street"
-            placeholder="خیابان"
+            :placeholder="$t('contactForm.streetPlaceholder')"
             class="flat-input compact-input"
             type="text"
           />
         </div>
         <div class="address-field">
           <label
-            ><span style="margin-left: 2px"><i class="fa-solid fa-city"></i></span>شهر:</label
+            ><span style="margin-left: 2px"><IconWrapper icon="fa-solid fa-city" /></span
+            >{{ $t('contactForm.city') }}:</label
           >
           <input
             v-model="address.city"
-            placeholder="شهر"
+            :placeholder="$t('contactForm.cityPlaceholder')"
             class="flat-input compact-input"
             type="text"
           />
         </div>
         <div class="address-field">
           <label
-            ><span style="margin-left: 2px"><i class="fa-solid fa-mountain"></i></span>استان:</label
+            ><span style="margin-left: 2px"><IconWrapper icon="fa-solid fa-mountain" /></span
+            >{{ $t('contactForm.province') }}:</label
           >
           <input
             v-model="address.province"
-            placeholder="استان"
+            :placeholder="$t('contactForm.provincePlaceholder')"
             class="flat-input compact-input"
             type="text"
           />
         </div>
         <div class="address-field">
           <label
-            ><span style="margin-left: 2px"><i class="fa-solid fa-earth-americas"></i></span
-            >کشور:</label
+            ><span style="margin-left: 2px"><IconWrapper icon="fa-solid fa-earth-americas" /></span
+            >{{ $t('contactForm.country') }}:</label
           >
           <input
             v-model="address.country"
-            placeholder="کشور"
+            :placeholder="$t('contactForm.countryPlaceholder')"
             class="flat-input compact-input"
             type="text"
           />
         </div>
         <div class="address-field">
           <label
-            ><span style="margin-left: 2px"><i class="fa-solid fa-barcode"></i></span>کدپستی:</label
+            ><span style="margin-left: 2px"><IconWrapper icon="fa-solid fa-barcode" /></span
+            >{{ $t('contactForm.postalCode') }}:</label
           >
           <input
             v-model="address.postalCode"
-            placeholder="کدپستی"
+            :placeholder="$t('contactForm.postalCodePlaceholder')"
             class="flat-input compact-input"
             type="text"
           />
         </div>
         <div class="address-field address-notes-field">
           <label
-            ><span style="margin-left: 2px"><i class="fa-solid fa-note-sticky"></i></span>یادداشت
-            آدرس:</label
+            ><span style="margin-left: 2px"><IconWrapper icon="fa-solid fa-note-sticky" /></span
+            >{{ $t('contactForm.addressNotes') }}:</label
           >
           <textarea
             v-model="address.notes"
-            placeholder="یادداشت آدرس"
+            :placeholder="$t('contactForm.addressNotesPlaceholder')"
             class="flat-input compact-input"
             rows="2"
           ></textarea>
@@ -291,9 +348,9 @@
           type="button"
           @click="removeAddress(address.id)"
           class="remove-item-btn"
-          title="حذف آدرس"
+          :title="$t('contactForm.removeAddress')"
         >
-          🗑️
+          🗑️ {{ $t('contactForm.removeAddress') }}
         </button>
       </div>
       <button
@@ -301,15 +358,16 @@
         @click="addAddress"
         class="add-item-btn flat-input"
         style="margin-top: 0"
+        :title="$t('contactForm.addAddress')"
       >
-        ➕ افزودن آدرس
+        ➕ {{ $t('contactForm.addAddress') }}
       </button>
     </div>
 
     <div class="form-section additional-items-section">
       <h4>
-        <span><i class="fa-solid fa-phone"></i></span>
-        شماره‌های اضافی
+        <span><IconWrapper icon="fa-solid fa-phone" /></span>
+        {{ $t('contactForm.additionalPhones') }}
       </h4>
       <div
         v-for="(phoneItem, index) in additionalPhones"
@@ -317,26 +375,36 @@
         class="item-block additional-phones-grid"
       >
         <select v-model="phoneItem.type" class="flat-select item-select">
-          <option value="">نوع شماره</option>
-          <option value="mobile"><i class="fa-solid fa-mobile-alt"></i> موبایل</option>
-          <option value="home"><i class="fa-solid fa-house"></i> منزل</option>
-          <option value="work"><i class="fa-solid fa-briefcase"></i> محل کار</option>
-          <option value="fax"><i class="fa-solid fa-fax"></i> فکس</option>
-          <option value="other"><i class="fa-solid fa-link"></i> دیگر</option>
+          <option value="">{{ $t('contactForm.phoneTypePlaceholder') }}</option>
+          <option value="mobile">
+            <IconWrapper icon="fa-solid fa-mobile-alt" /> {{ $t('contactForm.phoneTypeMobile') }}
+          </option>
+          <option value="home">
+            <IconWrapper icon="fa-solid fa-house" /> {{ $t('contactForm.phoneTypeHome') }}
+          </option>
+          <option value="work">
+            <IconWrapper icon="fa-solid fa-briefcase" /> {{ $t('contactForm.phoneTypeWork') }}
+          </option>
+          <option value="fax">
+            <IconWrapper icon="fa-solid fa-fax" /> {{ $t('contactForm.phoneTypeFax') }}
+          </option>
+          <option value="other">
+            <IconWrapper icon="fa-solid fa-link" /> {{ $t('contactForm.phoneTypeOther') }}
+          </option>
         </select>
         <input
           type="text"
           v-model="phoneItem.number"
-          placeholder="شماره تلفن"
+          :placeholder="$t('contactForm.additionalPhonePlaceholder')"
           class="flat-input item-input"
         />
         <button
           type="button"
           @click="removeAdditionalPhone(phoneItem.id)"
           class="remove-item-btn"
-          title="حذف شماره"
+          :title="$t('contactForm.removePhone')"
         >
-          🗑️
+          🗑️ {{ $t('contactForm.removePhone') }}
         </button>
       </div>
       <button
@@ -344,15 +412,25 @@
         @click="addAdditionalPhone"
         class="add-item-btn flat-input"
         style="margin-top: 0"
+        :title="$t('contactForm.addPhone')"
       >
-        ➕ افزودن شماره
+        ➕ {{ $t('contactForm.addPhone') }}
       </button>
     </div>
 
     <div class="form-group">
-      <label for="notes"> یادداشت/توضیحات: </label>
-      <textarea id="notes" v-model="notes" rows="4" class="flat-input" maxlength="500"></textarea>
-      <span class="char-counter">({{ notes.length }}/500)</span>
+      <label for="notes">{{ $t('contactForm.notes') }}: </label>
+      <textarea
+        id="notes"
+        v-model="notes"
+        rows="4"
+        class="flat-input"
+        maxlength="500"
+        :placeholder="$t('contactForm.notesPlaceholder')"
+      ></textarea>
+      <span class="char-counter">{{
+        $t('contactForm.charCounter', { count: notes.length, max: 500 })
+      }}</span>
     </div>
 
     <div class="form-actions">
@@ -361,7 +439,7 @@
         class="submit-btn"
         :disabled="contactStore.loading || groupStore.loading"
       >
-        ذخیره مخاطب
+        {{ $t('contactForm.save') }}
       </button>
       <button
         v-if="contactStore.contactToEdit"
@@ -369,7 +447,7 @@
         @click="clearFormAndResetEdit"
         class="cancel-btn"
       >
-        انصراف
+        {{ $t('contactForm.cancel') }}
       </button>
       <button
         v-if="!contactStore.contactToEdit"
@@ -377,15 +455,15 @@
         @click="router.push({ name: 'contact-list' })"
         class="cancel-btn"
       >
-        بازگشت به لیست
+        {{ $t('contactForm.backToList') }}
       </button>
     </div>
 
     <p v-if="contactStore.error" class="error-message">
-      {{ contactStore.error }}
+      {{ $t(contactStore.error) }}
     </p>
     <p v-if="groupStore.error" class="error-message">
-      {{ groupStore.error }}
+      {{ $t(groupStore.error) }}
     </p>
   </form>
 </template>
@@ -398,6 +476,7 @@ import { useContactStore } from '../store/contacts'
 import { useGroupStore } from '../store/groups'
 import DatePicker from 'vue3-persian-datetime-picker'
 import moment from 'moment-jalaali'
+import IconWrapper from './icons/IconWrapper.vue'
 
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
@@ -605,13 +684,14 @@ onBeforeRouteLeave(() => {
 })
 
 const validateForm = () => {
-  nameError.value = name.value.trim() === '' ? 'نام الزامی است.' : ''
-  lastNameError.value = lastName.value.trim() === '' ? 'نام خانوادگی الزامی است.' : ''
+  nameError.value = name.value.trim() === '' ? 'contactForm.validation.nameRequired' : ''
+  lastNameError.value =
+    lastName.value.trim() === '' ? 'contactForm.validation.lastNameRequired' : ''
   phoneError.value =
     phone.value.trim() === ''
-      ? 'شماره تلفن الزامی است.'
+      ? 'contactForm.validation.phoneRequired'
       : !/^([\d\s+\-()]+)$/.test(phone.value)
-        ? 'شماره تلفن فقط باید شامل عدد، فاصله و کاراکترهای مجاز باشد.'
+        ? 'contactForm.validation.phoneInvalid'
         : ''
   return !nameError.value && !lastNameError.value && !phoneError.value
 }
@@ -622,7 +702,7 @@ const handleSubmit = async () => {
   let finalContactGroupName = contactGroup.value
   if (isCreatingNewGroup.value) {
     if (newGroupName.value.trim() === '') {
-      groupStore.error = 'لطفاً نام گروه جدید را وارد کنید.'
+      groupStore.error = 'contactForm.validation.groupNameRequired'
       return
     }
     groupStore.error = null

@@ -1,93 +1,100 @@
 <template>
-  <div class="app-container">
-    <div class="app-bg"></div>
-    <header class="app-header glass fade-in">
-      <div class="header-content">
-        <h1 class="app-title">دفترچه مخاطبین هوشمند</h1>
-        <button
-          v-if="showInstallButton"
-          @click="handleInstallClick"
-          class="install-button glass-btn"
-          title="نصب اپلیکیشن"
+  <div id="app">
+    <h1>{{ $t('message.welcome') }}</h1>
+    <select v-model="$i18n.locale">
+      <option value="fa">فارسی</option>
+      <option value="en">English</option>
+    </select>
+    <div class="app-container">
+      <div class="app-bg"></div>
+      <header class="app-header glass fade-in">
+        <div class="header-content">
+          <h1 class="app-title">دفترچه مخاطبین</h1>
+          <button
+            v-if="showInstallButton"
+            @click="handleInstallClick"
+            class="install-button glass-btn"
+            title="نصب اپلیکیشن"
+          >
+            <i class="fa-solid fa-download"></i>
+            نصب
+          </button>
+        </div>
+        <nav class="app-nav-desktop">
+          <RouterLink :to="{ name: 'contact-list' }" active-class="active-link" class="nav-item">
+            <i class="fa-solid fa-user"></i>
+            <span>مخاطبین</span>
+          </RouterLink>
+          <RouterLink :to="{ name: 'add-contact' }" active-class="active-link" class="nav-item">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>افزودن</span>
+          </RouterLink>
+          <RouterLink :to="{ name: 'group-manager' }" active-class="active-link" class="nav-item">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>گروه‌ها</span>
+          </RouterLink>
+          <RouterLink
+            :to="{ name: 'custom-field-manager' }"
+            active-class="active-link"
+            class="nav-item"
+          >
+            <i class="fa-solid fa-list"></i>
+            <span>فیلدها</span>
+          </RouterLink>
+          <RouterLink :to="{ name: 'settings' }" active-class="active-link" class="nav-item">
+            <i class="fa-solid fa-gear"></i>
+            <span>تنظیمات</span>
+          </RouterLink>
+        </nav>
+      </header>
+
+      <main class="app-main glass fade-in">
+        <RouterView></RouterView>
+      </main>
+
+      <nav class="app-nav-mobile glass fade-in">
+        <RouterLink
+          :to="{ name: 'contact-list' }"
+          class="mobile-nav-item"
+          active-class="active-mobile-link"
         >
-          <i class="fa-solid fa-download"></i>
-          نصب
-        </button>
-      </div>
-      <nav class="app-nav-desktop">
-        <RouterLink :to="{ name: 'contact-list' }" active-class="active-link" class="nav-item">
           <i class="fa-solid fa-user"></i>
           <span>مخاطبین</span>
         </RouterLink>
-        <RouterLink :to="{ name: 'add-contact' }" active-class="active-link" class="nav-item">
+        <RouterLink
+          :to="{ name: 'add-contact' }"
+          class="mobile-nav-item"
+          active-class="active-mobile-link"
+        >
           <i class="fa-solid fa-user-plus"></i>
           <span>افزودن</span>
         </RouterLink>
-        <RouterLink :to="{ name: 'group-manager' }" active-class="active-link" class="nav-item">
+        <RouterLink
+          :to="{ name: 'group-manager' }"
+          class="mobile-nav-item"
+          active-class="active-mobile-link"
+        >
           <i class="fa-solid fa-layer-group"></i>
           <span>گروه‌ها</span>
         </RouterLink>
         <RouterLink
           :to="{ name: 'custom-field-manager' }"
-          active-class="active-link"
-          class="nav-item"
+          class="mobile-nav-item"
+          active-class="active-mobile-link"
         >
           <i class="fa-solid fa-list"></i>
           <span>فیلدها</span>
         </RouterLink>
-        <RouterLink :to="{ name: 'settings' }" active-class="active-link" class="nav-item">
+        <RouterLink
+          :to="{ name: 'settings' }"
+          class="mobile-nav-item"
+          active-class="active-mobile-link"
+        >
           <i class="fa-solid fa-gear"></i>
           <span>تنظیمات</span>
         </RouterLink>
       </nav>
-    </header>
-
-    <main class="app-main glass fade-in">
-      <RouterView></RouterView>
-    </main>
-
-    <nav class="app-nav-mobile glass fade-in">
-      <RouterLink
-        :to="{ name: 'contact-list' }"
-        class="mobile-nav-item"
-        active-class="active-mobile-link"
-      >
-        <i class="fa-solid fa-user"></i>
-        <span>مخاطبین</span>
-      </RouterLink>
-      <RouterLink
-        :to="{ name: 'add-contact' }"
-        class="mobile-nav-item"
-        active-class="active-mobile-link"
-      >
-        <i class="fa-solid fa-user-plus"></i>
-        <span>افزودن</span>
-      </RouterLink>
-      <RouterLink
-        :to="{ name: 'group-manager' }"
-        class="mobile-nav-item"
-        active-class="active-mobile-link"
-      >
-        <i class="fa-solid fa-layer-group"></i>
-        <span>گروه‌ها</span>
-      </RouterLink>
-      <RouterLink
-        :to="{ name: 'custom-field-manager' }"
-        class="mobile-nav-item"
-        active-class="active-mobile-link"
-      >
-        <i class="fa-solid fa-list"></i>
-        <span>فیلدها</span>
-      </RouterLink>
-      <RouterLink
-        :to="{ name: 'settings' }"
-        class="mobile-nav-item"
-        active-class="active-mobile-link"
-      >
-        <i class="fa-solid fa-gear"></i>
-        <span>تنظیمات</span>
-      </RouterLink>
-    </nav>
+    </div>
   </div>
 </template>
 
