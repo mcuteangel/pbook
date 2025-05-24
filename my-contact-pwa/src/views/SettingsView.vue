@@ -1,191 +1,47 @@
 <template>
-  <div class="settings-container">
-    <h2>تنظیمات</h2>
-    <form>
-      <div class="form-item">
-        <label>تم برنامه</label>
-        <input type="checkbox" v-model="isDarkMode" :checked="isDarkMode" />
-        <span>{{ isDarkMode ? 'تاریک' : 'روشن' }}</span>
-      </div>
+  <div class="settings-container glass-container">
+    <h1 class="page-title">تنظیمات برنامه</h1>
 
-      <section class="display-settings-section">
-        <h3>تنظیمات نمایش لیست مخاطبین</h3>
-        <p>ستون‌هایی را که می‌خواهید در لیست اصلی مخاطبین نمایش داده شوند، انتخاب کنید.</p>
+    <!-- Theme Toggle -->
+    <section class="theme-toggle-section settings-section glass-section">
+      <h3>تم برنامه</h3>
+      <button @click="toggleTheme" class="theme-toggle-button glass-btn">
+        <IconWrapper :icon="isDarkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon'" />
+        تغییر به تم {{ isDarkMode ? 'روشن' : 'تاریک' }}
+      </button>
+      <p>تم فعلی: {{ isDarkMode ? 'تاریک' : 'روشن' }}</p>
+    </section>
 
-        <div v-if="settingsStore.isLoading" class="loading-message">در حال بارگذاری تنظیمات...</div>
+    <!-- Display Column Settings -->
+    <DisplaySettings />
 
-        <div class="checkbox-group">
-          <div v-for="column in availableColumns" :key="column.value" class="checkbox-item">
-            <input
-              type="checkbox"
-              :value="column.value"
-              v-model="settingsStore.displayColumns"
-              @change="handleColumnSelectionChange"
-            />
-            <label>{{ column.label }}</label>
-          </div>
-        </div>
-
-        <button type="button" @click="settingsStore.resetToDefaults" class="reset-button">
-          بازنشانی به پیش‌فرض
-        </button>
-      </section>
-
-      <section class="backup-section">
-        <h3>پشتیبان‌گیری (Export)</h3>
-        <p>برای گرفتن خروجی از تمام مخاطبین، گروه‌ها و فیلدهای سفارشی، روی دکمه زیر کلیک کنید.</p>
-        <button type="button" @click="handleExport">دریافت فایل پشتیبان (JSON)</button>
-      </section>
-
-      <section class="restore-section">
-        <h3>بازیابی (Import)</h3>
-        <p>برای بازیابی اطلاعات از فایل پشتیبان JSON، فایل مورد نظر را انتخاب کنید.</p>
-        <input type="file" accept=".json" @change="handleImport" />
-      </section>
-    </form>
+    <!-- Backup and Restore -->
+    <BackupRestoreSettings />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { storeToRefs } from 'pinia'
-import { exportData } from '@/utils/backupRestore'
-import { importData } from '@/utils/backupRestore'
-
-import { useContactStore } from '@/store/contacts'
-import { useGroupStore } from '@/store/groups'
-import { useCustomFieldStore } from '@/store/customFields'
+import { computed, onMounted } from 'vue'
 import { useSettingsStore } from '@/store/settings'
+import IconWrapper from '@/components/icons/IconWrapper.vue'
+import DisplaySettings from '@/components/settings/DisplaySettings.vue'
+import BackupRestoreSettings from '@/components/settings/BackupRestoreSettings.vue'
 
-const contactStore = useContactStore()
-const groupStore = useGroupStore()
-const customFieldStore = useCustomFieldStore()
 const settingsStore = useSettingsStore()
 
-const isDarkMode = computed({
-  get: () => settingsStore.theme === 'dark',
-  set: () => settingsStore.toggleTheme(),
+const isDarkMode = computed(() => settingsStore.isDarkMode)
+
+const toggleTheme = () => {
+  settingsStore.toggleTheme()
+}
+
+// Load settings when the component is mounted
+onMounted(async () => {
+  // Ensure basic settings like theme are loaded if not already
+  if (settingsStore.settings === null || Object.keys(settingsStore.settings).length === 0) {
+    await settingsStore.loadSettings()
+  }
 })
-
-const { fieldDefinitions } = storeToRefs(customFieldStore)
-
-const standardColumns = [
-  { label: 'نام', value: 'name' },
-  { label: 'نام خانوادگی', value: 'lastName' },
-  { label: 'تلفن ', value: 'phone' },
-  { label: 'جنسیت', value: 'gender' },
-  { label: 'گروه', value: 'group' },
-  { label: 'تاریخ تولد', value: 'birthDate' },
-  { label: 'سمت / تخصص', value: 'title' },
-  { label: 'تاریخ ایجاد', value: 'createdAt' },
-  { label: 'آخرین ویرایش', value: 'updatedAt' },
-  { label: 'شهر (آدرس)', value: 'address.city' },
-  { label: 'خیابان (آدرس)', value: 'address.street' },
-  { label: 'یادداشت', value: 'notes' },
-]
-
-const availableColumns = computed(() => {
-  const columns = [...standardColumns]
-  fieldDefinitions.value.forEach((field) => {
-    columns.push({ label: `فیلد سفارشی: ${field.label}`, value: `customFieldDef_${field.id}` })
-  })
-  return columns
-})
-
-const handleColumnSelectionChange = (selectedValues) => {
-  console.log('Selected columns changed:', selectedValues)
-  settingsStore.setDisplayColumns(selectedValues)
-}
-
-const handleExport = async () => {
-  try {
-    const jsonData = await exportData()
-    const blob = new Blob([jsonData], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    link.download = `contacts_backup_${timestamp}.json`
-    document.body.appendChild(link)
-    link.click()
-    setTimeout(() => {
-      URL.revokeObjectURL(url)
-      link.remove()
-    }, 100)
-    console.log('Export file download initiated.')
-  } catch (error) {
-    console.error('Error during export:', error)
-    alert('خطا در تهیه فایل پشتیبان: ' + error.message)
-  }
-}
-
-const handleImport = async (event) => {
-  console.log('فایلی برای بازیابی انتخاب شد.')
-  const file = event.target.files[0]
-
-  if (!file) {
-    console.log('فایلی انتخاب نشد.')
-    return
-  }
-
-  console.log('فایل انتخاب شده:', file.name, file.type, file.size, 'بایت')
-
-  if (file.type !== 'application/json') {
-    alert('لطفاً یک فایل با فرمت JSON انتخاب کنید.')
-    event.target.value = null
-    return
-  }
-
-  const reader = new FileReader()
-
-  reader.onload = async (e) => {
-    const fileContent = e.target.result
-    console.log('محتوای فایل با موفقیت خوانده شد. در حال پارس کردن JSON...')
-    let importedData = null
-    try {
-      importedData = JSON.parse(fileContent)
-      console.log('JSON با موفقیت پارس شد.')
-
-      if (
-        !importedData ||
-        typeof importedData !== 'object' ||
-        importedData.version !== 1 ||
-        !importedData.data ||
-        typeof importedData.data !== 'object' ||
-        !Array.isArray(importedData.data.contacts) ||
-        !Array.isArray(importedData.data.customFieldDefinitions) ||
-        !Array.isArray(importedData.data.groups)
-      ) {
-        throw new Error('ساختار فایل پشتیبان نامعتبر است یا ورژن آن پشتیبانی نمی‌شود.')
-      }
-
-      console.log('ساختار فایل پشتیبان معتبر است. در حال وارد کردن داده‌ها به دیتابیس...')
-      await importData(importedData.data)
-      console.log('بازیابی اطلاعات دیتابیس با موفقیت انجام شد.')
-
-      console.log('Reloading Pinia stores...')
-      await contactStore.loadContacts()
-      await groupStore.loadGroups()
-      await customFieldStore.loadFieldDefinitions()
-      console.log('Stores reloaded. UI should update.')
-
-      alert('بازیابی اطلاعات با موفقیت انجام شد!')
-    } catch (error) {
-      console.error('خطا در پردازش یا اعتبارسنجی فایل پشتیبان:', error)
-      alert('خطا در پردازش یا اعتبارسنجی فایل پشتیبان: ' + error.message)
-    } finally {
-      event.target.value = null
-    }
-  }
-
-  reader.onerror = (error) => {
-    console.error('خطا در خواندن فایل:', error)
-    alert('خطا در خواندن فایل پشتیبان.')
-    event.target.value = null
-  }
-
-  reader.readAsText(file)
-}
 </script>
 
 <style scoped>

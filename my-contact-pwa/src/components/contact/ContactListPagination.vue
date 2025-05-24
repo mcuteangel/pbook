@@ -4,7 +4,11 @@
       <IconWrapper icon="fa-solid fa-arrow-right" /> قبلی
     </button>
     <span>صفحه {{ currentPage }} از {{ totalPages }}</span>
-    <button @click="$emit('nextPage')" :disabled="currentPage === totalPages" class="pagination-button">
+    <button
+      @click="$emit('nextPage')"
+      :disabled="currentPage === totalPages"
+      class="pagination-button"
+    >
       بعدی <IconWrapper icon="fa-solid fa-arrow-left" />
     </button>
     <div class="page-numbers">
@@ -24,7 +28,7 @@
 import IconWrapper from './icons/IconWrapper.vue'
 const props = defineProps({
   currentPage: Number,
-  totalPages: Number
+  totalPages: Number,
 })
 const emits = defineEmits(['prevPage', 'nextPage', 'goToPage'])
 </script>

@@ -94,19 +94,16 @@
             "
             type="number"
           />
-          <vue-persian-datetime-picker
+          <PersianDatePicker
             v-else-if="selectedNewRuleFieldDefinition.type === 'date'"
             v-model="newRule.value"
-            format="jYYYY/jM/jD"
-            display-format="jYYYY/jM/jD"
-            type="date"
             placeholder="انتخاب تاریخ شمسی"
             :disabled="
               !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
             "
             clearable
-            class="rule-control"
-          ></vue-persian-datetime-picker>
+            input-class="rule-control flat-input"
+          />
           <select
             v-else-if="
               ['select', 'boolean', 'gender', 'group'].includes(selectedNewRuleFieldDefinition.type)
@@ -353,7 +350,7 @@ import {
   displayAddressType,
 } from '@/utils/formatters'
 import moment from 'moment-jalaali'
-import VuePersianDatetimePicker from 'vue3-persian-datetime-picker'
+import PersianDatePicker from '@/components/shared/PersianDatePicker.vue'
 import IconWrapper from '@/components/icons/IconWrapper.vue'
 
 const contactStore = useContactStore()

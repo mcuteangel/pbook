@@ -29,7 +29,11 @@
         <option value="desc">نزولی</option>
       </select>
     </div>
-    <button type="button" @click="$emit('toggleFilterSection')" class="advanced-filter-button flat-input">
+    <button
+      type="button"
+      @click="$emit('toggleFilterSection')"
+      class="advanced-filter-button flat-input"
+    >
       <span style="margin-left: 4px"><IconWrapper icon="fa-solid fa-sliders" /></span>
       فیلتر پیشرفته
       <span v-if="!isFilterSectionVisible"><IconWrapper icon="fa-solid fa-chevron-down" /></span>
@@ -44,7 +48,12 @@ const props = defineProps({
   sortField: String,
   sortOrder: String,
   sortOptions: Array,
-  isFilterSectionVisible: Boolean
+  isFilterSectionVisible: Boolean,
 })
-const emits = defineEmits(['update:searchQuery', 'update:sortField', 'update:sortOrder', 'toggleFilterSection'])
+const emits = defineEmits([
+  'update:searchQuery',
+  'update:sortField',
+  'update:sortOrder',
+  'toggleFilterSection',
+])
 </script>

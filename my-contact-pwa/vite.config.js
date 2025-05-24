@@ -138,6 +138,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      dexie: 'dexie/dist/dexie.mjs', // اضافه کردن Alias برای Dexie
     },
+  },
+  optimizeDeps: {
+    // include: ['vue-persian-datetime-picker'], // Removed include
+    exclude: ['vue-persian-datetime-picker', 'dexie'], // Added exclude
   },
 })

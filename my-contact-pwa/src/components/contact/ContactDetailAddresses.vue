@@ -3,14 +3,17 @@
     <h4>آدرس‌ها</h4>
     <ul>
       <li v-for="(address, index) in addresses" :key="'address-' + index">
-        <strong>{{ displayAddressType(address.type) }}</strong>:
+        <strong>{{ displayAddressType(address.type) }}</strong
+        >:
         {{ address.street ? address.street + ', ' : '' }}
         {{ address.city ? address.city : '' }}
         {{ address.province ? ', ' + address.province : '' }}
         {{ address.country ? ', ' + address.country : '' }}
         {{ address.postalCode ? ' (کد پستی: ' + address.postalCode + ')' : '' }}
         <span v-if="address.notes"> (یادداشت: {{ address.notes }})</span>
-        <a v-if="address.geo" :href="geoLink(address)" target="_blank" class="map-link">مشاهده روی نقشه</a>
+        <a v-if="address.geo" :href="geoLink(address)" target="_blank" class="map-link"
+          >مشاهده روی نقشه</a
+        >
       </li>
     </ul>
   </div>
@@ -18,7 +21,7 @@
 <script setup>
 import { displayAddressType } from '@/utils/formatters'
 const props = defineProps({
-  addresses: Array
+  addresses: Array,
 })
 function geoLink(address) {
   if (address.geo && address.geo.lat && address.geo.lng) {
