@@ -100,72 +100,74 @@
 
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue'
-import { useNotificationStore } from '@/stores/notificationStore'
-import { useI18n } from 'vue-i18n'
-import IconWrapper from './icons/IconWrapper.vue'
-
-// import DatePicker from 'vue3-persian-datetime-picker' // احتمالا در کامپوننت فرزند استفاده شده
-import defaultAvatar from '@/assets/default-avatar.png'
-// import { generateUniqueId } from '@/utils/idGenerator'
-import { getDefaultCustomFieldValue } from '@/utils/customFields'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
-import moment from 'moment' // Or 'moment-jalaali'
-import { useCustomFieldStore } from '@/stores/customFieldStore' // مسیر را چک کنید
-import ContactAvatarUpload from './contact/ContactAvatarUpload.vue'
-import ContactMainFields from './contact/ContactMainFields.vue'
-import ContactCustomFields from './contact/ContactCustomFields.vue'
-import ContactAddresses from './contact/ContactAddresses.vue'
-import ContactAdditionalPhones from './contact/ContactAdditionalPhones.vue'
+import { useI18n } from 'vue-i18n'
+import moment from 'moment' // یا 'moment-jalaali' برای تاریخ شمسی
+import { v4 as uuidv4 } from 'uuid'
+
+// استورها
+import { useContactStore } from '@/store/contacts'
+import { useGroupStore } from '@/store/groups'
+import { useNotificationStore } from '@/store/notificationStore'
+import { useCustomFieldStore } from '@/store/customFields'
+
+// کامپوننت‌ها
+import IconWrapper from '@/components/icons/IconWrapper.vue'
+import ContactAvatarUpload from './ContactAvatarUpload.vue'
+import ContactMainFields from './ContactMainFields.vue'
+import ContactCustomFields from './ContactCustomFields.vue'
+import ContactAddresses from './ContactAddresses.vue'
+import ContactAdditionalPhones from './ContactAdditionalPhones.vue'
+
+// آیکون‌ها و ابزارها
+import defaultAvatar from '@/assets/img/icons/default-avatar.svg'
+
 
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
 const router = useRouter() // استفاده صحیح از useRouter
 const customFieldStore = useCustomFieldStore() // مقداردهی store
 
-const avatarPreview = ref(defaultAvatar) // پیش‌نمایش آواتار
-// const avatarFile = ref(null) // فایل آواتار انتخاب شده - فعلا استفاده نشده
-const avatarError = ref('') // خطای مربوط به آواتار
-
+// متغیرهای فرم
 const name = ref('')
 const lastName = ref('')
 const phone = ref('')
 const title = ref('')
-const position = ref('') // موقعیت/تخصص
+const position = ref('')
 const gender = ref('')
 const notes = ref('')
 const contactGroup = ref('')
 const birthDate = ref('')
 
+// خطاهای اعتبارسنجی
 const nameError = ref('')
 const lastNameError = ref('')
 const phoneError = ref('')
+
+// مدیریت آواتار
+const avatarPreview = ref(defaultAvatar)
 const avatar = ref(null)
-// همه متغیرهای تکراری حذف شدند
+const avatarError = ref('')
 
 const additionalPhones = ref([])
-let phoneIdCounter = 0
 
 const contactAddresses = ref([])
-let addressIdCounter = 0
 
 const isCreatingNewGroup = ref(false)
 const newGroupName = ref('')
 
 const customFieldValues = ref({})
+const isSubmitting = ref(false)
 
 const sortedCustomFieldDefinitions = computed(() => customFieldStore.sortedFieldDefinitions || [])
 
-// تابع تولید شناسه یکتا فقط همینجا استفاده میشه و دیگه import نمیشه
-const generateUniqueId = () => Date.now() + Math.random().toString(36).substring(2, 9)
 
-const generateUniqueAddressId = () => {
-  addressIdCounter += 1
-  return Date.now() + addressIdCounter
-}
+
+
 
 const addAddress = () => {
   contactAddresses.value.push({
-    id: generateUniqueAddressId(),
+    id: uuidv4(),
     type: '',
     street: '',
     city: '',
@@ -206,14 +208,11 @@ const resetCustomFieldValues = () => {
   customFieldValues.value = newValues
 }
 
-const generateUniquePhoneId = () => {
-  phoneIdCounter += 1
-  return Date.now() + phoneIdCounter
-}
+
 
 const addAdditionalPhone = () => {
   additionalPhones.value.push({
-    id: generateUniquePhoneId(),
+    id: uuidv4(),
     type: '',
     number: '',
   })
@@ -414,96 +413,122 @@ const validateForm = () => {
 }
 
 const handleSubmit = async () => {
-  if (!validateForm()) return
-
-  let finalContactGroupName = contactGroup.value
-  if (isCreatingNewGroup.value) {
-    if (newGroupName.value.trim() === '') {
-      groupStore.error = 'contactForm.validation.groupNameRequired'
-      return
-    }
-    groupStore.error = null
-
-    await groupStore.addGroup(newGroupName.value.trim())
-
-    if (groupStore.error) {
-      return
+  isSubmitting.value = true;
+  
+  try {
+    // اعتبارسنجی فرم
+    if (!validateForm()) {
+      return; // اگر فرم معتبر نبود، خارج می‌شویم
     }
 
-    finalContactGroupName = newGroupName.value.trim() // اصلاح اشتباه تایپی
-  }
+    // مدیریت گروه جدید
+    let finalContactGroupName = contactGroup.value;
+    if (isCreatingNewGroup.value) {
+      if (newGroupName.value.trim() === '') {
+        groupStore.error = 'contactForm.validation.groupNameRequired';
+        return;
+      }
+      groupStore.error = null;
 
-  const processedCustomFields = []
-  if (sortedCustomFieldDefinitions.value && Array.isArray(sortedCustomFieldDefinitions.value)) {
-    for (const fieldDef of sortedCustomFieldDefinitions.value) {
-      const rawValue = customFieldValues.value[fieldDef.id]
-      let valueToStore = rawValue
+      await groupStore.addGroup(newGroupName.value.trim());
 
-      if (
-        rawValue !== null &&
-        rawValue !== undefined &&
-        (rawValue !== '' || fieldDef.type === 'boolean')
-      ) {
-        if (fieldDef.type === 'date' && rawValue) {
-          valueToStore = moment(rawValue, 'YYYY-MM-DD').toISOString()
+      if (groupStore.error) {
+        console.error('Error creating group:', groupStore.error);
+        return;
+      }
+
+      finalContactGroupName = newGroupName.value.trim();
+    }
+
+    // پردازش فیلدهای سفارشی
+    const processedCustomFields = [];
+    if (sortedCustomFieldDefinitions.value && Array.isArray(sortedCustomFieldDefinitions.value)) {
+      for (const fieldDef of sortedCustomFieldDefinitions.value) {
+        const rawValue = customFieldValues.value[fieldDef.id];
+        let valueToStore = rawValue;
+
+        if (
+          rawValue !== null &&
+          rawValue !== undefined &&
+          (rawValue !== '' || fieldDef.type === 'boolean')
+        ) {
+          if (fieldDef.type === 'date' && rawValue) {
+            valueToStore = moment(rawValue, 'YYYY-MM-DD').toISOString();
+          }
+          if (fieldDef.type === 'number' && rawValue !== null && rawValue !== '') {
+            valueToStore = parseFloat(rawValue);
+            if (isNaN(valueToStore)) valueToStore = null;
+          }
+
+          processedCustomFields.push({
+            fieldId: fieldDef.id,
+            value: valueToStore,
+          });
         }
-        if (fieldDef.type === 'number' && rawValue !== null && rawValue !== '') {
-          valueToStore = parseFloat(rawValue)
-          if (isNaN(valueToStore)) valueToStore = null
-        }
-
-        processedCustomFields.push({
-          fieldId: fieldDef.id,
-          value: valueToStore,
-        })
       }
     }
-  }
 
-  const contactDataPayload = {
-    name: name.value.trim(),
-    lastName: lastName.value.trim(),
-    phone: phone.value.trim(),
-    title: title.value.trim(),
-    position: position.value.trim(), // Added for position/expertise
-    gender: gender.value,
-    notes: notes.value.trim(),
-    group: finalContactGroupName === '__CREATE_NEW__' ? '' : finalContactGroupName,
-    birthDate: birthDate.value ? moment(birthDate.value, 'jYYYY/jMM/jDD').toISOString() : null,
-    additionalPhones: additionalPhones.value
-      .map((p) => ({ type: p.type, number: p.number.trim() }))
-      .filter((p) => p.number),
-    addresses: contactAddresses.value
-      .map((a) => ({
-        type: a.type,
-        street: a.street.trim(),
-        city: a.city.trim(),
-        province: a.province.trim(),
-        country: a.country.trim(),
-        postalCode: a.postalCode.trim(),
-        notes: a.notes.trim(),
-      }))
-      .filter((a) => Object.values(a).some((val) => typeof val === 'string' && val !== '')),
-    customFields: processedCustomFields,
-    // avatar: avatar.value, // We'll handle actual avatar upload logic later
-    createdAt: contactStore.contactToEdit?.createdAt || new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
 
-  let success = false
-  if (contactStore.contactToEdit) {
-    success = await contactStore.updateContact(contactStore.contactToEdit.id, contactDataPayload)
-  } else {
-    success = await contactStore.addContact(contactDataPayload)
-  }
+    // ایجاد شیء اطلاعات تماس
+    const contactDataPayload = {
+      name: name.value.trim(),
+      lastName: lastName.value.trim(),
+      phone: phone.value.trim(),
+      title: title.value.trim(),
+      position: position.value.trim(),
+      gender: gender.value,
+      notes: notes.value.trim(),
+      group: finalContactGroupName,
+      birthDate: birthDate.value ? moment(birthDate.value, 'jYYYY/jMM/jDD').toISOString() : null,
+      additionalPhones: additionalPhones.value
+        .map((p) => ({ type: p.type, number: p.number.trim() }))
+        .filter((p) => p.number),
+      addresses: contactAddresses.value
+        .map((a) => ({
+          type: a.type,
+          street: a.street.trim(),
+          city: a.city.trim(),
+          province: a.province.trim(),
+          country: a.country.trim(),
+          postalCode: a.postalCode.trim(),
+          notes: a.notes.trim(),
+        }))
+        .filter((a) => Object.values(a).some((val) => typeof val === 'string' && val !== '')),
+      customFields: processedCustomFields,
+      // avatar: avatar.value, // We'll handle actual avatar upload logic later
+      createdAt: contactStore.contactToEdit?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-  if (success && !contactStore.error) {
-    clearForm()
-    router.push({ name: 'contact-list' })
-  } else if (contactStore.error) {
-    console.error('Error saving contact:', contactStore.error)
+    // ذخیره یا به‌روزرسانی مخاطب
+    let success = false;
+    if (contactStore.contactToEdit) {
+      success = await contactStore.updateContact(contactStore.contactToEdit.id, contactDataPayload);
+    } else {
+      success = await contactStore.addContact(contactDataPayload);
+    }
+
+    // بررسی نتیجه عملیات
+    if (success && !contactStore.error) {
+      clearForm();
+      router.push({ name: 'contact-list' });
+    } else if (contactStore.error) {
+      console.error('Error saving contact:', contactStore.error);
+      // در اینجا می‌توانید یک اعلان خطا به کاربر نمایش دهید
+      // مثلاً:
+      // notificationStore.showError('خطا در ذخیره مخاطب');
+    }
+  } catch (error) {
+    // مدیریت خطاهای پیش‌بینی نشده
+    console.error('An unexpected error occurred:', error);
+    // نمایش پیام خطا به کاربر
+    // notificationStore.showError('خطای غیرمنتظره رخ داد. لطفاً دوباره تلاش کنید.');
+  } finally {
+    // در هر صورت (موفقیت یا خطا) مقدار isSubmitting را به false برمی‌گردانیم
+    isSubmitting.value = false;
   }
 }
+// در Composition API نیازی به تعریف جداگانه کامپوننت‌ها نیست
 </script>
 
 <style scoped>
@@ -586,203 +611,7 @@ const handleSubmit = async () => {
   display: block;
 }
 
-/* استایل‌های بخش آواتار */
-/* این استایل‌ها به ContactAvatarUpload.vue منتقل شده‌اند */
-/*
-.avatar-section {
-  text-align: center;
-  margin-bottom: 30px;
-}
 
-.avatar-upload-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-.avatar-preview {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid var(--color-border);
-  background-color: var(--color-background-soft);
-}
-
-.avatar-input {
-  display: none;
-}
-
-.upload-avatar-btn,
-.remove-avatar-btn {
-  padding: 8px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.9em;
-  transition: background-color 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.upload-avatar-btn {
-  background-color: var(--color-primary);
-  color: white;
-}
-
-.upload-avatar-btn:hover {
-  background-color: var(--color-primary-dark);
-}
-
-.remove-avatar-btn {
-  background-color: var(--color-danger);
-  color: white;
-}
-
-.remove-avatar-btn:hover {
-  background-color: var(--color-danger-dark);
-}
-*/
-
-/* استایل‌های بخش فیلدهای اصلی */
-/* این استایل‌ها به ContactMainFields.vue منتقل شده‌اند */
-/*
-.main-fields-section {
-  margin-bottom: 30px;
-}
-
-.main-fields-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.new-group-input {
-  margin-top: 15px;
-  padding: 15px;
-  border: 1px dashed var(--color-border);
-  border-radius: 8px;
-  background-color: var(--color-background-soft);
-}
-
-.new-group-input label {
-  font-weight: normal;
-  margin-bottom: 5px;
-}
-*/
-
-/* استایل‌های بخش فیلدهای سفارشی */
-/* این استایل‌ها به ContactCustomFields.vue منتقل شده‌اند */
-/*
-.custom-fields-wrapper {
-  margin-bottom: 30px;
-  padding: 20px;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background-color: var(--color-background-soft);
-}
-
-.custom-fields-wrapper h3 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  color: var(--color-heading);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.custom-field-group {
-  margin-bottom: 15px;
-}
-
-.custom-field-group label {
-  font-weight: normal;
-}
-*/
-
-/* استایل‌های بخش آدرس‌ها و شماره تلفن‌های اضافه */
-/* این استایل‌ها به ContactAddresses.vue و ContactAdditionalPhones.vue منتقل شده‌اند */
-/*
-.additional-items-section {
-  margin-bottom: 30px;
-  padding: 20px;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background-color: var(--color-background-soft);
-}
-
-.additional-items-section h4 {
-  margin-top: 0;
-  margin-bottom: 15px;
-  color: var(--color-heading);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.item-block {
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 15px;
-  background-color: var(--color-background-soft);
-  position: relative; /* Needed for absolute positioning of remove button */
-*/ .address-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
-}
-
-.additional-phones-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
-}
-
-.item-select,
-.item-input {
-  padding: 8px;
-  font-size: 0.9em;
-}
-
-.remove-item-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: var(--color-danger);
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
-  font-size: 0.8em;
-  transition: background-color 0.3s ease;
-}
-
-.remove-item-btn:hover {
-  background-color: var(--color-danger-dark);
-}
-
-.add-item-btn {
-  display: block;
-  width: auto; /* Adjust width */
-  margin: 15px auto 0 auto; /* Center button */
-  padding: 10px 20px;
-  background-color: var(--color-success);
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  text-align: center;
-}
-
-.add-item-btn:hover {
-  background-color: var(--color-success-dark);
-}
-*/
 
 /* استایل‌های بخش دکمه‌های عملیات */
 .form-actions {

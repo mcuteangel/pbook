@@ -16,7 +16,7 @@
 
 <script setup>
 import { ref, watch, defineProps, defineEmits } from 'vue'
-import { VuePersianDatetimePicker } from 'vue-persian-datetime-picker'
+import VuePersianDatetimePicker from 'vue3-persian-datetime-picker'
 
 const props = defineProps({
   modelValue: {

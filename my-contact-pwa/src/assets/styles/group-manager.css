@@ -1,0 +1,248 @@
+/* سبک‌های مربوط به مدیریت گروه‌ها */
+
+.group-manager-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.group-add-section {
+  margin-bottom: 20px;
+}
+
+.add-group-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-group-button:hover {
+  background-color: var(--primary-dark);
+}
+
+.add-group-button i {
+  font-size: 16px;
+}
+
+/* دیالوگ */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.dialog-box {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.dialog-box h3 {
+  margin: 0 0 20px 0;
+  color: var(--primary-color);
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text-color);
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-group input[type="color"] {
+  padding: 0;
+  height: 36px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.dialog-actions button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.dialog-actions button:first-child {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.dialog-actions button:last-child {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+}
+
+/* وضعیت بارگذاری و خطا */
+.loading-message {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-color);
+}
+
+.loading-message i {
+  margin-right: 10px;
+}
+
+.error-message {
+  text-align: center;
+  padding: 20px;
+  color: var(--error-color);
+}
+
+.error-message i {
+  margin-right: 10px;
+}
+
+/* لیست گروه‌ها */
+.group-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+
+.group-item {
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.group-item:last-child {
+  border-bottom: none;
+}
+
+.group-name-section {
+  flex: 1;
+}
+
+.group-name {
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.group-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.group-actions button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.group-actions button.save,
+.group-actions button.edit {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.group-actions button.cancel {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+}
+
+.group-actions button.delete {
+  background-color: var(--error-color);
+  color: white;
+}
+
+.group-actions button i {
+  margin-right: 5px;
+}
+
+/* حالت خالی */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-color);
+}
+
+.empty-state i {
+  font-size: 48px;
+  margin-bottom: 15px;
+  color: var(--secondary-color);
+}
+
+.empty-state button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+/* فیلد ورودی در حالت ویرایش */
+.group-name-section input {
+  width: 100%;
+  padding: 5px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* گلس‌مورفیسم */
+.group-item:hover {
+  background-color: var(--secondary-color);
+  transform: translateX(5px);
+  transition: all 0.3s ease;
+}
+
+.group-name-section input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+/* متغیرهای CSS */
+:root {
+  --primary-color: #4CAF50;
+  --primary-dark: #45a049;
+  --secondary-color: #f5f5f5;
+  --text-color: #333;
+  --border-color: #ddd;
+  --error-color: #f44336;
+}

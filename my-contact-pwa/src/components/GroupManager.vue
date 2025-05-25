@@ -2,104 +2,303 @@
   <div class="group-manager-container">
     <h2>مدیریت گروه‌ها</h2>
 
-    <div v-if="groupStore.loading || contactStore.loading">در حال پردازش...</div>
-    <div v-else-if="groupStore.error" style="color: red">{{ groupStore.error }}</div>
-    <div v-else-if="contactStore.error" style="color: red">{{ contactStore.error }}</div>
+    <!-- قسمت اضافه کردن گروه جدید -->
+    <div class="group-add-section">
+      <button @click="showAddGroupDialog = true" class="add-group-button">
+        <i class="fas fa-plus"></i> اضافه کردن گروه جدید
+      </button>
+    </div>
 
-    <ul v-else-if="groupStore.sortedGroups.length > 0" class="group-list">
-      <li v-for="group in groupStore.sortedGroups" :key="group.id" class="group-item">
-        <div class="group-name-section">
-          <input
-            v-if="editingGroupId === group.id"
-            type="text"
-            v-model="editingGroupName"
-            @keyup.enter="saveEditedGroup(group.id)"
-            @blur="cancelEditing"
-            ref="editingInput"
-          />
-          <span v-else class="group-name">{{ group.name }}</span>
+    <!-- دیالوگ اضافه کردن گروه -->
+    <teleport to="body">
+      <div v-if="showAddGroupDialog" class="dialog-overlay">
+        <div class="dialog-box">
+          <h3>افزودن گروه جدید</h3>
+          <div class="form-group">
+            <label for="newGroupName">نام گروه:</label>
+            <input
+              type="text"
+              id="newGroupName"
+              v-model="newGroupName"
+              placeholder="نام گروه را وارد کنید"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="parentGroup">گروه والد (اختیاری):</label>
+            <select
+              id="parentGroup"
+              v-model="newGroupParent"
+            >
+              <option value="">بدون والد</option>
+              <option
+                v-for="group in groupStore.sortedGroups"
+                :key="group.id"
+                :value="group.id"
+              >
+                {{ group.name }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="groupColor">رنگ گروه:</label>
+            <input
+              type="color"
+              id="groupColor"
+              v-model="newGroupColor"
+            />
+          </div>
+          <div class="dialog-actions">
+            <button @click="addNewGroup">ذخیره</button>
+            <button @click="showAddGroupDialog = false">لغو</button>
+          </div>
         </div>
+      </div>
+    </teleport>
 
-        <div class="group-actions">
-          <button
-            v-if="editingGroupId === group.id"
-            class="save-button"
-            @click="saveEditedGroup(group.id)"
-            :disabled="!editingGroupName.trim()"
-          >
-            ذخیره
-          </button>
-          <button v-if="editingGroupId === group.id" class="cancel-button" @click="cancelEditing">
-            انصراف
-          </button>
-
-          <button
-            v-else
-            class="edit-button"
-            @click="startEditing(group)"
-            :disabled="groupStore.loading || contactStore.loading"
-          >
-            ویرایش
-          </button>
-
-          <button
-            class="delete-button"
-            @click="confirmDeleteGroup(group)"
-            :disabled="groupStore.loading || contactStore.loading"
-          >
-            حذف
-          </button>
+    <!-- لیست گروه‌ها -->
+    <div v-if="groupStore.loading || contactStore.loading" class="loading-message">
+      <i class="fas fa-spinner fa-spin"></i> در حال بارگذاری...
+    </div>
+    <div v-else-if="groupStore.error || contactStore.error" class="error-message">
+      <i class="fas fa-exclamation-circle"></i>
+      {{ groupStore.error || contactStore.error }}
+    </div>
+    <div v-else>
+      <div v-if="groupStore.sortedGroups.length > 0" class="groups-container">
+        <div class="group-tree">
+          <div v-for="group in getTopLevelGroups" :key="group.id" class="group-node">
+            <div class="group-header" @click="toggleGroup(group.id)">
+              <i class="fas" :class="group.expanded ? 'fa-minus-square' : 'fa-plus-square'" v-if="hasChildren(group)"></i>
+              <div class="group-name-section">
+                <input
+                  v-if="editingGroupId === group.id"
+                  type="text"
+                  v-model="editingGroupName"
+                  @keyup.enter="saveEditedGroup(group.id)"
+                  @blur="cancelEditing"
+                  ref="editingInput"
+                  :style="{ color: group.color }"
+                  class="group-edit-input"
+                />
+                <span v-else class="group-name" :style="{ color: group.color }">
+                  {{ group.name }}
+                </span>
+              </div>
+              <div class="group-actions">
+                <button
+                  v-if="editingGroupId === group.id"
+                  class="save-button"
+                  @click="saveEditedGroup(group.id)"
+                  :disabled="!editingGroupName.trim()"
+                >
+                  <i class="fas fa-save"></i> ذخیره
+                </button>
+                <button v-if="editingGroupId === group.id" class="cancel-button" @click="cancelEditing">
+                  <i class="fas fa-times"></i> انصراف
+                </button>
+                <button
+                  v-else
+                  class="edit-button"
+                  @click="startEditing(group)"
+                  :disabled="groupStore.loading || contactStore.loading"
+                >
+                  <i class="fas fa-edit"></i> ویرایش
+                </button>
+                <button
+                  class="delete-button"
+                  @click="confirmDeleteGroup(group)"
+                  :disabled="groupStore.loading || contactStore.loading"
+                >
+                  <i class="fas fa-trash"></i> حذف
+                </button>
+              </div>
+            </div>
+            <div v-if="group.expanded" class="group-children">
+              <div v-for="child in getChildren(group.id)" :key="child.id" class="group-node">
+                <div class="group-header">
+                  <div class="group-name-section">
+                    <input
+                      v-if="editingGroupId === child.id"
+                      type="text"
+                      v-model="editingGroupName"
+                      @keyup.enter="saveEditedGroup(child.id)"
+                      @blur="cancelEditing"
+                      ref="editingInput"
+                      :style="{ color: child.color }"
+                      class="group-edit-input"
+                    />
+                    <span v-else class="group-name" :style="{ color: child.color }">
+                      {{ child.name }}
+                    </span>
+                  </div>
+                  <div class="group-actions">
+                    <button
+                      v-if="editingGroupId === child.id"
+                      class="save-button"
+                      @click="saveEditedGroup(child.id)"
+                      :disabled="!editingGroupName.trim()"
+                    >
+                      <i class="fas fa-save"></i> ذخیره
+                    </button>
+                    <button v-if="editingGroupId === child.id" class="cancel-button" @click="cancelEditing">
+                      <i class="fas fa-times"></i> انصراف
+                    </button>
+                    <button
+                      v-else
+                      class="edit-button"
+                      @click="startEditing(child)"
+                      :disabled="groupStore.loading || contactStore.loading"
+                    >
+                      <i class="fas fa-edit"></i> ویرایش
+                    </button>
+                    <button
+                      class="delete-button"
+                      @click="confirmDeleteGroup(child)"
+                      :disabled="groupStore.loading || contactStore.loading"
+                    >
+                      <i class="fas fa-trash"></i> حذف
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </li>
-    </ul>
-    <div v-else>هیچ گروهی یافت نشد.</div>
+      </div>
+      <div v-else class="empty-state">
+        <i class="fas fa-users"></i>
+        <p>هیچ گروهی یافت نشد.</p>
+        <button @click="showAddGroupDialog = true" class="add-first-group-button">
+          اضافه کردن گروه اول
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue' // nextTick رو هم import می‌کنیم
+import { ref, nextTick } from 'vue'
 import { useGroupStore } from '../store/groups'
-// contactStore رو هم برای نشون دادن وضعیت لودینگ و خطا لازم داریم
 import { useContactStore } from '../store/contacts'
 
 const groupStore = useGroupStore()
-const contactStore = useContactStore() // Store مخاطبین رو وارد می‌کنیم
+const contactStore = useContactStore()
 
 // متغیرهای واکنشی برای مدیریت حالت ویرایش
-const editingGroupId = ref(null) // ID گروهی که در حال ویرایش است (null اگر هیچ گروهی در حال ویرایش نیست)
-const editingGroupName = ref('') // اسم جدید گروه که در فیلد ورودی نوشته می‌شود
-const editingInput = ref(null) // رفرنس به المنت Input در حالت ویرایش برای فوکوس خودکار
+const editingGroupId = ref(null)
+const editingGroupName = ref('')
+const editingInput = ref(null)
+const newGroupParent = ref('')
+const expandedGroups = ref(new Set())
+
+// متغیرهای دیالوگ اضافه کردن گروه
+const newGroupColor = ref('#4CAF50') // رنگ پیش‌فرض
 
 // تابع شروع حالت ویرایش
 const startEditing = (group) => {
-  editingGroupId.value = group.id // تنظیم ID گروهی که در حال ویرایش است
-  editingGroupName.value = group.name // پر کردن فیلد ورودی با اسم فعلی گروه
-
-  // استفاده از nextTick برای فوکوس خودکار روی input بعد از ظاهر شدن در DOM
+  editingGroupId.value = group.id
+  editingGroupName.value = group.name
   nextTick(() => {
-    if (Array.isArray(editingInput.value) && editingInput.value.length > 0) {
-      // فوکوس روی اولین (و تنها) Input در آرایه
-      editingInput.value[0].focus() // <-- اینجا اصلاح کن!
-    } else {
-      console.warn('Could not find the editing input element to focus.') // یه هشدار برای عیب‌یابی
+    if (editingInput.value) {
+      editingInput.value.focus()
     }
   })
 }
 
 // تابع انصراف از ویرایش
 const cancelEditing = () => {
-  editingGroupId.value = null // پاک کردن ID گروه در حال ویرایش
-  editingGroupName.value = '' // پاک کردن محتوای فیلد ورودی
-  groupStore.error = null // پاک کردن خطای مربوط به گروه
+  editingGroupId.value = null
+  editingGroupName.value = ''
+  groupStore.error = null
 }
 
 // تابع ذخیره اسم ویرایش شده گروه
 const saveEditedGroup = async (groupId) => {
-  const newName = editingGroupName.value.trim() // گرفتن اسم جدید (بدون فاصله اضافی)
-
-  // چک کردن که اسم خالی نباشه
+  const newName = editingGroupName.value.trim()
   if (!newName) {
-    groupStore.error = 'نام گروه نمی‌تواند خالی باشد.'
+    groupStore.error = 'لطفاً نام گروه را وارد کنید'
+    return
+  }
+
+  try {
+    await groupStore.updateGroup(groupId, { name: newName })
+    cancelEditing()
+  } catch (error) {
+    groupStore.error = error.message || 'خطا در ذخیره تغییرات'
+  }
+}
+
+// تابع اضافه کردن گروه جدید
+const addNewGroup = async () => {
+  const name = newGroupName.value.trim()
+  if (!name) {
+    groupStore.error = 'لطفاً نام گروه را وارد کنید'
+    return
+  }
+
+  try {
+    const groupData = {
+      name,
+      color: newGroupColor.value,
+      parent_id: newGroupParent.value || null
+    }
+    await groupStore.addGroup(groupData)
+    showAddGroupDialog.value = false
+    newGroupName.value = ''
+    newGroupColor.value = '#4CAF50'
+    newGroupParent.value = ''
+  } catch (error) {
+    groupStore.error = error.message || 'خطا در اضافه کردن گروه'
+  }
+}
+
+// تابع برای گرفتن گروه‌های سطح اول
+const getTopLevelGroups = computed(() => {
+  return groupStore.sortedGroups.filter(group => !group.parent_id)
+})
+
+// تابع برای گرفتن فرزندان یک گروه
+const getChildren = (parentId) => {
+  return groupStore.sortedGroups.filter(group => group.parent_id === parentId)
+}
+
+// تابع برای بررسی وجود فرزندان
+const hasChildren = (group) => {
+  return groupStore.sortedGroups.some(child => child.parent_id === group.id)
+}
+
+// تابع برای فعال/غیرفعال کردن گروه
+const toggleGroup = (groupId) => {
+  if (expandedGroups.value.has(groupId)) {
+    expandedGroups.value.delete(groupId)
+  } else {
+    expandedGroups.value.add(groupId)
+  }
+}
+
+// تابع تایید حذف گروه
+const confirmDeleteGroup = async (group) => {
+  if (!confirm(`آیا از حذف گروه "${group.name}" مطمئن هستید؟`)) {
+    return
+  }
+
+  try {
+    await groupStore.deleteGroup(group.id)
+  } catch (error) {
+    groupStore.error = error.message || 'خطا در حذف گروه'
+  }
+}
+
+// هنگام mount شدن کامپوننت، لیست گروه‌ها رو لود می‌کنیم
+onMounted(async () => {
+  try {
+    await groupStore.loadGroups()
+  } catch (error) {
+    groupStore.error = error.message || 'خطا در بارگذاری گروه‌ها'
+  }
+})
+</script>    groupStore.error = 'نام گروه نمی‌تواند خالی باشد.'
     return
   }
 

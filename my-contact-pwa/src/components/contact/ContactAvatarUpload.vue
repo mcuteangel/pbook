@@ -34,8 +34,8 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import IconWrapper from './icons/IconWrapper.vue'
-import defaultAvatar from '/img/icons/default-avatar.svg' // مسیر آواتار پیش‌فرض
+import IconWrapper from '@/components/icons/IconWrapper.vue'
+import defaultAvatar from '@/assets/img/icons/default-avatar.svg' // مسیر آواتار پیش‌فرض
 
 const props = defineProps({
   modelValue: {

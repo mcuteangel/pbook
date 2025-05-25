@@ -60,7 +60,7 @@
 </template>
 
 <script setup>
-import IconWrapper from './icons/IconWrapper.vue'
+import IconWrapper from '@/components/icons/IconWrapper.vue'
 
 defineProps({
   additionalPhones: Array, // لیست شماره تلفن‌های اضافه

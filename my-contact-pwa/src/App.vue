@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <h1>{{ $t('message.welcome') }}</h1>
+    <h1 v-if="false">{{ $t('message.welcome') }}</h1>
     <select v-model="$i18n.locale">
       <option value="fa">فارسی</option>
       <option value="en">English</option>
@@ -94,11 +94,13 @@
           <span>تنظیمات</span>
         </RouterLink>
       </nav>
+      <Notification />
     </div>
   </div>
 </template>
 
 <script setup>
+import Notification from '@/components/shared/Notification.vue'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import { useContactStore } from '@/store/contacts'
@@ -161,6 +163,8 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+@import './assets/styles/custom-fields.css';
+@import './assets/styles/group-manager.css';
 .app-container {
   display: flex;
   flex-direction: column;

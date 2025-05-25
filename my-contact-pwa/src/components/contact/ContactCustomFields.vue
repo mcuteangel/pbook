@@ -167,7 +167,7 @@
 </template>
 
 <script setup>
-import IconWrapper from './icons/IconWrapper.vue';
+import IconWrapper from '@/components/icons/IconWrapper.vue';
 import DatePicker from 'vue3-persian-datetime-picker';
 
 defineProps({
