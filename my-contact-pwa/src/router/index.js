@@ -44,6 +44,13 @@ const router = createRouter({
       component: () => import('@/views/ContactDetail.vue'), // نمایش کامپوننت جزئیات
       props: true, // این گزینه باعث میشه پارامترهای مسیر (مثل id) به عنوان props به کامپوننت ContactDetail ارسال بشن (اختیاری ولی خوبه)
     },
+    // Route برای ویرایش مخاطب
+    {
+      path: '/contact/:id/edit', // مسیر با پارامتر ID مخاطب برای ویرایش
+      name: 'edit-contact',      // نام مسیر
+      component: () => import('@/components/contact/ContactForm.vue'), // همان فرم افزودن، اما در حالت ویرایش
+      props: true                // id به عنوان prop به ContactForm ارسال می‌شود
+    },
 
     {
       path: '/settings', // آدرسی که می‌خوایم صفحه تنظیمات باهاش باز بشه

@@ -101,6 +101,17 @@ export const displayPhoneType = (typeValue) => {
 }
 
 // تابع برای نمایش نوع آدرس (از کد قبلی شما)
+// تابع برای فرمت‌دهی آدرس به صورت رشته
+export const formatAddress = (address) => {
+  if (!address) return ''
+  const parts = []
+  if (address.street) parts.push(address.street)
+  if (address.city) parts.push(address.city)
+  if (address.province) parts.push(address.province)
+  if (address.country) parts.push(address.country)
+  return parts.join(', ')
+}
+
 export const displayAddressType = (typeValue) => {
   switch (typeValue) {
     case 'home':

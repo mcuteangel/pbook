@@ -1,84 +1,115 @@
 <template>
   <div class="contact-detail-container">
-    <h2>جزئیات مخاطب</h2>
-
-    <div v-if="loading" class="loading-message">در حال بارگذاری اطلاعات مخاطب...</div>
-    <div v-else-if="error" class="error-message">
-      <p>{{ error }}</p>
-      <button @click="loadContactDetail(parseInt(contactId))">تلاش مجدد</button>
+    <div v-if="loading" class="loading-message">
+      {{ $t('contactDetail.loading') }}
+      <v-progress-circular indeterminate color="primary"></v-progress-circular>
     </div>
-    <div v-else-if="contact" class="contact-info-wrapper">
-      <div class="contact-header">
-        <h3>{{ contact.name }} {{ contact.lastName }}</h3>
-        <p v-if="contact.title" class="title-text">سمت: {{ contact.title }}</p>
-      </div>
+    <div v-else-if="error" class="error-message">
+      <p>Error loading contact: {{ error }}</p>
+      <v-btn @click="fetchContactDetail" color="primary">{{
+        $t('contactDetail.retryButton')
+      }}</v-btn>
+    </div>
+    <div v-else-if="contact" class="contact-details">
+      <h1 class="page-title">{{ $t('contactDetail.title') }}</h1>
 
-      <div class="detail-section">
-        <h4>اطلاعات اصلی</h4>
-        <p>
-          <strong>تلفن اصلی:</strong>
-          <a :href="'tel:' + cleanPhoneNumber(contact.phone)" class="phone-link">{{
-            contact.phone
-          }}</a>
-        </p>
-        <p v-if="contact.gender"><strong>جنسیت:</strong> {{ displayGender(contact.gender) }}</p>
-        <p v-if="contact.group"><strong>گروه:</strong> {{ contact.group }}</p>
-        <p v-if="contact.birthDate">
-          <strong>تاریخ تولد:</strong> {{ formatGregorianDateToShamsi(contact.birthDate) }}
-        </p>
-      </div>
+      <!-- Basic Info -->
+      <v-card class="mb-4">
+        <v-card-title>{{ $t('contactDetail.mainInfoTitle') }}</v-card-title>
+        <v-card-text>
+          <v-row>
+            <v-col cols="12" md="6">
+              <p>
+                <strong>{{ $t('contactForm.name') }}:</strong> {{ contact.name }}
+              </p>
+              <p>
+                <strong>{{ $t('contactForm.lastName') }}:</strong> {{ contact.lastName }}
+              </p>
+              <p v-if="contact.title">
+                <strong>{{ $t('contactDetail.titleLabel') }}:</strong> {{ contact.title }}
+              </p>
+              <p v-if="contact.mainPhone">
+                <strong>{{ $t('contactDetail.mainPhoneLabel') }}:</strong>
+                {{ contact.mainPhone }}
+              </p>
+              <p v-if="contact.gender">
+                <strong>{{ $t('contactDetail.genderLabel') }}:</strong> {{ contact.gender }}
+              </p>
+              <p v-if="contact.group">
+                <strong>{{ $t('contactDetail.groupLabel') }}:</strong> {{ contact.group.name }}
+              </p>
+              <p v-if="contact.birthDate">
+                <strong>{{ $t('contactDetail.birthDateLabel') }}:</strong>
+                {{ formatDate(contact.birthDate) }}
+              </p>
+            </v-col>
+            <v-col cols="12" md="6" class="text-center">
+              <v-avatar size="128">
+                <v-img :src="contact.avatar || defaultAvatar"></v-img>
+              </v-avatar>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
 
-      <div
-        v-if="contact.additionalPhones && contact.additionalPhones.length > 0"
-        class="detail-section"
-      >
-        <h4>شماره‌های اضافی</h4>
-        <ul>
-          <li v-for="(item, index) in contact.additionalPhones" :key="'phone-' + index">
-            <strong>{{ displayPhoneType(item.type) }}:</strong>
-            <a :href="'tel:' + cleanPhoneNumber(item.number)" class="phone-link">{{
-              item.number
-            }}</a>
-          </li>
-        </ul>
-      </div>
+      <!-- Additional Phones -->
+      <v-card v-if="contact.additionalPhones && contact.additionalPhones.length > 0" class="mb-4">
+        <v-card-title>{{ $t('contactDetail.additionalPhonesTitle') }}</v-card-title>
+        <v-card-text>
+          <p v-for="(phone, index) in contact.additionalPhones" :key="index">
+            <strong>{{ phone.type }}:</strong> {{ phone.number }}
+          </p>
+        </v-card-text>
+      </v-card>
 
+      <!-- Addresses -->
       <ContactDetailAddresses :addresses="contact.addresses" />
 
-      <div v-if="contact.notes" class="detail-section">
-        <h4>یادداشت/توضیحات</h4>
-        <p class="notes-text">{{ contact.notes }}</p>
-      </div>
+      <!-- Notes -->
+      <v-card v-if="contact.notes" class="mb-4">
+        <v-card-title>{{ $t('contactDetail.notesTitle') }}</v-card-title>
+        <v-card-text>
+          <p>{{ contact.notes }}</p>
+        </v-card-text>
+      </v-card>
 
-      <div v-if="displayedCustomFields.length > 0" class="mt-6 border-t pt-4">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">فیلدهای سفارشی</h3>
-        <div class="space-y-2">
-          <div v-for="field in displayedCustomFields" :key="field.id" class="flex items-center">
-            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 w-1/3">
-              {{ field.label }}:
+      <!-- Custom Fields -->
+      <v-card v-if="displayedCustomFields.length > 0" class="mb-4">
+        <v-card-title>{{ $t('contactDetail.customFieldsTitle') }}</v-card-title>
+        <v-card-text>
+          <div v-for="processedField in displayedCustomFields" :key="processedField.id">
+            <p>
+              <strong>{{ processedField.label }}:</strong> {{ processedField.formattedValue }}
             </p>
-            <p class="text-sm text-gray-800 dark:text-gray-200 w-2/3">{{ field.formattedValue }}</p>
           </div>
-        </div>
-      </div>
+        </v-card-text>
+      </v-card>
 
-      <div class="meta-info detail-section">
-        <h4>اطلاعات سیستمی</h4>
-        <p v-if="contact.createdAt">
-          <strong>تاریخ ایجاد:</strong> {{ formatGregorianDateToShamsi(contact.createdAt, true) }}
-        </p>
-        <p v-if="contact.updatedAt">
-          <strong>آخرین ویرایش:</strong> {{ formatGregorianDateToShamsi(contact.updatedAt, true) }}
-        </p>
-      </div>
+      <!-- System Info -->
+      <v-card class="mb-4">
+        <v-card-title>{{ $t('contactDetail.systemInfoTitle') }}</v-card-title>
+        <v-card-text>
+          <p>
+            <strong>{{ $t('contactDetail.createdAtLabel') }}:</strong>
+            {{ formatDate(contact.createdAt) }}
+          </p>
+          <p>
+            <strong>{{ $t('contactDetail.updatedAtLabel') }}:</strong>
+            {{ formatDate(contact.updatedAt) }}
+          </p>
+        </v-card-text>
+      </v-card>
 
+      <!-- Actions -->
       <div class="actions">
-        <button @click="startEditingCurrentContact" class="edit-button">ویرایش این مخاطب</button>
-        <button @click="goBack">برگشت به لیست</button>
+        <v-btn color="primary" @click="editContact">{{
+          $t('contactDetail.editContactButton')
+        }}</v-btn>
+        <v-btn @click="backToList">{{ $t('contactDetail.backToListButton') }}</v-btn>
       </div>
     </div>
     <div v-else class="no-contact-message">
-      <p>مخاطبی برای نمایش انتخاب نشده است یا یافت نشد.</p>
+      {{ $t('contactDetail.noContactFound') }}
     </div>
   </div>
 </template>
@@ -88,6 +119,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 // برای دسترسی به route و پارامترها و ناوبری
 import { useRoute, useRouter } from 'vue-router'
 import { useCustomFieldStore } from '@/store/customFields' // این رو اضافه کن
+import i18n from '@/plugins/i18n'; // برای استفاده از $t در اسکریپت
 
 // برای دسترسی به Store مخاطبین و لود اطلاعات
 import { useContactStore } from '../store/contacts'
@@ -161,12 +193,20 @@ const displayedCustomFields = computed(() => {
 
       if (hasDisplayableValue) {
         // ** اینجا مقدار را با استفاده از formatCustomFieldValue فرمت می‌کنیم **
-        const formatted = formatCustomFieldValue(value, fieldDef.type, fieldDef.options)
+        let formattedDisplay = formatCustomFieldValue(value, fieldDef.type, fieldDef.options)
+
+        // اگر فیلد از نوع select است و مقدار ذخیره شده در گزینه‌های فعلی موجود نیست، پسوند اضافه کن
+        if (fieldDef.type === 'select') {
+          const optionExists = fieldDef.options?.some(opt => opt.value === value)
+          if (!optionExists && value !== undefined && value !== null && String(value).trim() !== '') { // فقط اگر مقداری وجود داشته و نامعتبر شده
+            formattedDisplay += ` ${i18n.global.t('customFields.optionNoLongerValid')}`
+          }
+        }
 
         return {
           ...fieldDef, // کپی کردن خصوصیات تعریف فیلد (مثل id, label, type, options)
           value: value, // ذخیره مقدار خام هم (اختیاری)
-          formattedValue: formatted, // ** ذخیره مقدار فرمت شده برای نمایش در Template **
+          formattedValue: formattedDisplay, // ** ذخیره مقدار فرمت شده برای نمایش در Template **
         }
       }
 
@@ -201,10 +241,10 @@ onMounted(async () => {
   isLoading.value = false
 })
 
-const startEditingCurrentContact = () => {
+const editContact = () => {
   if (contact.value) {
     contactStore.setContactToEdit(contact.value)
-    router.push({ name: 'add-contact' })
+    router.push({ name: 'edit-contact', params: { id: contact.value.id } })
   }
 }
 

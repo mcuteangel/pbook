@@ -4,7 +4,7 @@
     :format="format"
     :display-format="displayFormat"
     :type="type"
-    :placeholder="placeholder"
+    :placeholder="$t('shared.datePicker.placeholder')"
     :disabled="disabled"
     :clearable="clearable"
     class="persian-date-picker-wrapper"
@@ -17,6 +17,9 @@
 <script setup>
 import { ref, watch, defineProps, defineEmits } from 'vue'
 import VuePersianDatetimePicker from 'vue3-persian-datetime-picker'
+import { useI18n } from 'vue-i18n'
+
+const { t: $t } = useI18n()
 
 const props = defineProps({
   modelValue: {
@@ -38,7 +41,7 @@ const props = defineProps({
   },
   placeholder: {
     type: String,
-    default: 'انتخاب تاریخ',
+    // default: 'انتخاب تاریخ', // Removed hardcoded default
   },
   disabled: {
     type: Boolean,

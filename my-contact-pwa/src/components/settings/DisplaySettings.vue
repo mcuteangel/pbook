@@ -1,10 +1,10 @@
 <template>
   <section class="display-settings-section settings-section glass-section">
-    <h3>تنظیمات نمایش لیست مخاطبین</h3>
-    <p>ستون‌هایی را که می‌خواهید در لیست اصلی مخاطبین نمایش داده شوند، انتخاب کنید.</p>
+    <h3>{{ $t('settings.displaySettingsTitle') }}</h3>
+    <p>{{ $t('settings.displaySettingsDescription') }}</p>
 
     <div v-if="settingsStore.isLoading" class="loading-message">
-      <IconWrapper icon="fa-solid fa-spinner fa-spin" /> در حال بارگذاری تنظیمات...
+      <IconWrapper icon="fa-solid fa-spinner fa-spin" /> {{ $t('settings.loadingSettings') }}
     </div>
 
     <div class="checkbox-group">
@@ -19,7 +19,7 @@
     </div>
 
     <button type="button" @click="settingsStore.resetToDefaults" class="reset-button glass-btn">
-      <IconWrapper icon="fa-solid fa-undo" /> بازنشانی به پیش‌فرض
+      <IconWrapper icon="fa-solid fa-undo" /> {{ $t('settings.resetToDefaults') }}
     </button>
   </section>
 </template>
@@ -30,30 +30,35 @@ import { useSettingsStore } from '@/store/settings'
 import { useCustomFieldStore } from '@/store/customFields'
 import AppSettingsItem from './AppSettingsItem.vue'
 import IconWrapper from '@/components/icons/IconWrapper.vue'
+import { useI18n } from 'vue-i18n' // Import useI18n
 
 const settingsStore = useSettingsStore()
 const customFieldStore = useCustomFieldStore()
+const { t } = useI18n() // Initialize useI18n
 
 const standardColumns = [
-  { label: 'نام', value: 'name' },
-  { label: 'نام خانوادگی', value: 'lastName' },
-  { label: 'تلفن ', value: 'phone' },
-  { label: 'جنسیت', value: 'gender' },
-  { label: 'گروه', value: 'group' },
-  { label: 'تاریخ تولد', value: 'birthDate' },
-  { label: 'سمت / تخصص', value: 'title' }, // قبلا position بود، به title تغییر کرد
-  { label: 'تاریخ ایجاد', value: 'createdAt' },
-  { label: 'آخرین ویرایش', value: 'updatedAt' },
-  { label: 'شهر (آدرس اصلی)', value: 'address.city' }, // مشخص‌تر شد
-  { label: 'خیابان (آدرس اصلی)', value: 'address.street' }, // مشخص‌تر شد
-  { label: 'یادداشت‌ها', value: 'notes' }, // قبلا note بود
+  { label: t('contactList.name'), value: 'name' },
+  { label: t('contactList.lastName'), value: 'lastName' },
+  { label: t('contactList.phone'), value: 'phone' },
+  { label: t('contactList.gender'), value: 'gender' },
+  { label: t('contactList.group'), value: 'group' },
+  { label: t('contactList.birthDate'), value: 'birthDate' },
+  { label: t('contactList.title'), value: 'title' }, // قبلا position بود، به title تغییر کرد
+  { label: t('contactList.createdAt'), value: 'createdAt' },
+  { label: t('contactList.updatedAt'), value: 'updatedAt' },
+  { label: t('contactList.addressCity'), value: 'address.city' }, // مشخص‌تر شد
+  { label: t('contactList.addressStreet'), value: 'address.street' }, // مشخص‌تر شد
+  { label: t('contactList.notes'), value: 'notes' }, // قبلا note بود
 ]
 
 const availableColumns = computed(() => {
   const columns = [...standardColumns]
   if (customFieldStore.fieldDefinitions && customFieldStore.fieldDefinitions.length > 0) {
     customFieldStore.fieldDefinitions.forEach((field) => {
-      columns.push({ label: `فیلد سفارشی: ${field.label}`, value: `customFieldDef_${field.id}` })
+      columns.push({
+        label: t('settings.customFieldLabel', { label: field.label }),
+        value: `customFieldDef_${field.id}`,
+      }) // Use translation key with placeholder
     })
   }
   return columns.sort((a, b) => a.label.localeCompare(b.label, 'fa')) // مرتب‌سازی بر اساس حروف الفبا

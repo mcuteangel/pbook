@@ -9,29 +9,29 @@
       <div class="app-bg"></div>
       <header class="app-header glass fade-in">
         <div class="header-content">
-          <h1 class="app-title">دفترچه مخاطبین</h1>
+          <h1 class="app-title">{{ $t('app.title') }}</h1>
           <button
             v-if="showInstallButton"
             @click="handleInstallClick"
             class="install-button glass-btn"
-            title="نصب اپلیکیشن"
+            :title="$t('app.installButtonTitle')"
           >
             <i class="fa-solid fa-download"></i>
-            نصب
+            {{ $t('app.installButtonText') }}
           </button>
         </div>
         <nav class="app-nav-desktop">
           <RouterLink :to="{ name: 'contact-list' }" active-class="active-link" class="nav-item">
             <i class="fa-solid fa-user"></i>
-            <span>مخاطبین</span>
+            <span>{{ $t('app.nav.contacts') }}</span>
           </RouterLink>
           <RouterLink :to="{ name: 'add-contact' }" active-class="active-link" class="nav-item">
             <i class="fa-solid fa-user-plus"></i>
-            <span>افزودن</span>
+            <span>{{ $t('app.nav.addContact') }}</span>
           </RouterLink>
           <RouterLink :to="{ name: 'group-manager' }" active-class="active-link" class="nav-item">
             <i class="fa-solid fa-layer-group"></i>
-            <span>گروه‌ها</span>
+            <span>{{ $t('app.nav.groups') }}</span>
           </RouterLink>
           <RouterLink
             :to="{ name: 'custom-field-manager' }"
@@ -39,11 +39,11 @@
             class="nav-item"
           >
             <i class="fa-solid fa-list"></i>
-            <span>فیلدها</span>
+            <span>{{ $t('app.nav.fields') }}</span>
           </RouterLink>
           <RouterLink :to="{ name: 'settings' }" active-class="active-link" class="nav-item">
             <i class="fa-solid fa-gear"></i>
-            <span>تنظیمات</span>
+            <span>{{ $t('app.nav.settings') }}</span>
           </RouterLink>
         </nav>
       </header>
@@ -59,7 +59,7 @@
           active-class="active-mobile-link"
         >
           <i class="fa-solid fa-user"></i>
-          <span>مخاطبین</span>
+          <span>{{ $t('app.nav.contacts') }}</span>
         </RouterLink>
         <RouterLink
           :to="{ name: 'add-contact' }"
@@ -67,7 +67,7 @@
           active-class="active-mobile-link"
         >
           <i class="fa-solid fa-user-plus"></i>
-          <span>افزودن</span>
+          <span>{{ $t('app.nav.addContact') }}</span>
         </RouterLink>
         <RouterLink
           :to="{ name: 'group-manager' }"
@@ -75,7 +75,7 @@
           active-class="active-mobile-link"
         >
           <i class="fa-solid fa-layer-group"></i>
-          <span>گروه‌ها</span>
+          <span>{{ $t('app.nav.groups') }}</span>
         </RouterLink>
         <RouterLink
           :to="{ name: 'custom-field-manager' }"
@@ -83,7 +83,7 @@
           active-class="active-mobile-link"
         >
           <i class="fa-solid fa-list"></i>
-          <span>فیلدها</span>
+          <span>{{ $t('app.nav.fields') }}</span>
         </RouterLink>
         <RouterLink
           :to="{ name: 'settings' }"
@@ -91,7 +91,7 @@
           active-class="active-mobile-link"
         >
           <i class="fa-solid fa-gear"></i>
-          <span>تنظیمات</span>
+          <span>{{ $t('app.nav.settings') }}</span>
         </RouterLink>
       </nav>
       <Notification />

@@ -1,11 +1,11 @@
 <template>
   <div class="group-manager-container">
-    <h2>مدیریت گروه‌ها</h2>
+    <h2>{{ $t('groupManager.title') }}</h2>
 
     <!-- قسمت اضافه کردن گروه جدید -->
     <div class="group-add-section">
       <button @click="showAddGroupDialog = true" class="add-group-button">
-        <i class="fas fa-plus"></i> اضافه کردن گروه جدید
+        <i class="fas fa-plus"></i> {{ $t('groupManager.addNewGroup') }}
       </button>
     </div>
 
@@ -13,24 +13,24 @@
     <teleport to="body">
       <div v-if="showAddGroupDialog" class="dialog-overlay">
         <div class="dialog-box">
-          <h3>افزودن گروه جدید</h3>
+          <h3>{{ $t('groupManager.addNewGroupDialogTitle') }}</h3>
           <div class="form-group">
-            <label for="newGroupName">نام گروه:</label>
+            <label for="newGroupName">{{ $t('groupManager.groupName') }}:</label>
             <input
               type="text"
               id="newGroupName"
               v-model="newGroupName"
-              placeholder="نام گروه را وارد کنید"
+              :placeholder="$t('groupManager.groupNamePlaceholder')"
               required
             />
           </div>
           <div class="form-group">
-            <label for="parentGroup">گروه والد (اختیاری):</label>
+            <label for="parentGroup">{{ $t('groupManager.parentGroup') }}:</label>
             <select
               id="parentGroup"
               v-model="newGroupParent"
             >
-              <option value="">بدون والد</option>
+              <option value="">{{ $t('groupManager.noParent') }}</option>
               <option
                 v-for="group in groupStore.sortedGroups"
                 :key="group.id"
@@ -41,7 +41,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="groupColor">رنگ گروه:</label>
+            <label for="groupColor">{{ $t('groupManager.groupColor') }}:</label>
             <input
               type="color"
               id="groupColor"
@@ -49,8 +49,8 @@
             />
           </div>
           <div class="dialog-actions">
-            <button @click="addNewGroup">ذخیره</button>
-            <button @click="showAddGroupDialog = false">لغو</button>
+            <button @click="addNewGroup">{{ $t('form.save') }}</button>
+            <button @click="showAddGroupDialog = false">{{ $t('form.cancel') }}</button>
           </div>
         </div>
       </div>
@@ -58,7 +58,7 @@
 
     <!-- لیست گروه‌ها -->
     <div v-if="groupStore.loading || contactStore.loading" class="loading-message">
-      <i class="fas fa-spinner fa-spin"></i> در حال بارگذاری...
+      <i class="fas fa-spinner fa-spin"></i> {{ $t('customFieldManager.loading') }}
     </div>
     <div v-else-if="groupStore.error || contactStore.error" class="error-message">
       <i class="fas fa-exclamation-circle"></i>
@@ -92,10 +92,10 @@
                   @click="saveEditedGroup(group.id)"
                   :disabled="!editingGroupName.trim()"
                 >
-                  <i class="fas fa-save"></i> ذخیره
+                  <i class="fas fa-save"></i> {{ $t('form.save') }}
                 </button>
                 <button v-if="editingGroupId === group.id" class="cancel-button" @click="cancelEditing">
-                  <i class="fas fa-times"></i> انصراف
+                  <i class="fas fa-times"></i> {{ $t('form.cancel') }}
                 </button>
                 <button
                   v-else
@@ -103,14 +103,14 @@
                   @click="startEditing(group)"
                   :disabled="groupStore.loading || contactStore.loading"
                 >
-                  <i class="fas fa-edit"></i> ویرایش
+                  <i class="fas fa-edit"></i> {{ $t('shared.contactListItem.edit') }}
                 </button>
                 <button
                   class="delete-button"
                   @click="confirmDeleteGroup(group)"
                   :disabled="groupStore.loading || contactStore.loading"
                 >
-                  <i class="fas fa-trash"></i> حذف
+                  <i class="fas fa-trash"></i> {{ $t('shared.contactListItem.delete') }}
                 </button>
               </div>
             </div>
@@ -139,10 +139,10 @@
                       @click="saveEditedGroup(child.id)"
                       :disabled="!editingGroupName.trim()"
                     >
-                      <i class="fas fa-save"></i> ذخیره
+                      <i class="fas fa-save"></i> {{ $t('form.save') }}
                     </button>
                     <button v-if="editingGroupId === child.id" class="cancel-button" @click="cancelEditing">
-                      <i class="fas fa-times"></i> انصراف
+                      <i class="fas fa-times"></i> {{ $t('form.cancel') }}
                     </button>
                     <button
                       v-else
@@ -150,14 +150,14 @@
                       @click="startEditing(child)"
                       :disabled="groupStore.loading || contactStore.loading"
                     >
-                      <i class="fas fa-edit"></i> ویرایش
+                      <i class="fas fa-edit"></i> {{ $t('shared.contactListItem.edit') }}
                     </button>
                     <button
                       class="delete-button"
                       @click="confirmDeleteGroup(child)"
                       :disabled="groupStore.loading || contactStore.loading"
                     >
-                      <i class="fas fa-trash"></i> حذف
+                      <i class="fas fa-trash"></i> {{ $t('shared.contactListItem.delete') }}
                     </button>
                   </div>
                 </div>
@@ -168,9 +168,9 @@
       </div>
       <div v-else class="empty-state">
         <i class="fas fa-users"></i>
-        <p>هیچ گروهی یافت نشد.</p>
+        <p>{{ $t('groupManager.emptyStateMessage') }}</p>
         <button @click="showAddGroupDialog = true" class="add-first-group-button">
-          اضافه کردن گروه اول
+          {{ $t('groupManager.addFirstGroupButton') }}
         </button>
       </div>
     </div>
@@ -215,9 +215,9 @@ const cancelEditing = () => {
 
 // تابع ذخیره اسم ویرایش شده گروه
 const saveEditedGroup = async (groupId) => {
-  const newName = editingGroupName.value.trim()
-  if (!newName) {
-    groupStore.error = 'لطفاً نام گروه را وارد کنید'
+  const name = editingGroupName.value.trim()
+  if (!name) {
+    groupStore.error = $t('groupManager.groupNameRequired')
     return
   }
 
@@ -225,7 +225,7 @@ const saveEditedGroup = async (groupId) => {
     await groupStore.updateGroup(groupId, { name: newName })
     cancelEditing()
   } catch (error) {
-    groupStore.error = error.message || 'خطا در ذخیره تغییرات'
+    groupStore.error = error.message || $t('groupManager.errorSavingGroup')
   }
 }
 
@@ -233,7 +233,7 @@ const saveEditedGroup = async (groupId) => {
 const addNewGroup = async () => {
   const name = newGroupName.value.trim()
   if (!name) {
-    groupStore.error = 'لطفاً نام گروه را وارد کنید'
+    groupStore.error = $t('groupManager.groupNameRequired')
     return
   }
 
@@ -249,7 +249,7 @@ const addNewGroup = async () => {
     newGroupColor.value = '#4CAF50'
     newGroupParent.value = ''
   } catch (error) {
-    groupStore.error = error.message || 'خطا در اضافه کردن گروه'
+    groupStore.error = error.message || $t('groupManager.errorAddingGroup')
   }
 }
 
@@ -346,6 +346,7 @@ const confirmDeleteGroup = async (groupToDelete) => {
 //     await groupStore.loadGroups();
 // });
 </script>
+
 
 <style scoped>
 .group-manager-container {

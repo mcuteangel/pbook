@@ -1,22 +1,31 @@
 <template>
   <li class="field-item">
     <div class="field-info">
-      <strong>{{ field.label }}</strong> (نوع: {{ displayFieldType(field.type) }})
+      <strong>{{ field.label }}</strong> ({{ $t('customFields.fieldType') }}:
+      {{ displayFieldType(field.type) }})
       <div v-if="field.type === 'select' && field.options && field.options.length">
-        <em>گزینه‌ها: {{ field.options.join(', ') }}</em>
+        <em>{{ $t('customFields.optionsLabel') }}: {{ field.options.join(', ') }}</em>
       </div>
       <div v-if="field.order">
-        <em>ترتیب: {{ field.order }}</em>
+        <em>{{ $t('customFields.displayOrder') }}: {{ field.order }}</em>
       </div>
     </div>
     <div class="field-actions">
-      <button @click="onEdit" class="edit-btn" :disabled="isLoading">ویرایش</button>
-      <button @click="onDelete" class="delete-btn" :disabled="isLoading">حذف</button>
+      <button @click="onEdit" class="edit-btn" :disabled="isLoading">
+        {{ $t('customFields.editField') }}
+      </button>
+      <button @click="onDelete" class="delete-btn" :disabled="isLoading">
+        {{ $t('contactList.deleteButton') }}
+      </button>
     </div>
   </li>
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 const props = defineProps({
   field: {
     type: Object,
@@ -32,12 +41,12 @@ const emit = defineEmits(['edit-field', 'delete-field'])
 
 const displayFieldType = (type) => {
   const types = {
-    text: 'متن کوتاه',
-    textarea: 'متن بلند',
-    number: 'عدد',
-    date: 'تاریخ',
-    boolean: 'بله/خیر',
-    select: 'لیست گزینه‌ای',
+    text: t('customFields.typeText'),
+    textarea: t('customFields.typeTextarea'),
+    number: t('customFields.typeNumber'),
+    date: t('customFields.typeDate'),
+    boolean: t('customFields.typeBoolean'),
+    select: t('customFields.typeSelect'),
   }
   return types[type] || type
 }

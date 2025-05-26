@@ -15,7 +15,7 @@
         v-if="contact.contact.additionalPhones && contact.contact.additionalPhones.length > 0"
         class="additional-info"
       >
-        <strong>شماره‌های اضافی:</strong>
+        <strong>{{ $t('contactListItem.additionalPhones') }}:</strong>
         <ul>
           <li v-for="(additionalPhone, index) in contact.contact.additionalPhones" :key="index">
             {{ displayPhoneType(additionalPhone.type) }}: {{ additionalPhone.number }}
@@ -26,7 +26,7 @@
         v-if="contact.contact.addresses && contact.contact.addresses.length > 0"
         class="additional-info"
       >
-        <strong>آدرس‌ها:</strong>
+        <strong>{{ $t('contactListItem.addresses') }}:</strong>
         <ul>
           <li v-for="(address, index) in contact.contact.addresses" :key="index">
             <strong>{{ displayAddressType(address.type) }}</strong
@@ -35,8 +35,14 @@
             {{ address.city ? address.city : '' }}
             {{ address.province ? ', ' + address.province : '' }}
             {{ address.country ? ', ' + address.country : '' }}
-            {{ address.postalCode ? ' (کد پستی: ' + address.postalCode + ')' : '' }}
-            <span v-if="address.notes"> (یادداشت: {{ address.notes }})</span>
+            {{
+              address.postalCode
+                ? $t('contactListItem.postalCode') + ': ' + address.postalCode + ')'
+                : ''
+            }}
+            <span v-if="address.notes">
+              ({{ $t('contactListItem.notes') }}: {{ address.notes }})</span
+            >
           </li>
         </ul>
       </div>
@@ -48,14 +54,14 @@
         @click="$emit('edit', contact.contact)"
         :disabled="loading"
       >
-        <IconWrapper icon="fa-solid fa-pen-to-square" /> ویرایش
+        <IconWrapper icon="fa-solid fa-pen-to-square" /> {{ $t('contactListItem.edit') }}
       </button>
       <button
         class="button delete-button"
         type="button"
         @click="$emit('delete', contact.contact.id)"
       >
-        <IconWrapper icon="fa-solid fa-trash" /> حذف
+        <IconWrapper icon="fa-solid fa-trash" /> {{ $t('contactListItem.delete') }}
       </button>
     </div>
   </li>

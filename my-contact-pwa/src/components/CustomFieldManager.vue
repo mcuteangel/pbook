@@ -1,29 +1,29 @@
 <template>
   <div class="custom-field-manager-container">
-    <h2>مدیریت فیلدهای سفارشی</h2>
+    <h2>{{ $t('customFieldManager.title') }}</h2>
 
     <!-- قسمت جستجو -->
     <div class="search-section">
       <input
         v-model="searchQuery"
         type="text"
-        placeholder="جستجو در فیلدها..."
+        :placeholder="$t('customFieldManager.searchPlaceholder')"
         class="search-input"
       />
       <select v-model="filterType" class="filter-select">
-        <option value="">همه انواع</option>
-        <option value="text">متن</option>
-        <option value="number">عدد</option>
-        <option value="date">تاریخ شمسی</option>
-        <option value="select">لیست گزینه‌ها</option>
-        <option value="boolean">بله/خیر</option>
+        <option value="">{{ $t('customFieldManager.allTypes') }}</option>
+        <option value="text">{{ $t('customFields.typeText') }}</option>
+        <option value="number">{{ $t('customFields.typeNumber') }}</option>
+        <option value="date">{{ $t('customFields.typeDate') }}</option>
+        <option value="select">{{ $t('customFields.typeSelect') }}</option>
+        <option value="boolean">{{ $t('customFields.typeBoolean') }}</option>
       </select>
     </div>
 
     <!-- قسمت اضافه کردن فیلد جدید -->
     <div class="field-add-section">
       <button @click="showAddFieldDialog = true" class="add-field-button">
-        <i class="fas fa-plus"></i> اضافه کردن فیلد جدید
+        <i class="fas fa-plus"></i> {{ $t('customFields.addNewField') }}
       </button>
     </div>
 
@@ -31,53 +31,43 @@
     <teleport to="body">
       <div v-if="showAddFieldDialog" class="dialog-overlay">
         <div class="dialog-box">
-          <h3>افزودن فیلد سفارشی جدید</h3>
+          <h3>{{ $t('customFieldManager.addNewFieldDialogTitle') }}</h3>
           <div class="form-group">
-            <label for="fieldName">نام فیلد:</label>
+            <label for="fieldName">{{ $t('customFields.fieldLabel') }}:</label>
             <input
               type="text"
               id="fieldName"
               v-model="newFieldName"
-              placeholder="نام فیلد را وارد کنید"
+              :placeholder="$t('customFieldManager.fieldNamePlaceholder')"
               required
             />
           </div>
           <div class="form-group">
-            <label for="fieldType">نوع داده:</label>
-            <select
-              id="fieldType"
-              v-model="newFieldType"
-              required
-            >
-              <option value="text">متن</option>
-              <option value="number">عدد</option>
-              <option value="date">تاریخ شمسی</option>
-              <option value="select">لیست گزینه‌ها</option>
-              <option value="boolean">بله/خیر</option>
+            <label for="fieldType">{{ $t('customFields.fieldType') }}:</label>
+            <select id="fieldType" v-model="newFieldType" required>
+              <option value="text">{{ $t('customFields.typeText') }}</option>
+              <option value="number">{{ $t('customFields.typeNumber') }}</option>
+              <option value="date">{{ $t('customFields.typeDate') }}</option>
+              <option value="select">{{ $t('customFields.typeSelect') }}</option>
+              <option value="boolean">{{ $t('customFields.typeBoolean') }}</option>
             </select>
           </div>
           <div class="form-group" v-if="newFieldType === 'select'">
-            <label for="fieldOptions">گزینه‌های فیلد:</label>
+            <label for="fieldOptions">{{ $t('customFields.optionsLabel') }}:</label>
             <textarea
               id="fieldOptions"
               v-model="newFieldOptions"
-              placeholder="هر گزینه را در یک خط بنویسید"
+              :placeholder="$t('customFieldManager.fieldOptionsPlaceholder')"
               rows="3"
             ></textarea>
           </div>
           <div class="form-group">
-            <label for="fieldOrder">ترتیب نمایش:</label>
-            <input
-              type="number"
-              id="fieldOrder"
-              v-model="newFieldOrder"
-              min="0"
-              required
-            />
+            <label for="fieldOrder">{{ $t('customFields.displayOrder') }}:</label>
+            <input type="number" id="fieldOrder" v-model="newFieldOrder" min="0" required />
           </div>
           <div class="dialog-actions">
-            <button @click="addNewField">ذخیره</button>
-            <button @click="showAddFieldDialog = false">لغو</button>
+            <button @click="addNewField">{{ $t('customFields.addField') }}</button>
+            <button @click="showAddFieldDialog = false">{{ $t('customFields.cancel') }}</button>
           </div>
         </div>
       </div>
@@ -85,7 +75,7 @@
 
     <!-- وضعیت بارگذاری و خطا -->
     <div v-if="customFieldStore.loading" class="loading-message">
-      <i class="fas fa-spinner fa-spin"></i> در حال بارگذاری...
+      <i class="fas fa-spinner fa-spin"></i> {{ $t('customFieldManager.loading') }}
     </div>
     <div v-else-if="customFieldStore.error" class="error-message">
       <i class="fas fa-exclamation-circle"></i>
@@ -103,12 +93,15 @@
     <hr />
 
     <!-- لیست فیلدها -->
-    <h3>لیست فیلدهای تعریف شده</h3>
-    <div v-if="!customFieldStore.fieldDefinitions.length && !customFieldStore.loading" class="empty-state">
+    <h3>{{ $t('customFieldManager.listTitle') }}</h3>
+    <div
+      v-if="!customFieldStore.fieldDefinitions.length && !customFieldStore.loading"
+      class="empty-state"
+    >
       <i class="fas fa-list"></i>
-      <p>هیچ فیلد سفارشی تعریف نشده است.</p>
+      <p>{{ $t('customFieldManager.emptyStateMessage') }}</p>
       <button @click="showAddFieldDialog = true" class="add-first-field-button">
-        اضافه کردن فیلد اول
+        {{ $t('customFieldManager.addFirstFieldButton') }}
       </button>
     </div>
     <ul v-else class="field-list">
@@ -144,7 +137,7 @@ const filterType = ref('')
 
 // محاسبه فیلدهای فیلتر شده
 const filteredFields = computed(() => {
-  return customFieldStore.fieldDefinitions.filter(field => {
+  return customFieldStore.fieldDefinitions.filter((field) => {
     const matchesSearch = field.label.toLowerCase().includes(searchQuery.value.toLowerCase())
     const matchesType = !filterType.value || field.type === filterType.value
     return matchesSearch && matchesType
@@ -191,20 +184,21 @@ const handleSaveFieldDefinition = async (fieldData) => {
 const addNewField = async () => {
   const name = newFieldName.value.trim()
   if (!name) {
-    customFieldStore.error = 'لطفاً نام فیلد را وارد کنید'
+    customFieldStore.error = $t('customFields.validation.labelRequired')
     return
   }
 
   try {
-    const options = newFieldType.value === 'select' 
-      ? newFieldOptions.value.split('\n').map(opt => opt.trim())
-      : undefined
+    const options =
+      newFieldType.value === 'select'
+        ? newFieldOptions.value.split('\n').map((opt) => opt.trim())
+        : undefined
 
     await customFieldStore.addFieldDefinition({
       label: name,
       type: newFieldType.value,
       options,
-      order: parseInt(newFieldOrder.value) || 0
+      order: parseInt(newFieldOrder.value) || 0,
     })
 
     showAddFieldDialog.value = false
@@ -213,16 +207,19 @@ const addNewField = async () => {
     newFieldOptions.value = ''
     newFieldOrder.value = 0
   } catch (error) {
-    customFieldStore.error = error.message || 'خطا در اضافه کردن فیلد'
+    customFieldStore.error = error.message || $t('customFieldManager.errorSavingField')
   }
 }
 
 // تابع تایید حذف فیلد
 const confirmDeleteField = async (fieldId) => {
-  const fieldToDelete = customFieldStore.fieldDefinitions.find(f => f.id === fieldId)
-  if (!fieldToDelete || !confirm(
-    `آیا از حذف فیلد سفارشی "${fieldToDelete.label}" مطمئن هستید؟ این عمل، این فیلد را از تمام مخاطبین نیز حذف خواهد کرد.`
-  )) {
+  const fieldToDelete = customFieldStore.fieldDefinitions.find((f) => f.id === fieldId)
+  if (
+    !fieldToDelete ||
+    !confirm(
+      `آیا از حذف فیلد سفارشی "${fieldToDelete.label}" مطمئن هستید؟ این عمل، این فیلد را از تمام مخاطبین نیز حذف خواهد کرد.`,
+    )
+  ) {
     return
   }
 

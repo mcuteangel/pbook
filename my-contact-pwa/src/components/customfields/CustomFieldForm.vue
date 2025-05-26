@@ -1,66 +1,86 @@
 <template>
   <form @submit.prevent="onSave" class="field-form">
-    <h3>{{ isEditing ? 'ویرایش فیلد' : 'افزودن فیلد جدید' }}</h3>
+    <h3>{{ isEditing ? $t('customFields.editField') : $t('customFields.addNewField') }}</h3>
     <div v-if="customFieldStore.error" class="error-message" style="color: red">
       {{ customFieldStore.error }}
     </div>
     <div>
-      <label for="fieldLabel">برچسب فیلد:</label>
+      <label for="fieldLabel">{{ $t('customFields.fieldLabel') }}</label>
       <input type="text" id="fieldLabel" v-model="localField.label" required />
     </div>
     <div>
-      <label for="fieldType">نوع فیلد:</label>
-      <select id="fieldType" v-model="localField.type" required @change="handleTypeChange">
-        <option value="text">متن (کوتاه)</option>
-        <option value="textarea">متن (بلند)</option>
-        <option value="number">عدد</option>
-        <option value="date">تاریخ</option>
-        <option value="boolean">چک‌باکس (بله/خیر)</option>
-        <option value="select">لیست گزینه‌ای</option>
+      <label for="fieldType">{{ $t('customFields.fieldType') }}</label>
+      <select id="fieldType" v-model="localField.type" required @change="handleTypeChange" :disabled="isEditing">
+        <option value="text">{{ $t('customFields.typeText') }}</option>
+        <option value="textarea">{{ $t('customFields.typeTextarea') }}</option>
+        <option value="number">{{ $t('customFields.typeNumber') }}</option>
+        <option value="date">{{ $t('customFields.typeDate') }}</option>
+        <option value="boolean">{{ $t('customFields.typeBoolean') }}</option>
+        <option value="select">{{ $t('customFields.typeSelect') }}</option>
       </select>
+      <div v-if="isEditing" class="info-message" style="font-size: 0.9em; color: var(--color-text-secondary); margin-top: 5px;">
+        {{ $t('customFields.warningTypeNotEditable') }}
+      </div>
     </div>
 
     <div v-if="localField.type === 'select'" class="options-section">
-      <label>گزینه‌ها (برای لیست کشویی):</label>
-      <div v-for="(option, index) in localField.options" :key="index" class="option-input">
-        <input type="text" v-model="localField.options[index]" placeholder="مقدار گزینه" />
+      <label>{{ $t('customFields.optionsLabel') }}</label>
+      <div v-for="(option, index) in localField.options" :key="index" class="option-input-group">
+        <div class="option-inputs">
+          <input
+            type="text"
+            v-model="localField.options[index].value"
+            :placeholder="$t('customFields.optionValuePlaceholder')" 
+            class="option-value-input"
+          />
+          <input
+            type="text"
+            v-model="localField.options[index].label"
+            :placeholder="$t('customFields.optionLabelPlaceholder')" 
+            class="option-label-input"
+          />
+        </div>
         <button type="button" @click="removeOption(index)" class="remove-option-btn">X</button>
       </div>
-      <button type="button" @click="addOption" class="add-option-btn">+ افزودن گزینه</button>
+      <button type="button" @click="addOption" class="add-option-btn">
+        {{ $t('customFields.addOption') }}
+      </button>
     </div>
     <div>
-      <label for="fieldOrder">ترتیب نمایش (اختیاری):</label>
+      <label for="fieldOrder">{{ $t('customFields.displayOrder') }}</label>
       <input type="number" id="fieldOrder" v-model.number="localField.order" />
     </div>
 
     <div class="form-actions">
       <button type="submit" :disabled="customFieldStore.loading">
-        {{ isEditing ? 'ذخیره تغییرات' : 'افزودن فیلد' }}
+        {{ isEditing ? $t('customFields.saveChanges') : $t('customFields.addField') }}
       </button>
       <button type="button" v-if="isEditing" @click="onCancel" :disabled="customFieldStore.loading">
-        انصراف
+        {{ $t('customFields.cancel') }}
       </button>
     </div>
   </form>
 </template>
 
 <script setup>
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useCustomFieldStore } from '../../store/customFields'
 
 const props = defineProps({
-  fieldToEdit: Object, // فیلدی که برای ویرایش پاس داده می‌شود
+  fieldToEdit: Object, // {{ $t('customFields.fieldToEditComment') }}
 })
 
 const emit = defineEmits(['save-field', 'cancel-edit'])
 
-const customFieldStore = useCustomFieldStore()
+const customFieldStore = useCustomFieldStore();
+const { t } = useI18n();
 
 const defaultFieldState = () => ({
   id: null,
   label: '',
   type: 'text',
-  options: [],
+  options: [], // Array of { value: '', label: '' }
   order: 0,
 })
 
@@ -73,10 +93,20 @@ watch(
     if (newField && newField.id) {
       isEditing.value = true
       localField.id = newField.id
-      localField.label = newField.label
-      localField.type = newField.type
-      localField.options = newField.options ? [...newField.options] : []
-      localField.order = newField.order || 0
+      localField.label = newField.label;
+      localField.type = newField.type;
+      if (newField.options && newField.options.length > 0) {
+        if (typeof newField.options[0] === 'string') {
+          // Migrate old string array to new {value, label} structure
+          localField.options = newField.options.map(optStr => ({ value: optStr, label: optStr }));
+        } else {
+          // Already new structure, ensure deep copy
+          localField.options = JSON.parse(JSON.stringify(newField.options));
+        }
+      } else {
+        localField.options = [];
+      }
+      localField.order = newField.order || 0;
     } else {
       isEditing.value = false
       Object.assign(localField, defaultFieldState())
@@ -95,31 +125,51 @@ const handleTypeChange = () => {
 }
 
 const addOption = () => {
-  localField.options.push('')
-}
+  localField.options.push({ value: '', label: '' });
+};
 
 const removeOption = (index) => {
   localField.options.splice(index, 1)
 }
 
 const onSave = () => {
-  if (!localField.label.trim()) {
-    customFieldStore.error = 'برچسب فیلد نمی‌تواند خالی باشد.'
-    return
+  if (!localField.label || !localField.label.trim()) {
+    customFieldStore.error = t('customFields.validation.labelRequired');
+    return;
   }
-  if (localField.type === 'select' && localField.options.every((opt) => !opt.trim())) {
-    customFieldStore.error = 'حداقل یک گزینه برای لیست گزینه‌ای باید مقدار داشته باشد.'
-    return
-  }
+
   if (localField.type === 'select') {
-    localField.options = localField.options.filter((opt) => opt.trim() !== '')
-    if (localField.options.length === 0) {
-      customFieldStore.error = 'برای فیلد از نوع گزینه‌ای، حداقل یک گزینه معتبر باید تعریف شود.'
-      return
+    // Filter out options where value is empty or only whitespace
+    let validOptions = localField.options.filter(opt => opt.value && opt.value.trim() !== '');
+
+    // Ensure labels are set, defaulting to value if label is empty or only whitespace
+    validOptions.forEach(opt => {
+      if (!opt.label || opt.label.trim() === '') {
+        opt.label = opt.value;
+      }
+    });
+
+    // Check for duplicate values
+    const valueSet = new Set();
+    for (const opt of validOptions) {
+      if (valueSet.has(opt.value)) {
+        customFieldStore.error = t('customFields.validation.duplicateOptionValues');
+        return;
+      }
+      valueSet.add(opt.value);
     }
+
+    if (validOptions.length === 0) {
+      customFieldStore.error = t('customFields.validation.selectValidOptionRequired');
+      return;
+    }
+    localField.options = validOptions; // Assign the processed valid options back
   }
-  emit('save-field', { ...localField })
-}
+
+  // Clear error if all validations pass for select or other types
+  customFieldStore.error = null;
+  emit('save-field', { ...localField });
+};
 
 const onCancel = () => {
   emit('cancel-edit')
@@ -133,10 +183,18 @@ onMounted(() => {
   if (props.fieldToEdit && props.fieldToEdit.id) {
     isEditing.value = true
     localField.id = props.fieldToEdit.id
-    localField.label = props.fieldToEdit.label
-    localField.type = props.fieldToEdit.type
-    localField.options = props.fieldToEdit.options ? [...props.fieldToEdit.options] : []
-    localField.order = props.fieldToEdit.order || 0
+    localField.label = props.fieldToEdit.label;
+    localField.type = props.fieldToEdit.type;
+    if (props.fieldToEdit.options && props.fieldToEdit.options.length > 0) {
+      if (typeof props.fieldToEdit.options[0] === 'string') {
+        localField.options = props.fieldToEdit.options.map(optStr => ({ value: optStr, label: optStr }));
+      } else {
+        localField.options = JSON.parse(JSON.stringify(props.fieldToEdit.options));
+      }
+    } else {
+      localField.options = [];
+    }
+    localField.order = props.fieldToEdit.order || 0;
   } else {
     isEditing.value = false
     Object.assign(localField, defaultFieldState())
@@ -200,38 +258,43 @@ onMounted(() => {
   border: none;
 }
 .remove-option-btn {
-  background-color: var(--color-danger-bg);
-  color: var(--color-danger-text);
+  background-color: var(--color-danger);
+  color: white;
 }
 .add-option-btn {
-  background-color: var(--color-success-bg);
-  color: var(--color-success-text);
-  display: block;
-  margin-top: 5px;
+  background-color: var(--color-primary);
+  color: white;
 }
-
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
 .form-actions button {
-  padding: 10px 15px;
-  border: none;
+  padding: 10px 20px;
   border-radius: 4px;
   cursor: pointer;
-  margin-right: 10px;
-  background-color: var(--color-link-primary);
-  color: var(--color-link-text);
+  border: none;
+  font-weight: bold;
 }
-.form-actions button:disabled {
-  background-color: var(--color-button-disabled-bg);
-  color: var(--color-button-disabled-text);
+.form-actions button[type='submit'] {
+  background-color: var(--color-success);
+  color: white;
 }
 .form-actions button[type='button'] {
-  background-color: var(--color-text-tertiary);
+  background-color: var(--color-secondary);
+  color: white;
+}
+.form-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .error-message {
-  padding: 10px;
   margin-bottom: 15px;
+  padding: 10px;
+  background-color: var(--color-danger-light);
+  border: 1px solid var(--color-danger);
   border-radius: 4px;
-  text-align: center;
-  background-color: var(--color-danger-light-bg);
-  color: var(--color-danger-light-text);
+  color: var(--color-danger-dark);
 }
 </style>

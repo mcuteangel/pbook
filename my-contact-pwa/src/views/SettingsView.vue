@@ -1,15 +1,22 @@
 <template>
   <div class="settings-container glass-container">
-    <h1 class="page-title">تنظیمات برنامه</h1>
+    <h1 class="page-title">{{ $t('settingsView.title') }}</h1>
 
     <!-- Theme Toggle -->
     <section class="theme-toggle-section settings-section glass-section">
-      <h3>تم برنامه</h3>
+      <h3>{{ $t('settingsView.themeSectionTitle') }}</h3>
       <button @click="toggleTheme" class="theme-toggle-button glass-btn">
         <IconWrapper :icon="isDarkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon'" />
-        تغییر به تم {{ isDarkMode ? 'روشن' : 'تاریک' }}
+        {{
+          $t('settingsView.toggleThemeButton', {
+            theme: isDarkMode ? $t('settingsView.lightTheme') : $t('settingsView.darkTheme'),
+          })
+        }}
       </button>
-      <p>تم فعلی: {{ isDarkMode ? 'تاریک' : 'روشن' }}</p>
+      <p>
+        {{ $t('settingsView.currentThemeLabel') }}
+        {{ isDarkMode ? $t('settingsView.darkTheme') : $t('settingsView.lightTheme') }}
+      </p>
     </section>
 
     <!-- Display Column Settings -->

@@ -3,12 +3,12 @@
     <div class="search-control">
       <label for="search">
         <span style="margin-left: 2px"><IconWrapper icon="fa-solid fa-magnifying-glass" /></span>
-        جستجو:
+        {{ $t('contactList.search') }}:
       </label>
       <input
         id="search"
         v-model="searchQuery"
-        placeholder="جستجو در مخاطبین..."
+        :placeholder="$t('contactList.searchPlaceholder')"
         class="control-input flat-input"
         type="text"
       />
@@ -16,17 +16,17 @@
     <div class="sort-controls">
       <label for="sortField">
         <span style="margin-left: 2px"><IconWrapper icon="fa-solid fa-arrow-up-a-z" /></span>
-        مرتب‌سازی بر اساس:
+        {{ $t('contactList.sortBy') }}:
       </label>
       <select id="sortField" v-model="sortField" class="control-select flat-select">
         <option v-for="option in sortOptions" :key="option.value" :value="option.value">
           {{ option.label }}
         </option>
       </select>
-      <label for="sortOrder">ترتیب:</label>
+      <label for="sortOrder">{{ $t('contactList.sortOrder') }}:</label>
       <select id="sortOrder" v-model="sortOrder" class="control-select flat-select">
-        <option value="asc">صعودی</option>
-        <option value="desc">نزولی</option>
+        <option value="asc">{{ $t('contactList.sortOrderAsc') }}</option>
+        <option value="desc">{{ $t('contactList.sortOrderDesc') }}</option>
       </select>
     </div>
     <button
@@ -35,7 +35,7 @@
       class="advanced-filter-button flat-input"
     >
       <span style="margin-left: 4px"><IconWrapper icon="fa-solid fa-sliders" /></span>
-      فیلتر پیشرفته
+      {{ $t('contactList.advancedFilter') }}
       <span v-if="!isFilterSectionVisible"><IconWrapper icon="fa-solid fa-chevron-down" /></span>
       <span v-else><IconWrapper icon="fa-solid fa-chevron-up" /></span>
     </button>

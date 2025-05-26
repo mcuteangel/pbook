@@ -1,334 +1,72 @@
 <template>
   <div class="contact-list-wrapper">
     <h2>
-      <span style="margin-left: 6px"><IconWrapper icon="fa-solid fa-magnifying-glass" /></span> لیست
-      مخاطبین
+      <span style="margin-left: 6px"><IconWrapper icon="fa-solid fa-magnifying-glass" /></span>
+      {{ $t('contactList.title') }}
     </h2>
 
-    <div class="controls-container">
-      <div class="search-control">
-        <label for="search">
-          <span style="margin-left: 2px"><IconWrapper icon="fa-solid fa-magnifying-glass" /></span>
-          جستجو:
-        </label>
-        <input
-          id="search"
-          v-model="contactStore.searchQuery"
-          placeholder="جستجو در مخاطبین..."
-          class="control-input flat-input"
-          type="text"
-        />
-      </div>
+    <ContactListHeader
+      v-model:searchQuery="contactStore.searchQuery"
+      v-model:sortField="contactStore.sortField"
+      v-model:sortOrder="contactStore.sortOrder"
+      :sortOptions="sortOptions"
+      :isFilterSectionVisible="isFilterSectionVisible"
+      @toggleFilterSection="toggleFilterSection"
+    />
 
-      <div class="sort-controls">
-        <label for="sortField">
-          <span style="margin-left: 2px"><IconWrapper icon="fa-solid fa-arrow-up-a-z" /></span>
-          مرتب‌سازی بر اساس:
-        </label>
-        <select id="sortField" v-model="contactStore.sortField" class="control-select flat-select">
-          <option v-for="option in sortOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-
-        <label for="sortOrder">ترتیب:</label>
-        <select id="sortOrder" v-model="contactStore.sortOrder" class="control-select flat-select">
-          <option value="asc">صعودی</option>
-          <option value="desc">نزولی</option>
-        </select>
-      </div>
-
-      <button type="button" @click="toggleFilterSection" class="advanced-filter-button flat-input">
-        <span style="margin-left: 4px"><IconWrapper icon="fa-solid fa-sliders" /></span>
-        فیلتر پیشرفته
-        <span v-if="!isFilterSectionVisible"><IconWrapper icon="fa-solid fa-chevron-down" /></span>
-        <span v-else><IconWrapper icon="fa-solid fa-chevron-up" /></span>
-      </button>
-    </div>
-
-    <div v-if="isFilterSectionVisible" class="advanced-filter-section">
-      <h3>
-        <span style="margin-left: 4px"><IconWrapper icon="fa-solid fa-list" /></span> قوانین فیلتر
-      </h3>
-
-      <div class="add-rule-form">
-        <h4>افزودن قانون جدید:</h4>
-        <select v-model="newRule.field" class="rule-control flat-select">
-          <option value="" disabled>انتخاب فیلد</option>
-          <option v-for="field in filterableFields" :key="field.value" :value="field.value">
-            {{ field.label }}
-          </option>
-        </select>
-        <select
-          v-model="newRule.operator"
-          class="rule-control flat-select"
-          :disabled="!newRule.field"
-        >
-          <option value="" disabled>انتخاب عملگر</option>
-          <option
-            v-for="operator in availableOperators"
-            :key="operator.value"
-            :value="operator.value"
-          >
-            {{ operator.label }}
-          </option>
-        </select>
-        <template v-if="selectedNewRuleFieldDefinition">
-          <input
-            v-if="['text', 'textarea'].includes(selectedNewRuleFieldDefinition.type)"
-            v-model="newRule.value"
-            :placeholder="`مقدار فیلتر (${selectedNewRuleFieldDefinition.label})`"
-            class="rule-control flat-input"
-            :disabled="
-              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
-            "
-            :type="selectedNewRuleFieldDefinition.type === 'textarea' ? 'text' : 'text'"
-          />
-          <input
-            v-else-if="selectedNewRuleFieldDefinition.type === 'number'"
-            v-model.number="newRule.value"
-            :placeholder="`مقدار فیلتر عددی (${selectedNewRuleFieldDefinition.label})`"
-            class="rule-control flat-input"
-            :disabled="
-              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
-            "
-            type="number"
-          />
-          <PersianDatePicker
-            v-else-if="selectedNewRuleFieldDefinition.type === 'date'"
-            v-model="newRule.value"
-            placeholder="انتخاب تاریخ شمسی"
-            :disabled="
-              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
-            "
-            clearable
-            input-class="rule-control flat-input"
-          />
-          <select
-            v-else-if="
-              ['select', 'boolean', 'gender', 'group'].includes(selectedNewRuleFieldDefinition.type)
-            "
-            v-model="newRule.value"
-            class="rule-control flat-select"
-            :disabled="
-              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
-            "
-          >
-            <option value="" disabled>انتخاب مقدار</option>
-            <option v-for="option in valueSelectOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-          <input
-            v-else
-            v-model="newRule.value"
-            placeholder="مقدار فیلتر (نوع نامشخص)"
-            class="rule-control flat-input"
-            :disabled="
-              !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
-            "
-            type="text"
-          />
-        </template>
-        <span v-else class="rule-control-placeholder"> فیلد را انتخاب کنید </span>
-        <button
-          type="button"
-          class="button add-rule-btn"
-          @click="addNewRule"
-          :disabled="
-            !newRule.field ||
-            !newRule.operator ||
-            (newRule.operator !== 'isNull' &&
-              newRule.operator !== 'isNotNull' &&
-              (newRule.value === null || newRule.value === ''))
-          "
-        >
-          ➕ افزودن قانون
-        </button>
-      </div>
-
-      <div class="current-rules-list">
-        <h4>قوانین فیلتر فعال:</h4>
-        <p v-if="currentFilterRules.length === 0" class="no-rules-message">
-          هنوز قانونی اضافه نشده است. برای شروع، فیلد و عملگر را انتخاب کنید.
-        </p>
-
-        <div v-for="(rule, index) in currentFilterRules" :key="index" class="filter-rule-item">
-          <p>
-            <span class="rule-field-label">
-              {{ filterableFields.find((f) => f.value === rule.field)?.label || rule.field }}:
-            </span>
-            <span class="rule-operator-label"> {{ getRuleOperatorLabel(rule) }} </span>
-            <span
-              v-if="
-                rule.value !== null &&
-                rule.operator !== 'isNull' &&
-                rule.operator !== 'isNotNull' &&
-                rule.value !== ''
-              "
-              class="rule-value"
-            >
-              "{{ formatRuleValue(rule) }}"
-            </span>
-            <span
-              v-else-if="rule.operator === 'isNull' || rule.operator === 'isNotNull'"
-              class="rule-value-none"
-            >
-              (بدون نیاز به مقدار)
-            </span>
-          </p>
-          <button type="button" class="button delete-button" @click="removeRule(index)">
-            🗑️ حذف
-          </button>
-        </div>
-      </div>
-
-      <hr v-if="currentFilterRules.length > 0" class="filter-section-separator" />
-
-      <div class="filter-actions">
-        <button
-          type="button"
-          class="button apply-filter-btn"
-          @click="applyFilters"
-          :disabled="currentFilterRules.length === 0"
-        >
-          ✔️ اعمال فیلتر
-        </button>
-        <button
-          type="button"
-          class="button clear-filter-btn"
-          @click="clearFilters"
-          :disabled="currentFilterRules.length === 0"
-        >
-          ❌ پاک کردن همه
-        </button>
-      </div>
-    </div>
+    <ContactListAdvancedFilter
+      v-if="isFilterSectionVisible"
+      :filterRules="currentFilterRules"
+      :filterableFields="filterableFields"
+      :valueSelectOptions="valueSelectOptions"
+      @addRule="addNewRule"
+      @removeRule="removeRule"
+      @applyFilters="applyFilters"
+      @clearFilters="clearFilters"
+    />
 
     <hr class="separator" />
     <div v-if="contactStore.loading" class="status-message loading">
-      <span style="font-size: 1.2em">⏳</span>
-      در حال بارگذاری مخاطبین...
+      <span style="font-size: 1.2em">⏳</span> {{ $t('contactList.loadingContacts') }}
     </div>
     <div v-else-if="contactStore.error" class="status-message error">
       <span style="font-size: 1.2em">❗</span>
       {{ contactStore.error }}
     </div>
     <div v-else-if="paginatedContacts.length === 0" class="status-message no-results">
-      <span style="font-size: 1.2em">⚠️</span>
-      هیچ مخاطبی یافت نشد.
+      <span style="font-size: 1.2em">⚠️</span> {{ $t('contactList.noContactsFound') }}
       <span
         v-if="
           contactStore.contacts.length > 0 &&
           (contactStore.searchQuery || contactStore.filterRules.length > 0)
         "
       >
-        (با معیارهای جستجو/فیلتر مطابقت ندارد.)
+        ({{ $t('contactList.noMatchCriteria') }})
       </span>
     </div>
 
     <ul v-else class="contact-list">
-      <li
+      <ContactListItem
         v-for="contactItem in contactsPreparedForDisplay"
         :key="contactItem.contact.id"
-        class="contact-item"
-      >
-        <div class="contact-info">
-          <router-link
-            :to="{ name: 'contact-detail', params: { id: contactItem.contact.id } }"
-            class="contact-name-link"
-          >
-            <IconWrapper icon="fa-solid fa-user" />
-            {{ contactItem.contact.name }} {{ contactItem.contact.lastName }}
-          </router-link>
-
-          <p v-for="fieldData in contactItem.displayData" :key="fieldData.key">
-            <strong>{{ fieldData.label }}:</strong> {{ fieldData.value }}
-          </p>
-
-          <div
-            v-if="
-              contactItem.contact.additionalPhones &&
-              contactItem.contact.additionalPhones.length > 0
-            "
-            class="additional-info"
-          >
-            <strong>شماره‌های اضافی:</strong>
-            <ul>
-              <li
-                v-for="(additionalPhone, index) in contactItem.contact.additionalPhones"
-                :key="index"
-              >
-                {{ displayPhoneType(additionalPhone.type) }}: {{ additionalPhone.number }}
-              </li>
-            </ul>
-          </div>
-
-          <div
-            v-if="contactItem.contact.addresses && contactItem.contact.addresses.length > 0"
-            class="additional-info"
-          >
-            <strong>آدرس‌ها:</strong>
-            <ul>
-              <li v-for="(address, index) in contactItem.contact.addresses" :key="index">
-                <strong>{{ displayAddressType(address.type) }}</strong
-                >:
-                {{ address.street ? address.street + ', ' : '' }}
-                {{ address.city ? address.city : '' }}
-                {{ address.province ? ', ' + address.province : '' }}
-                {{ address.country ? ', ' + address.country : '' }}
-                {{ address.postalCode ? ' (کد پستی: ' + address.postalCode + ')' : '' }}
-                <span v-if="address.notes"> (یادداشت: {{ address.notes }})</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="contact-actions">
-          <button
-            class="button edit-button"
-            type="button"
-            @click="startEditingContact(contactItem.contact)"
-            :disabled="contactStore.loading"
-          >
-            <IconWrapper icon="fa-solid fa-pen-to-square" /> ویرایش
-          </button>
-
-          <button
-            class="button delete-button"
-            type="button"
-            @click="confirmDeleteContact(contactItem.contact.id)"
-          >
-            <IconWrapper icon="fa-solid fa-trash" /> حذف
-          </button>
-        </div>
-      </li>
+        :contact="contactItem"
+        :loading="contactStore.loading"
+        @edit="startEditingContact"
+        @delete="confirmDeleteContact"
+      />
     </ul>
 
-    <div v-if="totalPages > 1" class="pagination-controls">
-      <button @click="prevPage" :disabled="currentPage === 1" class="pagination-button">
-        <IconWrapper icon="fa-solid fa-arrow-right" /> قبلی
-      </button>
-      <span>صفحه {{ currentPage }} از {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="currentPage === totalPages" class="pagination-button">
-        بعدی <IconWrapper icon="fa-solid fa-arrow-left" />
-      </button>
-
-      <div class="page-numbers">
-        <button
-          v-for="page in totalPages"
-          :key="page"
-          @click="goToPage(page)"
-          :class="['page-number-button', { active: currentPage === page }]"
-        >
-          <span v-if="currentPage === page"><IconWrapper icon="fa-solid fa-circle" /></span>
-          {{ page }}
-        </button>
-      </div>
-    </div>
+    <ContactListPagination
+      v-if="totalPages > 1"
+      :currentPage="currentPage"
+      :totalPages="totalPages"
+      @prevPage="prevPage"
+      @nextPage="nextPage"
+      @goToPage="goToPage"
+    />
 
     <div class="total-contacts">
-      تعداد کل مخاطبین (بر اساس فیلتر فعلی): {{ totalContactsOnCurrentFilter }}
+      {{ $t('contactList.totalContacts') }}: {{ totalContactsOnCurrentFilter }}
     </div>
   </div>
 </template>
@@ -336,6 +74,9 @@
 <script setup>
 import { computed, ref, watch, watchEffect } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
+import { useFiltering } from '@/composables/useFiltering'
+import { usePagination } from '@/composables/usePagination'
 import { useContactStore } from '@/store/contacts'
 import { useCustomFieldStore } from '@/store/customFields'
 import { useGroupStore } from '@/store/groups'
@@ -350,14 +91,18 @@ import {
   displayAddressType,
 } from '@/utils/formatters'
 import moment from 'moment-jalaali'
-import PersianDatePicker from '@/components/shared/PersianDatePicker.vue'
-import IconWrapper from '@/components/icons/IconWrapper.vue'
+import { IconWrapper, PersianDatePicker } from '@/components/common/commonComponents'
+import ContactListHeader from './ContactListHeader.vue'
+import ContactListAdvancedFilter from './ContactListAdvancedFilter.vue'
+import ContactListItem from './ContactListItem.vue'
+import ContactListPagination from './ContactListPagination.vue'
 
 const contactStore = useContactStore()
 const customFieldStore = useCustomFieldStore()
 const groupStore = useGroupStore()
 const settingsStore = useSettingsStore()
 const router = useRouter()
+const { t } = useI18n()
 
 const { displayColumns } = storeToRefs(settingsStore)
 const { fieldDefinitions } = storeToRefs(customFieldStore)
@@ -365,18 +110,18 @@ const { filteredAndSortedContacts } = storeToRefs(contactStore)
 
 const contactsPreparedForDisplay = ref([])
 
-const standardFieldLabels = {
-  phone: 'تلفن ',
-  group: 'گروه',
-  birthDate: 'تاریخ تولد',
-  title: 'سمت / تخصص',
-  createdAt: 'تاریخ ایجاد',
-  updatedAt: 'آخرین ویرایش',
-  'address.city': 'شهر (آدرس)',
-  'address.street': 'خیابان (آدرس)',
-  notes: 'یادداشت',
-  gender: 'جنسیت',
-}
+const standardFieldLabels = computed(() => ({
+  phone: t('contactList.fields.phone'),
+  group: t('contactList.fields.group'),
+  birthDate: t('contactList.fields.birthDate'),
+  title: t('contactList.fields.title'),
+  createdAt: t('contactList.fields.createdAt'),
+  updatedAt: t('contactList.fields.updatedAt'),
+  'address.city': t('contactList.fields.addressCity'),
+  'address.street': t('contactList.fields.addressStreet'),
+  notes: t('contactList.fields.notes'),
+  gender: t('contactList.fields.gender'),
+}))
 
 const standardFieldTypes = {
   phone: 'text',
@@ -395,7 +140,23 @@ const isFilterSectionVisible = ref(false)
 const toggleFilterSection = () => {
   isFilterSectionVisible.value = !isFilterSectionVisible.value
 }
-const currentFilterRules = ref([])
+
+// استفاده از کامپوزابل فیلترینگ
+const filterContacts = (contact, rules) => {
+  return rules.every(rule => {
+    // منطق فیلتر کردن مخاطبین براساس قوانین فیلتر
+    // این منطق با منطق قبلی یکسان است و فقط به صورت منسجم‌تر در اینجا قرار می‌گیرد
+    return contactStore.filterContact(contact, rule);
+  });
+};
+
+const {
+  filterRules: currentFilterRules,
+  addFilterRule,
+  removeFilterRule,
+  clearFilters: clearFilterRules
+} = useFiltering(contactStore.contacts, filterContacts);
+
 const newRule = ref({
   field: null,
   operator: null,
@@ -414,16 +175,16 @@ watch(
 
 const filterableFields = computed(() => {
   const standardFields = [
-    { value: 'name', label: 'نام', type: 'text' },
-    { value: 'lastName', label: 'نام خانوادگی', type: 'text' },
-    { value: 'phone', label: 'تلفن اصلی', type: 'text' },
-    { value: 'title', label: 'سمت/تخصص', type: 'text' },
-    { value: 'notes', label: 'یادداشت/توضیحات', type: 'textarea' },
-    { value: 'createdAt', label: 'تاریخ ایجاد', type: 'date' },
-    { value: 'updatedAt', label: 'تاریخ ویرایش', type: 'date' },
-    { value: 'birthDate', label: 'تاریخ تولد', type: 'date' },
-    { value: 'gender', label: 'جنسیت', type: 'select' },
-    { value: 'group', label: 'گروه', type: 'select' },
+    { value: 'name', label: this.$t('contactList.fields.name'), type: 'text' },
+    { value: 'lastName', label: this.$t('contactList.fields.lastName'), type: 'text' },
+    { value: 'phone', label: this.$t('contactList.fields.phone'), type: 'text' },
+    { value: 'title', label: this.$t('contactList.fields.title'), type: 'text' },
+    { value: 'notes', label: this.$t('contactList.fields.notes'), type: 'textarea' },
+    { value: 'createdAt', label: this.$t('contactList.fields.createdAt'), type: 'date' },
+    { value: 'updatedAt', label: this.$t('contactList.fields.updatedAt'), type: 'date' },
+    { value: 'birthDate', label: this.$t('contactList.fields.birthDate'), type: 'date' },
+    { value: 'gender', label: this.$t('contactList.fields.gender'), type: 'select' },
+    { value: 'group', label: this.$t('contactList.fields.group'), type: 'select' },
   ]
 
   const customFields = fieldDefinitions.value.map((field) => ({
@@ -450,47 +211,47 @@ const availableOperators = computed(() => {
   const type = fieldDef?.type
   const operators = {
     text: [
-      { value: 'equals', label: 'مساوی با' },
-      { value: 'notEquals', label: 'مساوی نباشد با' },
-      { value: 'contains', label: 'شامل باشد' },
-      { value: 'notContains', label: 'شامل نباشد' },
-      { value: 'startsWith', label: 'شروع شود با' },
-      { value: 'endsWith', label: 'پایان یابد با' },
+      { value: 'equals', label: this.$t('contactList.operators.equals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
+      { value: 'contains', label: this.$t('contactList.operators.contains') },
+      { value: 'notContains', label: this.$t('contactList.operators.notContains') },
+      { value: 'startsWith', label: this.$t('contactList.operators.startsWith') },
+      { value: 'endsWith', label: this.$t('contactList.operators.endsWith') },
     ],
     textarea: [
-      { value: 'equals', label: 'مساوی با' },
-      { value: 'notEquals', label: 'مساوی نباشد با' },
-      { value: 'contains', label: 'شامل باشد' },
-      { value: 'notContains', label: 'شامل نباشد' },
+      { value: 'equals', label: this.$t('contactList.operators.equals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
+      { value: 'contains', label: this.$t('contactList.operators.contains') },
+      { value: 'notContains', label: this.$t('contactList.operators.notContains') },
     ],
     number: [
-      { value: 'equals', label: 'مساوی با' },
-      { value: 'notEquals', label: 'مساوی نباشد با' },
-      { value: 'greaterThan', label: 'بزرگتر از' },
-      { value: 'lessThan', label: 'کوچکتر از' },
-      { value: 'greaterThanOrEqual', label: 'بزرگتر یا مساوی' },
-      { value: 'lessThanOrEqual', label: 'کوچکتر یا مساوی' },
+      { value: 'equals', label: this.$t('contactList.operators.equals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
+      { value: 'greaterThan', label: this.$t('contactList.operators.greaterThan') },
+      { value: 'lessThan', label: this.$t('contactList.operators.lessThan') },
+      { value: 'greaterThanOrEqual', label: this.$t('contactList.operators.greaterThanOrEqual') },
+      { value: 'lessThanOrEqual', label: this.$t('contactList.operators.lessThanOrEqual') },
     ],
     date: [
-      { value: 'equals', label: 'مساوی با تاریخ' },
-      { value: 'notEquals', label: 'مساوی نباشد با تاریخ' },
-      { value: 'isBefore', label: 'قبل از تاریخ' },
-      { value: 'isAfter', label: 'بعد از تاریخ' },
-      { value: 'isSameOrBefore', label: 'مساوی یا قبل از تاریخ' },
-      { value: 'isSameOrAfter', label: 'مساوی یا بعد از تاریخ' },
+      { value: 'equals', label: this.$t('contactList.operators.dateEquals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.dateNotEquals') },
+      { value: 'isBefore', label: this.$t('contactList.operators.isBefore') },
+      { value: 'isAfter', label: this.$t('contactList.operators.isAfter') },
+      { value: 'isSameOrBefore', label: this.$t('contactList.operators.isSameOrBefore') },
+      { value: 'isSameOrAfter', label: this.$t('contactList.operators.isSameOrAfter') },
     ],
     boolean: [
-      { value: 'equals', label: 'مساوی با (بله/خیر)' },
-      { value: 'notEquals', label: 'مساوی نباشد با (بله/خیر)' },
+      { value: 'equals', label: this.$t('contactList.operators.booleanEquals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.booleanNotEquals') },
     ],
     select: [
-      { value: 'equals', label: 'مساوی با' },
-      { value: 'notEquals', label: 'مساوی نباشد با' },
+      { value: 'equals', label: this.$t('contactList.operators.equals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
     ],
   }
   const commonOperators = [
-    { value: 'isNull', label: 'مقدار نداشته باشد' },
-    { value: 'isNotNull', label: 'مقدار داشته باشد' },
+    { value: 'isNull', label: this.$t('contactList.operators.isNull') },
+    { value: 'isNotNull', label: this.$t('contactList.operators.isNotNull') },
   ]
 
   const typeOperators = operators[type] || []
@@ -549,67 +310,67 @@ const getRuleOperatorLabel = (rule) => {
 
   const allPossibleOperators = {
     text: [
-      { value: 'equals', label: 'مساوی با' },
-      { value: 'notEquals', label: 'مساوی نباشد با' },
-      { value: 'contains', label: 'شامل باشد' },
-      { value: 'notContains', label: 'شامل نباشد' },
-      { value: 'startsWith', label: 'شروع شود با' },
-      { value: 'endsWith', label: 'پایان یابد با' },
+      { value: 'equals', label: this.$t('contactList.operators.equals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
+      { value: 'contains', label: this.$t('contactList.operators.contains') },
+      { value: 'notContains', label: this.$t('contactList.operators.notContains') },
+      { value: 'startsWith', label: this.$t('contactList.operators.startsWith') },
+      { value: 'endsWith', label: this.$t('contactList.operators.endsWith') },
     ],
     textarea: [
-      { value: 'equals', label: 'مساوی با' },
-      { value: 'notEquals', label: 'مساوی نباشد با' },
-      { value: 'contains', label: 'شامل باشد' },
-      { value: 'notContains', label: 'شامل نباشد' },
+      { value: 'equals', label: this.$t('contactList.operators.equals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
+      { value: 'contains', label: this.$t('contactList.operators.contains') },
+      { value: 'notContains', label: this.$t('contactList.operators.notContains') },
     ],
     number: [
-      { value: 'equals', label: 'مساوی با' },
-      { value: 'notEquals', label: 'مساوی نباشد با' },
-      { value: 'greaterThan', label: 'بزرگتر از' },
-      { value: 'lessThan', label: 'کوچکتر از' },
-      { value: 'greaterThanOrEqual', label: 'بزرگتر یا مساوی' },
-      { value: 'lessThanOrEqual', label: 'کوچکتر یا مساوی' },
+      { value: 'equals', label: this.$t('contactList.operators.equals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
+      { value: 'greaterThan', label: this.$t('contactList.operators.greaterThan') },
+      { value: 'lessThan', label: this.$t('contactList.operators.lessThan') },
+      { value: 'greaterThanOrEqual', label: this.$t('contactList.operators.greaterThanOrEqual') },
+      { value: 'lessThanOrEqual', label: this.$t('contactList.operators.lessThanOrEqual') },
     ],
     date: [
-      { value: 'equals', label: 'مساوی با تاریخ' },
-      { value: 'notEquals', label: 'مساوی نباشد با تاریخ' },
-      { value: 'isBefore', label: 'قبل از تاریخ' },
-      { value: 'isAfter', label: 'بعد از تاریخ' },
-      { value: 'isSameOrBefore', label: 'مساوی یا قبل از تاریخ' },
-      { value: 'isSameOrAfter', label: 'مساوی یا بعد از تاریخ' },
+      { value: 'equals', label: this.$t('contactList.operators.dateEquals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.dateNotEquals') },
+      { value: 'isBefore', label: this.$t('contactList.operators.isBefore') },
+      { value: 'isAfter', label: this.$t('contactList.operators.isAfter') },
+      { value: 'isSameOrBefore', label: this.$t('contactList.operators.isSameOrBefore') },
+      { value: 'isSameOrAfter', label: this.$t('contactList.operators.isSameOrAfter') },
     ],
     boolean: [
-      { value: 'equals', label: 'مساوی با (بله/خیر)' },
-      { value: 'notEquals', label: 'مساوی نباشد با (بله/خیر)' },
+      { value: 'equals', label: this.$t('contactList.operators.booleanEquals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.booleanNotEquals') },
     ],
     select: [
-      { value: 'equals', label: 'مساوی با' },
-      { value: 'notEquals', label: 'مساوی نباشد با' },
+      { value: 'equals', label: this.$t('contactList.operators.equals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
     ],
     gender: [
-      { value: 'equals', label: 'مساوی با' },
-      { value: 'notEquals', label: 'مساوی نباشد با' },
-      { value: 'isNull', label: 'مقدار نداشته باشد' },
-      { value: 'isNotNull', label: 'مقدار داشته باشد' },
+      { value: 'equals', label: this.$t('contactList.operators.equals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
+      { value: 'isNull', label: this.$t('contactList.operators.isNull') },
+      { value: 'isNotNull', label: this.$t('contactList.operators.isNotNull') },
     ],
     group: [
-      { value: 'equals', label: 'مساوی با' },
-      { value: 'notEquals', label: 'مساوی نباشد با' },
-      { value: 'isNull', label: 'مقدار نداشته باشد' },
-      { value: 'isNotNull', label: 'مقدار داشته باشد' },
+      { value: 'equals', label: this.$t('contactList.operators.equals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
+      { value: 'isNull', label: this.$t('contactList.operators.isNull') },
+      { value: 'isNotNull', label: this.$t('contactList.operators.isNotNull') },
     ],
     addressPart: [
-      { value: 'equals', label: 'مساوی با' },
-      { value: 'notEquals', label: 'مساوی نباشد با' },
-      { value: 'contains', label: 'شامل باشد' },
-      { value: 'notContains', label: 'شامل نباشد' },
-      { value: 'isNull', label: 'مقدار نداشته باشد' },
-      { value: 'isNotNull', label: 'مقدار داشته باشد' },
+      { value: 'equals', label: this.$t('contactList.operators.equals') },
+      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
+      { value: 'contains', label: this.$t('contactList.operators.contains') },
+      { value: 'notContains', label: this.$t('contactList.operators.notContains') },
+      { value: 'isNull', label: this.$t('contactList.operators.isNull') },
+      { value: 'isNotNull', label: this.$t('contactList.operators.isNotNull') },
     ],
   }
   const commonOperators = [
-    { value: 'isNull', label: 'مقدار نداشته باشد' },
-    { value: 'isNotNull', label: 'مقدار داشته باشد' },
+    { value: 'isNull', label: this.$t('contactList.operators.isNull') },
+    { value: 'isNotNull', label: this.$t('contactList.operators.isNotNull') },
   ]
 
   const typeOperators = allPossibleOperators[type] || []
@@ -637,11 +398,13 @@ const formatRuleValue = (rule) => {
     case 'date':
       return formatGregorianDateToShamsi(rule.value)
     case 'boolean':
-      return rule.value ? 'بله' : 'خیر'
+      return rule.value
+        ? this.$t('contactList.booleanOptions.yes')
+        : this.$t('contactList.booleanOptions.no')
     case 'gender':
       return displayGender(rule.value)
     case 'group':
-      return rule.value === '' ? 'بدون گروه' : rule.value
+      return rule.value === '' ? this.$t('contactList.noGroup') : rule.value
     case 'select':
       const customSelectDef = fieldDefinitions.value.find((def) => def.id === rule.field)
       if (customSelectDef) {
@@ -667,12 +430,12 @@ const addNewRule = () => {
   const fieldDef = selectedNewRuleFieldDefinition.value
 
   if (!rule.field || !rule.operator) {
-    alert('لطفاً فیلد و عملگر را انتخاب کنید.')
+    alert(this.$t('contactList.selectFieldAndOperatorAlert'))
     return
   }
   const requiresValue = rule.operator !== 'isNull' && rule.operator !== 'isNotNull'
   if (requiresValue && (rule.value === null || rule.value === '')) {
-    alert('لطفاً مقدار فیلتر را وارد کنید.')
+    alert(this.$t('contactList.enterFilterValueAlert'))
     return
   }
 
@@ -683,14 +446,14 @@ const addNewRule = () => {
       case 'number':
         valueToStore = Number(rule.value)
         if (isNaN(valueToStore)) {
-          alert('لطفاً یک عدد معتبر وارد کنید.')
+          alert(this.$t('contactList.invalidNumberAlert'))
           return
         }
         break
       case 'date':
         const jalaaliMoment = parseJalaaliStringToGregorianMoment(rule.value)
         if (!jalaaliMoment || !jalaaliMoment.isValid()) {
-          alert('تاریخ شمسی انتخاب شده نامعتبر است.')
+          alert(this.$t('contactList.invalidDateAlert'))
           return
         }
         valueToStore = jalaaliMoment.format('YYYY-MM-DD')
@@ -711,7 +474,8 @@ const addNewRule = () => {
     }
   }
 
-  currentFilterRules.value.push({
+  // استفاده از تابع addFilterRule از کامپوزابل
+  addFilterRule({
     field: rule.field,
     operator: rule.operator,
     value: valueToStore,
@@ -724,11 +488,10 @@ const addNewRule = () => {
   }
 }
 
+// استفاده از تابع removeFilterRule از کامپوزابل
 const removeRule = (index) => {
-  if (index >= 0 && index < currentFilterRules.value.length) {
-    currentFilterRules.value.splice(index, 1)
-    applyFilters()
-  }
+  removeFilterRule(index)
+  applyFilters()
 }
 
 const applyFilters = () => {
@@ -736,39 +499,39 @@ const applyFilters = () => {
 }
 
 const clearFilters = () => {
-  currentFilterRules.value = []
+  clearFilterRules()
   contactStore.setFilterRules([])
 }
 
-const currentPage = ref(1)
-const itemsPerPage = ref(10)
+// استفاده از کامپوزابل صفحه‌بندی
+const {
+  currentPage,
+  itemsPerPage,
+  totalPages,
+  paginatedItems: paginatedContacts,
+  goToPage: baseGoToPage,
+  nextPage: baseNextPage,
+  prevPage: basePrevPage
+} = usePagination(filteredAndSortedContacts, 10)
+
 const totalContactsOnCurrentFilter = computed(() => filteredAndSortedContacts.value.length)
-const totalPages = computed(() =>
-  Math.ceil(totalContactsOnCurrentFilter.value / itemsPerPage.value),
-)
-const paginatedContacts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value
-  const end = start + itemsPerPage.value
-  return filteredAndSortedContacts.value.slice(start, end)
-})
+
+// افزودن امکان اسکرول به بالای صفحه هنگام تغییر صفحه
 const goToPage = (page) => {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
+  baseGoToPage(page)
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
 const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
+  baseNextPage()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
 const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
+  basePrevPage()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
 watch(
   () => [
     contactStore.searchQuery,
@@ -807,7 +570,7 @@ watchEffect(() => {
         return
       }
 
-      let label = standardFieldLabels[columnKey] || 'فیلد ناشناس'
+      let label = standardFieldLabels[columnKey] || this.$t('contactList.unknownField')
       let rawValue = undefined
       let fieldType = standardFieldTypes[columnKey] || 'text'
       let currentFieldDefForFormatter = null
@@ -918,13 +681,13 @@ watchEffect(() => {
 })
 
 const standardSortableOptions = [
-  { value: 'lastName', label: 'نام خانوادگی' },
-  { value: 'name', label: 'نام' },
-  { value: 'phone', label: 'تلفن اصلی' },
-  { value: 'createdAt', label: 'تاریخ ایجاد' },
-  { value: 'group', label: 'گروه' },
-  { value: 'title', label: 'سمت/تخصص' },
-  { value: 'birthDate', label: 'تاریخ تولد' },
+  { value: 'lastName', label: this.$t('contactList.fields.lastName') },
+  { value: 'name', label: this.$t('contactList.fields.name') },
+  { value: 'phone', label: this.$t('contactList.fields.phone') },
+  { value: 'createdAt', label: this.$t('contactList.fields.createdAt') },
+  { value: 'group', label: this.$t('contactList.fields.group') },
+  { value: 'title', label: this.$t('contactList.fields.title') },
+  { value: 'birthDate', label: this.$t('contactList.fields.birthDate') },
 ]
 const sortOptions = computed(() => {
   const options = [...standardSortableOptions]
@@ -948,7 +711,7 @@ const confirmDeleteContact = async (contactId) => {
     try {
       await contactStore.deleteContact(contactId)
     } catch (error) {
-      alert('خطا در حذف مخاطب: ' + (error.message || 'خطای نامشخص در هنگام حذف.'))
+      this.notificationStore.showNotification(this.$t('contactList.deleteError'), 'error')
     }
   }
 }

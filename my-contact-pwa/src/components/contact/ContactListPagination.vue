@@ -1,15 +1,17 @@
 <template>
   <div class="pagination-controls">
     <button @click="$emit('prevPage')" :disabled="currentPage === 1" class="pagination-button">
-      <IconWrapper icon="fa-solid fa-arrow-right" /> قبلی
+      <IconWrapper icon="fa-solid fa-arrow-right" /> {{ $t('contactList.paginationPrev') }}
     </button>
-    <span>صفحه {{ currentPage }} از {{ totalPages }}</span>
+    <span>{{
+      $t('contactList.paginationPageInfo', { currentPage: currentPage, totalPages: totalPages })
+    }}</span>
     <button
       @click="$emit('nextPage')"
       :disabled="currentPage === totalPages"
       class="pagination-button"
     >
-      بعدی <IconWrapper icon="fa-solid fa-arrow-left" />
+      {{ $t('contactList.paginationNext') }} <IconWrapper icon="fa-solid fa-arrow-left" />
     </button>
     <div class="page-numbers">
       <button
@@ -25,7 +27,7 @@
   </div>
 </template>
 <script setup>
-import IconWrapper from './icons/IconWrapper.vue'
+import { IconWrapper } from '@/components/common/commonComponents'
 const props = defineProps({
   currentPage: Number,
   totalPages: Number,

@@ -1,15 +1,18 @@
 <template>
   <div class="pagination-controls">
     <button @click="$emit('prevPage')" :disabled="currentPage === 1" class="pagination-button">
-      <IconWrapper icon="fa-solid fa-arrow-right" /> قبلی
+      <IconWrapper icon="fa-solid fa-arrow-right" /> {{ $t('contactListPagination.previous') }}
     </button>
-    <span>صفحه {{ currentPage }} از {{ totalPages }}</span>
+    <span
+      >{{ $t('contactListPagination.page') }} {{ currentPage }}
+      {{ $t('contactListPagination.of') }} {{ totalPages }}</span
+    >
     <button
       @click="$emit('nextPage')"
       :disabled="currentPage === totalPages"
       class="pagination-button"
     >
-      بعدی <IconWrapper icon="fa-solid fa-arrow-left" />
+      {{ $t('contactListPagination.next') }} <IconWrapper icon="fa-solid fa-arrow-left" />
     </button>
     <div class="page-numbers">
       <button

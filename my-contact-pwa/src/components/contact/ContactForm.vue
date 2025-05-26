@@ -63,7 +63,7 @@
 
     <div class="form-group">
       <label for="notes">
-        <span><IconWrapper icon="fa-solid fa-notes" /></span>
+        <span><IconWrapper icon="fa-solid fa-note-sticky" /></span>
         {{ $t('contactForm.notes') }}:
       </label>
       <textarea
@@ -126,6 +126,7 @@ import defaultAvatar from '@/assets/img/icons/default-avatar.svg'
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
 const router = useRouter() // استفاده صحیح از useRouter
+const { t } = useI18n()
 const customFieldStore = useCustomFieldStore() // مقداردهی store
 
 // متغیرهای فرم
@@ -516,13 +517,13 @@ const handleSubmit = async () => {
       console.error('Error saving contact:', contactStore.error);
       // در اینجا می‌توانید یک اعلان خطا به کاربر نمایش دهید
       // مثلاً:
-      // notificationStore.showError('خطا در ذخیره مخاطب');
+      notificationStore.showError(t('contactForm.errorSavingContact'));
     }
   } catch (error) {
     // مدیریت خطاهای پیش‌بینی نشده
     console.error('An unexpected error occurred:', error);
     // نمایش پیام خطا به کاربر
-    // notificationStore.showError('خطای غیرمنتظره رخ داد. لطفاً دوباره تلاش کنید.');
+    notificationStore.showError(t('contactForm.unexpectedError'));
   } finally {
     // در هر صورت (موفقیت یا خطا) مقدار isSubmitting را به false برمی‌گردانیم
     isSubmitting.value = false;

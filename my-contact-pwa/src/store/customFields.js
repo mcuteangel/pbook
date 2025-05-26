@@ -2,6 +2,7 @@
 import { toRaw } from 'vue' // این خط رو اضافه کن
 import { defineStore } from 'pinia'
 import { db } from '../db' // نمونه دیتابیس Dexie
+import i18n from '@/plugins/i18n';
 
 export const useCustomFieldStore = defineStore('customFieldStore', {
   // <-- Store ID: 'customFieldStore'
@@ -129,50 +130,108 @@ export const useCustomFieldStore = defineStore('customFieldStore', {
     },
 
     async updateFieldDefinition(fieldId, updates) {
-      // updates شامل label, type, options, order قابل تغییر
-      this.loading = true
-      this.error = null
-      const trimmedLabel = updates.label?.trim()
+      this.loading = true;
+      this.error = null;
+      const trimmedLabel = updates.label?.trim();
 
-      if (trimmedLabel && trimmedLabel !== '') {
-        // چک کردن تکراری نبودن برچسب جدید (به جز خودش)
+      // ۱. واکشی تعریف فعلی فیلد
+      const currentField = await db.customFieldDefinitions.get(fieldId);
+      if (!currentField) {
+        this.error = i18n.global.t('customFields.validation.fieldNotFound');
+        this.loading = false;
+        return false;
+      }
+
+      // ۲. بررسی تلاش برای تغییر نوع فیلد
+      // اگر 'type' در 'updates' وجود دارد و با 'currentField.type' متفاوت است، خطا بده
+      if (updates.hasOwnProperty('type') && updates.type !== currentField.type) {
+        this.error = i18n.global.t('customFields.validation.typeChangeNotAllowed');
+        this.loading = false;
+        return false;
+      }
+
+      // ۳. بررسی تکراری نبودن برچسب جدید (اگر برچسب تغییر کرده)
+      if (trimmedLabel && trimmedLabel !== '' && trimmedLabel !== currentField.label) {
         const existingField = await db.customFieldDefinitions
           .where('label')
           .equalsIgnoreCase(trimmedLabel)
-          .first()
+          .first();
         if (existingField && existingField.id !== fieldId) {
-          this.error = `فیلدی با برچسب "${trimmedLabel}" از قبل وجود دارد.`
-          this.loading = false
-          return false
+          this.error = i18n.global.t('customFields.validation.labelDuplicate');
+          this.loading = false;
+          return false;
         }
       }
 
       try {
-        const dataToUpdate = { ...updates }
-        if (trimmedLabel) dataToUpdate.label = trimmedLabel // فقط اگه تغییر کرده و خالی نیست، آپدیت کن
-        if (updates.type === 'select') {
-          if (!updates.options || updates.options.length === 0) {
-            this.error = 'برای فیلد از نوع گزینه‌ای، حداقل یک گزینه باید تعریف شود.'
-            this.loading = false
-            return false
-          }
-          dataToUpdate.options = toRaw(updates.options) // اینجا هم toRaw رو اضافه کن
-        } else {
-          // اگر نوع فیلد دیگر select نیست، options رو پاک کن
-          dataToUpdate.options = []
+        const dataToUpdate = {};
+
+        // فقط فیلدهایی که اجازه تغییر دارند و در updates آمده‌اند را به dataToUpdate اضافه کن
+        if (updates.hasOwnProperty('label') && trimmedLabel && trimmedLabel !== '') {
+          dataToUpdate.label = trimmedLabel;
+        } else if (updates.hasOwnProperty('label') && !trimmedLabel) {
+            // اگر برچسب خالی ارسال شده، خطا می‌دهیم چون برچسب نمی‌تواند خالی باشد
+            this.error = i18n.global.t('customFields.validation.labelRequired');
+            this.loading = false;
+            return false;
         }
 
-        await db.customFieldDefinitions.update(fieldId, dataToUpdate)
-        console.log(`تعریف فیلد سفارشی با ID ${fieldId} به‌روزرسانی شد.`)
-        await this.loadFieldDefinitions()
-        // TODO: اگر label یا type فیلد تغییر کرد، باید مقادیر ذخیره شده در customFields مخاطبین هم بررسی و احتمالاً آپدیت/پاک بشن. این بخش پیچیده است و فعلاً ازش صرف‌نظر می‌کنیم.
-        return true
+
+        if (updates.hasOwnProperty('order') && typeof updates.order === 'number') {
+          dataToUpdate.order = updates.order;
+        }
+
+        // مدیریت options فقط برای فیلدهای نوع select
+        if (currentField.type === 'select') {
+          if (updates.hasOwnProperty('options')) { // فقط اگر options در آپدیت آمده
+            if (!updates.options || updates.options.length === 0) {
+              this.error = i18n.global.t('customFields.validation.selectOptionRequired');
+              this.loading = false;
+              return false;
+            }
+            dataToUpdate.options = toRaw(updates.options.map(opt => typeof opt === 'string' ? { value: opt, label: opt } : opt));
+          }
+        } else {
+          // برای انواع دیگر، options همیشه باید خالی باشد و قابل تغییر نیست
+          // اگر به هر دلیلی options در updates برای نوع غیر select آمده بود، آن را نادیده می‌گیریم یا صراحتا خالی می‌کنیم
+           if (dataToUpdate.hasOwnProperty('options')) {
+             delete dataToUpdate.options; // یا dataToUpdate.options = [];
+           }
+        }
+        
+        // اگر هیچ تغییری برای اعمال وجود ندارد (مثلا فقط type ارسال شده که مجاز نیست)
+        // یا هیچ فیلد معتبری در updates نبوده
+        if (Object.keys(dataToUpdate).length === 0 && !(updates.hasOwnProperty('label') && updates.label === currentField.label && !trimmedLabel) ) {
+           // اگر فقط برچسبی مشابه برچسب فعلی اما با فضای خالی ارسال شده بود، اینجا نباید خطا بدهیم
+           // اما اگر هیچ آپدیت معناداری نبود
+           // this.error = 'هیچ تغییری برای اعمال مشخص نشده است.'; // یا به سادگی true برگردانیم
+           // this.loading = false;
+           // return true; // یا false بسته به سیاست
+           // فعلا اجازه می‌دهیم که اگر dataToUpdate خالی بود، db.update کاری نکند یا خطا بدهد
+        }
+
+
+        if (Object.keys(dataToUpdate).length > 0) {
+            await db.customFieldDefinitions.update(fieldId, dataToUpdate);
+            console.log(`تعریف فیلد سفارشی با ID ${fieldId} به‌روزرسانی شد.`, dataToUpdate);
+        } else {
+            console.log(`هیچ تغییری در فیلد سفارشی با ID ${fieldId} اعمال نشد چون داده‌های ارسالی تغییری ایجاد نمی‌کردند.`);
+        }
+        
+        await this.loadFieldDefinitions();
+        // TODO: با توجه به اینکه نوع فیلد قابل تغییر نیست، مشکل اصلی داده‌های ناسازگار حل شده.
+        // اما اگر گزینه‌های یک فیلد select تغییر کند (مثلا یک گزینه حذف شود یا برچسبش عوض شود)،
+        // مقادیر ذخیره شده در مخاطبین که از آن گزینه (با value قدیمی) استفاده می‌کردند، همچنان آن مقدار را خواهند داشت.
+        // این مورد هنوز می‌تواند یک بدهی فنی کوچک باشد، اما شدت آن بسیار کمتر است.
+        // برای مدیریت بهتر، می‌توان هنگام تغییر options، مقادیر value گزینه‌ها را ثابت نگه داشت و فقط label را تغییر داد.
+        // یا اگر value یک گزینه حذف شد، آنگاه مقادیر مرتبط در مخاطبین را پاک کرد.
+        return true;
       } catch (err) {
-        console.error('خطا در به‌روزرسانی تعریف فیلد سفارشی:', err)
-        this.error = 'امکان به‌روزرسانی تعریف فیلد سفارشی وجود ندارد.'
-        return false
+        console.error('خطا در به‌روزرسانی تعریف فیلد سفارشی:', err);
+        this.error = 'امکان به‌روزرسانی تعریف فیلد سفارشی وجود ندارد.';
+        return false;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 

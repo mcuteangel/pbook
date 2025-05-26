@@ -123,8 +123,8 @@
         class="flat-select"
       >
         <option value="">{{ fieldDef.placeholder || $t('contactForm.selectOption') }}</option>
-        <option v-for="option in fieldDef.options" :key="option" :value="option">
-          {{ option }}
+        <option v-for="option in getSelectOptions(fieldDef, customFields[fieldDef.id])" :key="option.value" :value="option.value">
+          {{ option.label }}
         </option>
       </select>
 
@@ -169,6 +169,7 @@
 <script setup>
 import IconWrapper from '@/components/icons/IconWrapper.vue';
 import DatePicker from 'vue3-persian-datetime-picker';
+import { useI18n } from 'vue-i18n';
 
 defineProps({
   sortedCustomFieldDefinitions: Array, // تعاریف فیلدهای سفارشی
@@ -177,6 +178,23 @@ defineProps({
 });
 
 defineEmits(['update:customFields']);
+
+const { t } = useI18n();
+
+const getSelectOptions = (fieldDef, currentValue) => {
+  let options = [...(fieldDef.options || [])]; // Start with a copy of original options
+  const valueExistsInOptions = options.some(opt => opt.value === currentValue);
+
+  if (currentValue !== undefined && currentValue !== null && String(currentValue).trim() !== '' && !valueExistsInOptions) {
+    // If the current value is not in the options, add it as the first option, marked as previous
+    options.unshift({
+      value: currentValue,
+      label: `${currentValue} (${t('customFields.previousOptionSuffix')})`,
+      isPrevious: true, // Optional: for styling or special handling
+    });
+  }
+  return options;
+};
 </script>
 
 <style scoped>

@@ -1,42 +1,45 @@
 <template>
   <section class="backup-restore-section settings-section glass-section">
-    <h3>پشتیبان‌گیری و بازیابی اطلاعات</h3>
+    <h3>{{ $t('settings.backupRestore.title') }}</h3>
     <p>
-      از اطلاعات مخاطبین، گروه‌ها و فیلدهای سفارشی خود پشتیبان تهیه کنید یا اطلاعات قبلی را بازیابی
-      نمایید.
+      {{ $t('settings.backupRestore.description') }}
     </p>
 
     <div class="backup-actions action-group">
-      <h4>تهیه پشتیبان</h4>
-      <AppSettingsItem label="پشتیبان‌گیری از مخاطبین">
+      <h4>{{ $t('settings.backupRestore.backupTitle') }}</h4>
+      <AppSettingsItem :label="$t('settings.backupRestore.backupContactsLabel')">
         <button @click="backupContactsHandler" class="action-button glass-btn">
-          <IconWrapper icon="fa-solid fa-download" /> دانلود فایل پشتیبان مخاطبین
+          <IconWrapper icon="fa-solid fa-download" />
+          {{ $t('settings.backupRestore.backupContactsButton') }}
         </button>
       </AppSettingsItem>
-      <AppSettingsItem label="پشتیبان‌گیری از گروه‌ها">
+      <AppSettingsItem :label="$t('settings.backupRestore.backupGroupsLabel')">
         <button @click="backupGroupsHandler" class="action-button glass-btn">
-          <IconWrapper icon="fa-solid fa-download" /> دانلود فایل پشتیبان گروه‌ها
+          <IconWrapper icon="fa-solid fa-download" />
+          {{ $t('settings.backupRestore.backupGroupsButton') }}
         </button>
       </AppSettingsItem>
-      <AppSettingsItem label="پشتیبان‌گیری از فیلدهای سفارشی">
+      <AppSettingsItem :label="$t('settings.backupRestore.backupCustomFieldsLabel')">
         <button @click="backupCustomFieldsHandler" class="action-button glass-btn">
-          <IconWrapper icon="fa-solid fa-download" /> دانلود فایل پشتیبان فیلدهای سفارشی
+          <IconWrapper icon="fa-solid fa-download" />
+          {{ $t('settings.backupRestore.backupCustomFieldsButton') }}
         </button>
       </AppSettingsItem>
-      <AppSettingsItem label="پشتیبان‌گیری کامل (همه اطلاعات)">
+      <AppSettingsItem :label="$t('settings.backupRestore.backupAllLabel')">
         <button @click="backupAllDataHandler" class="action-button glass-btn primary-action">
-          <IconWrapper icon="fa-solid fa-archive" /> دانلود فایل پشتیبان کامل
+          <IconWrapper icon="fa-solid fa-archive" />
+          {{ $t('settings.backupRestore.backupAllButton') }}
         </button>
       </AppSettingsItem>
     </div>
 
     <div class="restore-actions action-group">
-      <h4>بازیابی اطلاعات</h4>
+      <h4>{{ $t('settings.backupRestore.restoreTitle') }}</h4>
       <p class="warning-text">
-        <IconWrapper icon="fa-solid fa-triangle-exclamation" /> توجه: بازیابی اطلاعات، اطلاعات فعلی
-        را بازنویسی خواهد کرد. لطفاً قبل از اقدام، از اطلاعات فعلی خود پشتیبان تهیه کنید.
+        <IconWrapper icon="fa-solid fa-triangle-exclamation" />
+        {{ $t('settings.backupRestore.restoreWarning') }}
       </p>
-      <AppSettingsItem label="بازیابی مخاطبین از فایل">
+      <AppSettingsItem :label="$t('settings.backupRestore.restoreContactsLabel')">
         <input
           type="file"
           @change="(e) => handleFileUpload(e, 'contacts')"
@@ -48,10 +51,11 @@
           :disabled="!uploadedFiles.contacts"
           class="action-button glass-btn"
         >
-          <IconWrapper icon="fa-solid fa-upload" /> بازیابی مخاطبین
+          <IconWrapper icon="fa-solid fa-upload" />
+          {{ $t('settings.backupRestore.restoreContactsButton') }}
         </button>
       </AppSettingsItem>
-      <AppSettingsItem label="بازیابی گروه‌ها از فایل">
+      <AppSettingsItem :label="$t('settings.backupRestore.restoreGroupsLabel')">
         <input
           type="file"
           @change="(e) => handleFileUpload(e, 'groups')"
@@ -63,10 +67,11 @@
           :disabled="!uploadedFiles.groups"
           class="action-button glass-btn"
         >
-          <IconWrapper icon="fa-solid fa-upload" /> بازیابی گروه‌ها
+          <IconWrapper icon="fa-solid fa-upload" />
+          {{ $t('settings.backupRestore.restoreGroupsButton') }}
         </button>
       </AppSettingsItem>
-      <AppSettingsItem label="بازیابی فیلدهای سفارشی از فایل">
+      <AppSettingsItem :label="$t('settings.backupRestore.restoreCustomFieldsLabel')">
         <input
           type="file"
           @change="(e) => handleFileUpload(e, 'customFields')"
@@ -78,10 +83,11 @@
           :disabled="!uploadedFiles.customFields"
           class="action-button glass-btn"
         >
-          <IconWrapper icon="fa-solid fa-upload" /> بازیابی فیلدهای سفارشی
+          <IconWrapper icon="fa-solid fa-upload" />
+          {{ $t('settings.backupRestore.restoreCustomFieldsButton') }}
         </button>
       </AppSettingsItem>
-      <AppSettingsItem label="بازیابی کامل (همه اطلاعات) از فایل">
+      <AppSettingsItem :label="$t('settings.backupRestore.restoreAllLabel')">
         <input
           type="file"
           @change="(e) => handleFileUpload(e, 'all')"
@@ -93,7 +99,8 @@
           :disabled="!uploadedFiles.all"
           class="action-button glass-btn primary-action"
         >
-          <IconWrapper icon="fa-solid fa-upload" /> بازیابی همه اطلاعات
+          <IconWrapper icon="fa-solid fa-upload" />
+          {{ $t('settings.backupRestore.restoreAllButton') }}
         </button>
       </AppSettingsItem>
     </div>
