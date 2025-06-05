@@ -20,6 +20,14 @@ export const useNotificationStore = defineStore('notification', () => {
     return id
   }
   
+  function showError(message, duration = 5000) {
+    return showNotification({
+      type: 'error',
+      message,
+      duration
+    })
+  }
+  
   function removeNotification(id) {
     const index = notifications.value.findIndex(n => n.id === id)
     if (index !== -1) {
@@ -34,6 +42,7 @@ export const useNotificationStore = defineStore('notification', () => {
   return {
     notifications,
     showNotification,
+    showError,
     removeNotification,
     clearNotifications
   }

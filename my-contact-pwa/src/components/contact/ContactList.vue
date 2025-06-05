@@ -1,263 +1,559 @@
 <template>
-  <div class="contact-list-wrapper">
-    <h2>
-      <span style="margin-left: 6px"><IconWrapper icon="fa-solid fa-magnifying-glass" /></span>
-      {{ $t('contactList.title') }}
-    </h2>
+  <div class="contact-list-wrapper" role="region" :aria-label="$t('contactList.ariaLabel')">
+    <!-- هدر لیست مخاطبین -->
+    <div class="header-container">
+      <div class="header-row">
+        <h1 class="page-title">
+          <IconWrapper icon="address-book" prefix="fa-solid" class="title-icon" />
+          {{ $t('contactList.title') }}
+        </h1>
+        <button
+          @click="handleAddSampleContacts"
+          class="add-sample-btn"
+          :disabled="isAddingSamples"
+          :aria-busy="isAddingSamples"
+          :aria-label="$t('contactList.ariaAddSampleContacts')"
+        >
+          <IconWrapper icon="plus" prefix="fa-solid" class="btn-icon" />
+          {{
+            isAddingSamples ? $t('contactList.addingSamples') : $t('contactList.addSampleContacts')
+          }}
+        </button>
+      </div>
+    </div>
 
+    <!-- هدر جستجو و مرتب‌سازی -->
     <ContactListHeader
-      v-model:searchQuery="contactStore.searchQuery"
-      v-model:sortField="contactStore.sortField"
-      v-model:sortOrder="contactStore.sortOrder"
-      :sortOptions="sortOptions"
-      :isFilterSectionVisible="isFilterSectionVisible"
-      @toggleFilterSection="toggleFilterSection"
+      :search-query="searchQuery"
+      :sort-field="sortField"
+      :sort-order="sortOrder"
+      :is-filter-section-visible="isFilterSectionVisible"
+      :sort-options="sortOptions"
+      @update:searchQuery="updateSearchQuery"
+      @update:sortField="updateSortField"
+      @update:sortOrder="updateSortOrder"
+ @toggleFilterSection="isFilterSectionVisible = !isFilterSectionVisible"
+      @add="addNewContact"
     />
 
+    <!-- فیلتر پیشرفته -->
     <ContactListAdvancedFilter
       v-if="isFilterSectionVisible"
-      :filterRules="currentFilterRules"
-      :filterableFields="filterableFields"
-      :valueSelectOptions="valueSelectOptions"
-      @addRule="addNewRule"
-      @removeRule="removeRule"
-      @applyFilters="applyFilters"
-      @clearFilters="clearFilters"
+      v-model:modelValue="storeFilterRules"
+      :filterable-fields="filterableFields"
+      @apply="applyFilters"
+      @clear="clearFilters"
     />
 
-    <hr class="separator" />
-    <div v-if="contactStore.loading" class="status-message loading">
-      <span style="font-size: 1.2em">⏳</span> {{ $t('contactList.loadingContacts') }}
+    <hr class="separator" aria-hidden="true" />
+
+    <!-- وضعیت‌های مختلف نمایش -->
+    <div v-if="isLoading" class="status-message loading" role="status" aria-live="polite">
+      <IconWrapper icon="spinner" prefix="fa-solid" class="status-icon" animation="fa-spin" />
+      {{ $t('contactList.loadingContacts') }}
     </div>
-    <div v-else-if="contactStore.error" class="status-message error">
-      <span style="font-size: 1.2em">❗</span>
+
+    <div v-else-if="hasError" class="status-message error" role="alert" aria-live="assertive">
+      <IconWrapper icon="exclamation-circle" prefix="fa-solid" class="status-icon" />
       {{ contactStore.error }}
     </div>
-    <div v-else-if="paginatedContacts.length === 0" class="status-message no-results">
-      <span style="font-size: 1.2em">⚠️</span> {{ $t('contactList.noContactsFound') }}
-      <span
-        v-if="
-          contactStore.contacts.length > 0 &&
-          (contactStore.searchQuery || contactStore.filterRules.length > 0)
-        "
-      >
-        ({{ $t('contactList.noMatchCriteria') }})
+
+    <div
+      v-else-if="hasNoResults"
+      class="status-message no-results"
+      role="status"
+      aria-live="polite"
+    >
+      <IconWrapper icon="info-circle" prefix="fa-solid" class="status-icon" />
+      {{ $t('contactList.noContactsFound') }}
+      <span v-if="hasActiveFilters" class="filter-hint">
+        {{ $t('contactList.noMatchCriteria') }}
       </span>
     </div>
 
-    <ul v-else class="contact-list">
-      <ContactListItem
-        v-for="contactItem in contactsPreparedForDisplay"
-        :key="contactItem.contact.id"
-        :contact="contactItem"
-        :loading="contactStore.loading"
-        @edit="startEditingContact"
-        @delete="confirmDeleteContact"
-      />
+    <!-- لیست مخاطبین -->
+    <ul v-else class="contact-list" role="list">
+      <li
+        v-for="item in contactsPreparedForDisplay"
+        :key="item.contact.id"
+        role="listitem"
+        class="contact-list-item"
+      >
+        <ContactListItem
+          :contact="item.contact"
+          :loading="contactStore.loading"
+          @edit="startEditingContact"
+          @delete="confirmDeleteContact"
+        />
+      </li>
     </ul>
 
+    <!-- صفحه‌بندی -->
     <ContactListPagination
       v-if="totalPages > 1"
-      :currentPage="currentPage"
-      :totalPages="totalPages"
-      @prevPage="prevPage"
-      @nextPage="nextPage"
-      @goToPage="goToPage"
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :total-items="totalContactsOnCurrentFilter"
+      @prev-page="prevPage"
+      @next-page="nextPage"
+      @go-to-page="goToPage"
     />
 
-    <div class="total-contacts">
-      {{ $t('contactList.totalContacts') }}: {{ totalContactsOnCurrentFilter }}
+    <!-- شمارشگر کل مخاطبین -->
+    <div class="total-contacts" aria-live="polite">
+      {{ $t('contactList.totalContacts', { count: totalContactsOnCurrentFilter }) }}
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch, watchEffect } from 'vue'
-import { storeToRefs } from 'pinia'
+// فقط ایمپورت‌های مورد نیاز را نگه می‌داریم
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useFiltering } from '@/composables/useFiltering'
-import { usePagination } from '@/composables/usePagination'
+import { storeToRefs } from 'pinia'
 import { useContactStore } from '@/store/contacts'
 import { useCustomFieldStore } from '@/store/customFields'
 import { useGroupStore } from '@/store/groups'
 import { useSettingsStore } from '@/store/settings'
-import { useRouter } from 'vue-router'
-import {
-  formatGregorianDateToShamsi,
-  parseJalaaliStringToGregorianMoment,
-  formatCustomFieldValue,
-  displayGender,
-  displayPhoneType,
-  displayAddressType,
-} from '@/utils/formatters'
-import moment from 'moment-jalaali'
-import { IconWrapper, PersianDatePicker } from '@/components/common/commonComponents'
+import { useNotificationStore } from '@/store/notificationStore'
+import { useErrorHandling } from '@/composables/useErrorHandling'
+import IconWrapper from '@/components/common/IconWrapper.vue'
+// این ایمپورت‌ها به نظر می‌رسه که در کامپوننت‌های فرزند استفاده می‌شن و می‌تونن حذف بشن
+// import { formatGregorianDateToShamsi } from '@/utils/formatters'
+// import { parseJalaaliStringToGregorianMoment } from '@/utils/formatters'
+// import { formatCustomFieldValue } from '@/utils/formatters'
+// import { displayGender } from '@/utils/formatters'
+// import { displayPhoneType } from '@/utils/formatters'
+// import { displayAddressType } from '@/utils/formatters'
+// import moment from 'moment-jalaali'
+// import { PersianDatePicker } from '@/components/common/commonComponents'
+// import { sanitizeInput } from '@/utils/security'
 import ContactListHeader from './ContactListHeader.vue'
 import ContactListAdvancedFilter from './ContactListAdvancedFilter.vue'
 import ContactListItem from './ContactListItem.vue'
 import ContactListPagination from './ContactListPagination.vue'
+// تنظیمات اولیه
+const { t } = useI18n()
+const router = useRouter()
 
+// تعریف متغیرهای مربوط به فیلتر
+const isFilterSectionVisible = ref(false)
+const filterableFields = ref([])
+
+// تعریف گزینه‌های مرتب‌سازی
+const sortOptions = computed(() => [
+  { value: 'firstName', label: t('contactList.sortBy.firstName') },
+  { value: 'lastName', label: t('contactList.sortBy.lastName') },
+  { value: 'email', label: t('contactList.sortBy.email') },
+  { value: 'phone', label: t('contactList.sortBy.phone') },
+  { value: 'createdAt', label: t('contactList.sortBy.createdAt') },
+  { value: 'updatedAt', label: t('contactList.sortBy.updatedAt') },
+])
+
+// تابع تغییر وضعیت نمایش بخش فیلتر
+function toggleFilterSection() {
+  isFilterSectionVisible.value = !isFilterSectionVisible.value
+}
+
+// استفاده از استورها
 const contactStore = useContactStore()
 const customFieldStore = useCustomFieldStore()
 const groupStore = useGroupStore()
 const settingsStore = useSettingsStore()
-const router = useRouter()
-const { t } = useI18n()
+const notificationStore = useNotificationStore()
+const { handleAsyncError } = useErrorHandling()
 
+// وضعیت‌های مختلف
+const isInitialLoad = ref(true)
+
+// Refs
+const isAddingSamples = ref(false)
+
+// Refs از استورها
 const { displayColumns } = storeToRefs(settingsStore)
 const { fieldDefinitions } = storeToRefs(customFieldStore)
-const { filteredAndSortedContacts } = storeToRefs(contactStore)
 
-const contactsPreparedForDisplay = ref([])
-
-const standardFieldLabels = computed(() => ({
-  phone: t('contactList.fields.phone'),
-  group: t('contactList.fields.group'),
-  birthDate: t('contactList.fields.birthDate'),
-  title: t('contactList.fields.title'),
-  createdAt: t('contactList.fields.createdAt'),
-  updatedAt: t('contactList.fields.updatedAt'),
-  'address.city': t('contactList.fields.addressCity'),
-  'address.street': t('contactList.fields.addressStreet'),
-  notes: t('contactList.fields.notes'),
-  gender: t('contactList.fields.gender'),
-}))
-
-const standardFieldTypes = {
-  phone: 'text',
-  group: 'group',
-  birthDate: 'date',
-  title: 'text',
-  createdAt: 'date',
-  updatedAt: 'date',
-  'address.city': 'addressPart',
-  'address.street': 'addressPart',
-  notes: 'textarea',
-  gender: 'gender',
-}
-
-const isFilterSectionVisible = ref(false)
-const toggleFilterSection = () => {
-  isFilterSectionVisible.value = !isFilterSectionVisible.value
-}
-
-// استفاده از کامپوزابل فیلترینگ
-const filterContacts = (contact, rules) => {
-  return rules.every(rule => {
-    // منطق فیلتر کردن مخاطبین براساس قوانین فیلتر
-    // این منطق با منطق قبلی یکسان است و فقط به صورت منسجم‌تر در اینجا قرار می‌گیرد
-    return contactStore.filterContact(contact, rule);
-  });
-};
-
+// دریافت مقادیر از استور
 const {
-  filterRules: currentFilterRules,
-  addFilterRule,
-  removeFilterRule,
-  clearFilters: clearFilterRules
-} = useFiltering(contactStore.contacts, filterContacts);
+  filteredAndSortedContacts,
+  filterRules: storeFilterRules,
+  searchQuery: storeSearchQuery,
+  sortField: storeSortField,
+  sortOrder: storeSortOrder,
+} = storeToRefs(contactStore)
 
-const newRule = ref({
-  field: null,
-  operator: null,
-  value: null,
-})
+// ===============================
+// 1. وضعیت و داده‌های اصلی
+// ===============================
 
-watch(
-  () => newRule.value.field,
-  (newField, oldField) => {
-    if (newField !== oldField) {
-      newRule.value.operator = null
-      newRule.value.value = null
-    }
-  },
+/**
+ * وضعیت در حال بارگذاری
+ * @type {import('vue').ComputedRef<boolean>}
+ */
+const isLoading = computed(
+  () => contactStore.loading || customFieldStore.loading || groupStore.loading,
 )
 
-const filterableFields = computed(() => {
-  const standardFields = [
-    { value: 'name', label: this.$t('contactList.fields.name'), type: 'text' },
-    { value: 'lastName', label: this.$t('contactList.fields.lastName'), type: 'text' },
-    { value: 'phone', label: this.$t('contactList.fields.phone'), type: 'text' },
-    { value: 'title', label: this.$t('contactList.fields.title'), type: 'text' },
-    { value: 'notes', label: this.$t('contactList.fields.notes'), type: 'textarea' },
-    { value: 'createdAt', label: this.$t('contactList.fields.createdAt'), type: 'date' },
-    { value: 'updatedAt', label: this.$t('contactList.fields.updatedAt'), type: 'date' },
-    { value: 'birthDate', label: this.$t('contactList.fields.birthDate'), type: 'date' },
-    { value: 'gender', label: this.$t('contactList.fields.gender'), type: 'select' },
-    { value: 'group', label: this.$t('contactList.fields.group'), type: 'select' },
-  ]
+/**
+ * وجود خطا
+ * @type {import('vue').ComputedRef<boolean>}
+ */
+const hasError = computed(() => contactStore.error || customFieldStore.error || groupStore.error)
 
-  const customFields = fieldDefinitions.value.map((field) => ({
-    value: field.id,
-    label: `فیلد سفارشی: ${field.label}`,
-    type: field.type,
-  }))
+// ===============================
+// 8. مدیریت صفحه‌بندی
+// ===============================
+const itemsPerPage = ref(parseInt(contactStore.itemsPerPage) || 10)
+const currentPage = ref(1)
 
-  return [...standardFields, ...customFields]
+// محاسبه تعداد کل صفحات
+const totalPages = computed(() => {
+  return Math.ceil(filteredAndSortedContacts.value.length / itemsPerPage.value)
 })
 
-const selectedNewRuleFieldDefinition = computed(() => {
-  if (!newRule.value.field) return null
-  const field = filterableFields.value.find((f) => f.value === newRule.value.field)
-  if (field?.value && !standardFieldLabels[field.value]) {
-    const customFieldId = field.value
-    return fieldDefinitions.value.find((def) => def.id === customFieldId)
+// محاسبه لیست صفحه‌بندی شده
+const paginatedContacts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredAndSortedContacts.value.slice(start, end)
+})
+
+// مدیریت تغییر صفحه
+const handlePageChange = (newPage) => {
+  if (newPage >= 1 && newPage <= totalPages.value) {
+    currentPage.value = newPage
   }
-  return field
+}
+
+// مدیریت تغییر تعداد آیتم در هر صفحه
+const handleItemsPerPageChange = (newSize) => {
+  const size = parseInt(newSize)
+  if (!isNaN(size)) {
+    itemsPerPage.value = size
+    currentPage.value = 1 // بازگشت به صفحه اول
+    contactStore.setItemsPerPage(size)
+  }
+}
+
+/**
+ * لیست نهایی مخاطبین برای نمایش
+ * @type {import('vue').ComputedRef<Array>}
+ */
+const contactsPreparedForDisplay = computed(() => {
+  if (contactStore.loading || !contactStore.paginatedContacts) {
+    return []
+  }
+
+  return contactStore.paginatedContacts.map((contact) => {
+    const displayData = []
+
+    // اضافه کردن فیلدهای استاندارد
+    if (settingsStore.displayColumns.includes('name')) {
+      displayData.push({
+        key: 'name',
+        label: t('form.name'),
+        value: contact.name || '',
+      })
+    }
+
+    if (settingsStore.displayColumns.includes('lastName')) {
+      displayData.push({
+        key: 'lastName',
+        label: t('form.lastName'),
+        value: contact.lastName || '',
+      })
+    }
+
+    // اضافه کردن فیلدهای سفارشی
+    settingsStore.displayColumns.forEach((columnKey) => {
+      // از فیلدهای استاندارد که قبلاً اضافه شدند رد شو
+      if (['name', 'lastName'].includes(columnKey)) {
+        return
+      }
+
+      // پیدا کردن تعریف فیلد
+      const fieldDef = customFieldStore.fieldDefinitions.find((f) => f.key === columnKey)
+      if (!fieldDef) return
+
+      // مقدار فیلد را از مخاطب بگیر
+      const fieldValue = contact.customFields?.[columnKey]
+
+      // فرمت کردن مقدار بر اساس نوع فیلد
+      let displayValue = formatCustomFieldValue(fieldValue, fieldDef.type)
+
+      displayData.push({
+        key: columnKey,
+        label: fieldDef.label,
+        value: displayValue,
+      })
+    })
+
+    return {
+      contact: {
+        ...contact,
+        displayData,
+      },
+    }
+  })
 })
+
+/**
+ * تعداد کل مخاطبین با توجه به فیلترهای اعمال شده
+ * @type {import('vue').ComputedRef<number>}
+ */
+const totalContactsOnCurrentFilter = computed(() => {
+  return filteredAndSortedContacts.value.length
+})
+
+// توابع nextPage و prevPage از usePagination استفاده می‌شوند
+
+/**
+ * رفتن به صفحه خاص
+ * @param {number} page - شماره صفحه مورد نظر
+ */
+function goToPage(page) {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+  }
+}
+
+// بررسی خالی بودن نتایج
+const hasNoResults = computed(() => paginatedContacts.value.length === 0 && !contactStore.loading)
+
+// بررسی فعال‌بودن فیلترها
+const hasActiveFilters = computed(
+  () =>
+    contactStore.contacts.length > 0 &&
+    (storeSearchQuery.value || storeFilterRules.value.length > 0),
+)
+
+// قوانین فیلتر جاری
+const currentFilterRules = computed(() => storeFilterRules.value)
+
+// ===============================
+// 1. توابع مدیریت مخاطبین
+// ===============================
+
+/**
+ * اضافه کردن مخاطبین نمونه
+ * @async
+ */
+const handleAddSampleContacts = async () => {
+  isAddingSamples.value = true
+  try {
+    const result = await contactStore.addSampleContacts(t)
+    
+    // اگر کاربر عملیات را لغو کرده یا نتیجه تعریف نشده باشد
+    if (!result) {
+      notificationStore.showNotification({
+        type: 'info',
+        message: t('contactList.operationCancelled')
+      })
+      return
+    }
+    
+    // اگر نتیجه موفقیت‌آمیز بود
+    if (result.success) {
+      notificationStore.showNotification({
+        type: 'success',
+        message: result.message || t('contactList.samplesAddedSuccessfully')
+      })
+    } else {
+      // اگر خطایی رخ داده باشد
+      notificationStore.showError({
+        message: result.message || t('contactList.errorAddingSamples'),
+        error: result.error
+      })
+    }
+  } catch (error) {
+    // اگر خطای غیرمنتظره‌ای رخ داده باشد
+    console.error('Error in handleAddSampleContacts:', error)
+    notificationStore.showError({
+      message: t('contactList.errorAddingSamples'),
+      error: error.message
+    })
+  } finally {
+    isAddingSamples.value = false
+  }
+}
+
+/**
+ * شروع ویرایش مخاطب
+ * @param {Object} contact - شیء مخاطب برای ویرایش
+ */
+const startEditingContact = (contact) => {
+  router.push({ name: 'edit-contact', params: { id: contact.id } })
+}
+
+/**
+ * تایید حذف مخاطب
+ * @param {string} contactId - شناسه مخاطب برای حذف
+ */
+const confirmDeleteContact = async (contactId) => {
+  await handleAsyncError(async () => {
+    const confirmed = await notificationStore.showConfirm(
+      t('contactList.confirmDelete'),
+      t('common.warning'),
+    )
+
+    if (confirmed) {
+      await contactStore.deleteContact(contactId)
+      notificationStore.showSuccess(t('contactList.contactDeleted'))
+    }
+  }, 'خطا در حذف مخاطب')
+}
+
+// ===============================
+// 4. فیلتر پیشرفته
+// ===============================
+
+// اضافه کردن قانون فیلتر جدید
+function addNewRule() {
+  const newRules = [
+    ...storeFilterRules.value,
+    {
+      field: '',
+      operator: 'contains',
+      value: '',
+    },
+  ]
+  contactStore.setFilterRules(newRules)
+}
+
+// حذف قانون فیلتر
+function removeRule(index) {
+  const newRules = [...storeFilterRules.value]
+  newRules.splice(index, 1)
+  contactStore.setFilterRules(newRules)
+}
+
+/**
+ * اعمال فیلترها
+ */
+const applyFilters = () => {
+  contactStore.applyFilters()
+}
+
+/**
+ * پاک کردن تمام فیلترها
+ */
+const clearFilters = () => {
+  contactStore.clearFilterRules()
+  isFilterSectionVisible.value = false
+}
+
+// ===============================
+// 3. صفحه‌بندی و اسکرول
+// ===============================
+
+/**
+ * رفتن به صفحه بعدی همراه با اسکرول به بالای صفحه
+ */
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    handlePageChange(currentPage.value + 1)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
+/**
+ * رفتن به صفحه قبلی همراه با اسکرول به بالای صفحه
+ */
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    handlePageChange(currentPage.value - 1)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
+// ===============================
+// 5. محاسبه‌شده‌های اضافی
+// ===============================
+// (کد به بخش 2 منتقل شد)
+
+// ===============================
+// 6. چرخه حیات
+// ===============================
+
+// بارگذاری اولیه داده‌ها
+onMounted(async () => {
+  try {
+    await Promise.all([
+      contactStore.loadContacts(),
+      customFieldStore.loadFieldDefinitions(),
+      groupStore.loadGroups(),
+    ])
+    isInitialLoad.value = false
+  } catch (error) {
+    console.error('خطا در بارگذاری داده‌های اولیه:', error)
+    notificationStore.showError(t('errors.failedToLoadData'))
+  }
+})
+
+// پاک‌سازی منابع در هنگام از بین رفتن کامپوننت
+onUnmounted(() => {
+  // پاک کردن فیلترها و جستجو هنگام ترک صفحه
+  contactStore.clearFilterRules()
+  contactStore.setSearchQuery('')
+})
+// filterableFields از useContactFilters ایمپورت شده و در آنجا تعریف می‌شود.
 
 const availableOperators = computed(() => {
   const fieldDef = selectedNewRuleFieldDefinition.value
   const type = fieldDef?.type
   const operators = {
     text: [
-      { value: 'equals', label: this.$t('contactList.operators.equals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
-      { value: 'contains', label: this.$t('contactList.operators.contains') },
-      { value: 'notContains', label: this.$t('contactList.operators.notContains') },
-      { value: 'startsWith', label: this.$t('contactList.operators.startsWith') },
-      { value: 'endsWith', label: this.$t('contactList.operators.endsWith') },
+      { value: 'equals', label: t('contactList.operators.equals') },
+      { value: 'notEquals', label: t('contactList.operators.notEquals') },
+      { value: 'contains', label: t('contactList.operators.contains') },
+      { value: 'notContains', label: t('contactList.operators.notContains') },
+      { value: 'startsWith', label: t('contactList.operators.startsWith') },
+      { value: 'endsWith', label: t('contactList.operators.endsWith') },
     ],
     textarea: [
-      { value: 'equals', label: this.$t('contactList.operators.equals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
-      { value: 'contains', label: this.$t('contactList.operators.contains') },
-      { value: 'notContains', label: this.$t('contactList.operators.notContains') },
+      { value: 'equals', label: t('contactList.operators.equals') },
+      { value: 'notEquals', label: t('contactList.operators.notEquals') },
+      { value: 'contains', label: t('contactList.operators.contains') },
+      { value: 'notContains', label: t('contactList.operators.notContains') },
     ],
     number: [
-      { value: 'equals', label: this.$t('contactList.operators.equals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
-      { value: 'greaterThan', label: this.$t('contactList.operators.greaterThan') },
-      { value: 'lessThan', label: this.$t('contactList.operators.lessThan') },
-      { value: 'greaterThanOrEqual', label: this.$t('contactList.operators.greaterThanOrEqual') },
-      { value: 'lessThanOrEqual', label: this.$t('contactList.operators.lessThanOrEqual') },
+      { value: 'equals', label: t('contactList.operators.equals') },
+      { value: 'notEquals', label: t('contactList.operators.notEquals') },
+      { value: 'greaterThan', label: t('contactList.operators.greaterThan') },
+      { value: 'lessThan', label: t('contactList.operators.lessThan') },
+      { value: 'greaterThanOrEqual', label: t('contactList.operators.greaterThanOrEqual') },
+      { value: 'lessThanOrEqual', label: t('contactList.operators.lessThanOrEqual') },
     ],
     date: [
-      { value: 'equals', label: this.$t('contactList.operators.dateEquals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.dateNotEquals') },
-      { value: 'isBefore', label: this.$t('contactList.operators.isBefore') },
-      { value: 'isAfter', label: this.$t('contactList.operators.isAfter') },
-      { value: 'isSameOrBefore', label: this.$t('contactList.operators.isSameOrBefore') },
-      { value: 'isSameOrAfter', label: this.$t('contactList.operators.isSameOrAfter') },
+      { value: 'equals', label: t('contactList.operators.dateEquals') },
+      { value: 'notEquals', label: t('contactList.operators.dateNotEquals') },
+      { value: 'isBefore', label: t('contactList.operators.isBefore') },
+      { value: 'isAfter', label: t('contactList.operators.isAfter') },
+      { value: 'isSameOrBefore', label: t('contactList.operators.isSameOrBefore') },
+      { value: 'isSameOrAfter', label: t('contactList.operators.isSameOrAfter') },
     ],
     boolean: [
-      { value: 'equals', label: this.$t('contactList.operators.booleanEquals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.booleanNotEquals') },
+      { value: 'equals', label: t('contactList.operators.booleanEquals') },
+      { value: 'notEquals', label: t('contactList.operators.booleanNotEquals') },
     ],
     select: [
-      { value: 'equals', label: this.$t('contactList.operators.equals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
+      { value: 'equals', label: t('contactList.operators.equals') },
+      { value: 'notEquals', label: t('contactList.operators.notEquals') },
     ],
   }
   const commonOperators = [
-    { value: 'isNull', label: this.$t('contactList.operators.isNull') },
-    { value: 'isNotNull', label: this.$t('contactList.operators.isNotNull') },
+    { value: 'isNull', label: t('contactList.operators.isNull') },
+    { value: 'isNotNull', label: t('contactList.operators.isNotNull') },
   ]
 
   const typeOperators = operators[type] || []
   return [...typeOperators, ...commonOperators]
 })
 
+/**
+ * گزینه‌های مقدار برای فیلدهای انتخاب شده
+ */
 const valueSelectOptions = computed(() => {
   const fieldDef = selectedNewRuleFieldDefinition.value
   if (!fieldDef) return []
@@ -278,12 +574,12 @@ const valueSelectOptions = computed(() => {
       )
     } else if (fieldDef.value === 'group' || fieldDef.type === 'group') {
       groupStore.groups.forEach((group) => {
-        options.push({ label: group.name, value: group.name })
+        options.push({ label: group.name, value: group.id })
       })
       options.unshift({ label: 'بدون گروه', value: '' })
     } else if (fieldDef.id && fieldDef.type === 'select') {
       const customFieldDefinition = fieldDefinitions.value.find((def) => def.id === fieldDef.id)
-      if (customFieldDefinition && customFieldDefinition.options) {
+      if (customFieldDefinition?.options) {
         customFieldDefinition.options.forEach((opt) => {
           if (typeof opt === 'string') {
             options.push({ label: opt, value: opt })
@@ -293,7 +589,7 @@ const valueSelectOptions = computed(() => {
         })
       }
     } else if (fieldDef.type === 'boolean') {
-      options.push({ label: 'بله', value: true }, { label: 'خیر', value: false })
+      options.push({ label: t('common.yes'), value: true }, { label: t('common.no'), value: false })
     }
   }
 
@@ -310,67 +606,67 @@ const getRuleOperatorLabel = (rule) => {
 
   const allPossibleOperators = {
     text: [
-      { value: 'equals', label: this.$t('contactList.operators.equals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
-      { value: 'contains', label: this.$t('contactList.operators.contains') },
-      { value: 'notContains', label: this.$t('contactList.operators.notContains') },
-      { value: 'startsWith', label: this.$t('contactList.operators.startsWith') },
-      { value: 'endsWith', label: this.$t('contactList.operators.endsWith') },
+      { value: 'equals', label: t('contactList.operators.equals') },
+      { value: 'notEquals', label: t('contactList.operators.notEquals') },
+      { value: 'contains', label: t('contactList.operators.contains') },
+      { value: 'notContains', label: t('contactList.operators.notContains') },
+      { value: 'startsWith', label: t('contactList.operators.startsWith') },
+      { value: 'endsWith', label: t('contactList.operators.endsWith') },
     ],
     textarea: [
-      { value: 'equals', label: this.$t('contactList.operators.equals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
-      { value: 'contains', label: this.$t('contactList.operators.contains') },
-      { value: 'notContains', label: this.$t('contactList.operators.notContains') },
+      { value: 'equals', label: t('contactList.operators.equals') },
+      { value: 'notEquals', label: t('contactList.operators.notEquals') },
+      { value: 'contains', label: t('contactList.operators.contains') },
+      { value: 'notContains', label: t('contactList.operators.notContains') },
     ],
     number: [
-      { value: 'equals', label: this.$t('contactList.operators.equals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
-      { value: 'greaterThan', label: this.$t('contactList.operators.greaterThan') },
-      { value: 'lessThan', label: this.$t('contactList.operators.lessThan') },
-      { value: 'greaterThanOrEqual', label: this.$t('contactList.operators.greaterThanOrEqual') },
-      { value: 'lessThanOrEqual', label: this.$t('contactList.operators.lessThanOrEqual') },
+      { value: 'equals', label: t('contactList.operators.equals') },
+      { value: 'notEquals', label: t('contactList.operators.notEquals') },
+      { value: 'greaterThan', label: t('contactList.operators.greaterThan') },
+      { value: 'lessThan', label: t('contactList.operators.lessThan') },
+      { value: 'greaterThanOrEqual', label: t('contactList.operators.greaterThanOrEqual') },
+      { value: 'lessThanOrEqual', label: t('contactList.operators.lessThanOrEqual') },
     ],
     date: [
-      { value: 'equals', label: this.$t('contactList.operators.dateEquals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.dateNotEquals') },
-      { value: 'isBefore', label: this.$t('contactList.operators.isBefore') },
-      { value: 'isAfter', label: this.$t('contactList.operators.isAfter') },
-      { value: 'isSameOrBefore', label: this.$t('contactList.operators.isSameOrBefore') },
-      { value: 'isSameOrAfter', label: this.$t('contactList.operators.isSameOrAfter') },
+      { value: 'equals', label: t('contactList.operators.dateEquals') },
+      { value: 'notEquals', label: t('contactList.operators.dateNotEquals') },
+      { value: 'isBefore', label: t('contactList.operators.isBefore') },
+      { value: 'isAfter', label: t('contactList.operators.isAfter') },
+      { value: 'isSameOrBefore', label: t('contactList.operators.isSameOrBefore') },
+      { value: 'isSameOrAfter', label: t('contactList.operators.isSameOrAfter') },
     ],
     boolean: [
-      { value: 'equals', label: this.$t('contactList.operators.booleanEquals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.booleanNotEquals') },
+      { value: 'equals', label: t('contactList.operators.booleanEquals') },
+      { value: 'notEquals', label: t('contactList.operators.booleanNotEquals') },
     ],
     select: [
-      { value: 'equals', label: this.$t('contactList.operators.equals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
+      { value: 'equals', label: t('contactList.operators.equals') },
+      { value: 'notEquals', label: t('contactList.operators.notEquals') },
     ],
     gender: [
-      { value: 'equals', label: this.$t('contactList.operators.equals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
-      { value: 'isNull', label: this.$t('contactList.operators.isNull') },
-      { value: 'isNotNull', label: this.$t('contactList.operators.isNotNull') },
+      { value: 'equals', label: t('contactList.operators.equals') },
+      { value: 'notEquals', label: t('contactList.operators.notEquals') },
+      { value: 'isNull', label: t('contactList.operators.isNull') },
+      { value: 'isNotNull', label: t('contactList.operators.isNotNull') },
     ],
     group: [
-      { value: 'equals', label: this.$t('contactList.operators.equals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
-      { value: 'isNull', label: this.$t('contactList.operators.isNull') },
-      { value: 'isNotNull', label: this.$t('contactList.operators.isNotNull') },
+      { value: 'equals', label: t('contactList.operators.equals') },
+      { value: 'notEquals', label: t('contactList.operators.notEquals') },
+      { value: 'isNull', label: t('contactList.operators.isNull') },
+      { value: 'isNotNull', label: t('contactList.operators.isNotNull') },
     ],
     addressPart: [
-      { value: 'equals', label: this.$t('contactList.operators.equals') },
-      { value: 'notEquals', label: this.$t('contactList.operators.notEquals') },
-      { value: 'contains', label: this.$t('contactList.operators.contains') },
-      { value: 'notContains', label: this.$t('contactList.operators.notContains') },
-      { value: 'isNull', label: this.$t('contactList.operators.isNull') },
-      { value: 'isNotNull', label: this.$t('contactList.operators.isNotNull') },
+      { value: 'equals', label: t('contactList.operators.equals') },
+      { value: 'notEquals', label: t('contactList.operators.notEquals') },
+      { value: 'contains', label: t('contactList.operators.contains') },
+      { value: 'notContains', label: t('contactList.operators.notContains') },
+      { value: 'isNull', label: t('contactList.operators.isNull') },
+      { value: 'isNotNull', label: t('contactList.operators.isNotNull') },
     ],
   }
   const commonOperators = [
-    { value: 'isNull', label: this.$t('contactList.operators.isNull') },
-    { value: 'isNotNull', label: this.$t('contactList.operators.isNotNull') },
+    { value: 'isNull', label: t('contactList.operators.isNull') },
+    { value: 'isNotNull', label: t('contactList.operators.isNotNull') },
   ]
 
   const typeOperators = allPossibleOperators[type] || []
@@ -392,21 +688,19 @@ const formatRuleValue = (rule) => {
   }
 
   const fieldDef = filterableFields.value.find((f) => f.value === rule.field)
-  const type = fieldDef?.type || 'text'
+  const type = fieldDef?.type
 
   switch (type) {
     case 'date':
       return formatGregorianDateToShamsi(rule.value)
     case 'boolean':
-      return rule.value
-        ? this.$t('contactList.booleanOptions.yes')
-        : this.$t('contactList.booleanOptions.no')
+      return rule.value ? t('contactList.booleanOptions.yes') : t('contactList.booleanOptions.no')
     case 'gender':
       return displayGender(rule.value)
     case 'group':
-      return rule.value === '' ? this.$t('contactList.noGroup') : rule.value
+      return rule.value === '' ? t('contactList.noGroup') : rule.value
     case 'select':
-      const customSelectDef = fieldDefinitions.value.find((def) => def.id === rule.field)
+      const customSelectDef = customFieldStore.fieldDefinitions.find((def) => def.id === rule.field)
       if (customSelectDef) {
         const option = customSelectDef.options?.find(
           (opt) =>
@@ -425,941 +719,50 @@ const formatRuleValue = (rule) => {
   }
 }
 
-const addNewRule = () => {
-  const rule = newRule.value
-  const fieldDef = selectedNewRuleFieldDefinition.value
+// ===============================
+// 9. محاسبه‌شده‌های وضعیت نمایش
+// ===============================
 
-  if (!rule.field || !rule.operator) {
-    alert(this.$t('contactList.selectFieldAndOperatorAlert'))
-    return
-  }
-  const requiresValue = rule.operator !== 'isNull' && rule.operator !== 'isNotNull'
-  if (requiresValue && (rule.value === null || rule.value === '')) {
-    alert(this.$t('contactList.enterFilterValueAlert'))
-    return
-  }
-
-  let valueToStore = rule.value
-
-  if (requiresValue && fieldDef) {
-    switch (fieldDef.type) {
-      case 'number':
-        valueToStore = Number(rule.value)
-        if (isNaN(valueToStore)) {
-          alert(this.$t('contactList.invalidNumberAlert'))
-          return
-        }
-        break
-      case 'date':
-        const jalaaliMoment = parseJalaaliStringToGregorianMoment(rule.value)
-        if (!jalaaliMoment || !jalaaliMoment.isValid()) {
-          alert(this.$t('contactList.invalidDateAlert'))
-          return
-        }
-        valueToStore = jalaaliMoment.format('YYYY-MM-DD')
-        break
-      case 'boolean':
-        valueToStore = rule.value
-        break
-      case 'select':
-      case 'gender':
-      case 'group':
-        valueToStore = rule.value
-        break
-      case 'text':
-      case 'textarea':
-      default:
-        valueToStore = String(rule.value)
-        break
-    }
-  }
-
-  // استفاده از تابع addFilterRule از کامپوزابل
-  addFilterRule({
-    field: rule.field,
-    operator: rule.operator,
-    value: valueToStore,
-  })
-
-  newRule.value = {
-    field: null,
-    operator: null,
-    value: null,
-  }
-}
-
-// استفاده از تابع removeFilterRule از کامپوزابل
-const removeRule = (index) => {
-  removeFilterRule(index)
-  applyFilters()
-}
-
-const applyFilters = () => {
-  contactStore.setFilterRules(currentFilterRules.value)
-}
-
-const clearFilters = () => {
-  clearFilterRules()
-  contactStore.setFilterRules([])
-}
-
-// استفاده از کامپوزابل صفحه‌بندی
-const {
-  currentPage,
-  itemsPerPage,
-  totalPages,
-  paginatedItems: paginatedContacts,
-  goToPage: baseGoToPage,
-  nextPage: baseNextPage,
-  prevPage: basePrevPage
-} = usePagination(filteredAndSortedContacts, 10)
-
-const totalContactsOnCurrentFilter = computed(() => filteredAndSortedContacts.value.length)
-
-// افزودن امکان اسکرول به بالای صفحه هنگام تغییر صفحه
-const goToPage = (page) => {
-  baseGoToPage(page)
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-const nextPage = () => {
-  baseNextPage()
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-const prevPage = () => {
-  basePrevPage()
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-watch(
-  () => [
-    contactStore.searchQuery,
-    contactStore.sortField,
-    contactStore.sortOrder,
-    currentFilterRules.value.length,
-  ],
-  () => {
-    currentPage.value = 1
-  },
-)
-
-watchEffect(() => {
-  const contactsLoading = contactStore.loading
-  const customFieldsLoading = customFieldStore.loading
-  const groupsLoading = groupStore.loading
-
-  const contacts = paginatedContacts.value
-
-  if (
-    contactsLoading ||
-    customFieldsLoading ||
-    groupsLoading ||
-    !contacts ||
-    customFieldStore.fieldDefinitions.length === 0
-  ) {
-    contactsPreparedForDisplay.value = []
-    return
-  }
-
-  const preparedData = contacts.map((contact) => {
-    const displayData = []
-
-    settingsStore.displayColumns.forEach((columnKey) => {
-      if (columnKey === 'name' || columnKey === 'lastName') {
-        return
-      }
-
-      let label = standardFieldLabels[columnKey] || this.$t('contactList.unknownField')
-      let rawValue = undefined
-      let fieldType = standardFieldTypes[columnKey] || 'text'
-      let currentFieldDefForFormatter = null
-
-      if (standardFieldLabels[columnKey]) {
-        rawValue = contact[columnKey]
-        if (columnKey.startsWith('address.')) {
-          const addressPartKey = columnKey.split('.')[1]
-          if (Array.isArray(contact.addresses) && contact.addresses.length > 0) {
-            rawValue = contact.addresses[0][addressPartKey]
-          } else {
-            rawValue = undefined
-          }
-        }
-      } else if (columnKey.startsWith('customFieldDef_')) {
-        const fieldIdString = columnKey.split('_')[1]
-        if (!customFieldStore.fieldDefinitions || customFieldStore.fieldDefinitions.length === 0) {
-          return
-        }
-
-        const fieldId = Number(fieldIdString)
-        if (isNaN(fieldId)) {
-          return
-        }
-
-        const fieldDef = customFieldStore.fieldDefinitions.find((def) => def.id === fieldId)
-        currentFieldDefForFormatter = fieldDef
-
-        if (!fieldDef) {
-          return
-        }
-
-        label = fieldDef.label
-        fieldType = fieldDef.type
-
-        const customFieldData = contact.customFields
-          ? contact.customFields.find((cf) => cf.fieldId === fieldId)
-          : null
-        rawValue = customFieldData ? customFieldData.value : undefined
-      } else {
-        return
-      }
-
-      let formattedValue = ''
-      let shouldDisplay = false
-
-      switch (fieldType) {
-        case 'date':
-          formattedValue = rawValue ? formatGregorianDateToShamsi(rawValue) : ''
-          shouldDisplay = formattedValue !== ''
-          break
-        case 'gender':
-          formattedValue = displayGender(rawValue)
-          shouldDisplay = formattedValue !== ''
-          break
-        case 'group':
-          formattedValue =
-            rawValue === '' || rawValue === null || rawValue === undefined
-              ? 'بدون گروه'
-              : String(rawValue)
-          shouldDisplay = true
-          break
-        case 'addressPart':
-          formattedValue = rawValue != null ? String(rawValue) : ''
-          shouldDisplay = formattedValue.trim() !== ''
-          break
-        case 'boolean':
-          formattedValue = formatCustomFieldValue(rawValue, 'boolean')
-          shouldDisplay = rawValue === true || rawValue === false
-          break
-        case 'number':
-          shouldDisplay = typeof rawValue === 'number' && !isNaN(rawValue)
-          formattedValue = shouldDisplay ? String(rawValue) : ''
-          break
-        case 'select':
-          formattedValue = formatCustomFieldValue(
-            rawValue,
-            'select',
-            currentFieldDefForFormatter?.options,
-          )
-          shouldDisplay =
-            rawValue !== undefined && rawValue !== null && String(rawValue).trim() !== ''
-          break
-        case 'text':
-        case 'textarea':
-        default:
-          formattedValue = rawValue != null ? String(rawValue) : ''
-          shouldDisplay = formattedValue.trim() !== ''
-          break
-      }
-
-      if (shouldDisplay) {
-        displayData.push({
-          label: label,
-          value: formattedValue,
-          key: columnKey,
-        })
-      }
-    })
-
-    return {
-      contact: contact,
-      displayData: displayData,
-    }
-  })
-
-  contactsPreparedForDisplay.value = preparedData
+/**
+ * بررسی خالی بودن نتایج جستجو
+ * @type {import('vue').ComputedRef<boolean>}
+ */
+const isEmptyResults = computed(() => {
+  return !isLoading.value && !hasError.value && contactsPreparedForDisplay.value.length === 0
 })
 
-const standardSortableOptions = [
-  { value: 'lastName', label: this.$t('contactList.fields.lastName') },
-  { value: 'name', label: this.$t('contactList.fields.name') },
-  { value: 'phone', label: this.$t('contactList.fields.phone') },
-  { value: 'createdAt', label: this.$t('contactList.fields.createdAt') },
-  { value: 'group', label: this.$t('contactList.fields.group') },
-  { value: 'title', label: this.$t('contactList.fields.title') },
-  { value: 'birthDate', label: this.$t('contactList.fields.birthDate') },
-]
-const sortOptions = computed(() => {
-  const options = [...standardSortableOptions]
-  customFieldStore.sortedFieldDefinitions.forEach((field) => {
-    options.push({
-      value: field.id,
-      label: `فیلد سفارشی: ${field.label}`,
-    })
-  })
-  return options
-})
+// ===============================
+// 10. مدیریت به‌روزرسانی‌ها
+// ===============================
 
-const startEditingContact = (contact) => {
-  contactStore.setContactToEdit(contact)
-  router.push({ name: 'add-contact' })
+/**
+ * مدیریت به‌روزرسانی عبارت جستجو
+ * @param {string} newValue - مقدار جدید برای جستجو
+ */
+function handleSearchQueryUpdate(newValue) {
+  contactStore.setSearchQuery(newValue)
 }
 
-const confirmDeleteContact = async (contactId) => {
-  const confirmed = window.confirm('آیا از حذف این مخاطب اطمینان دارید؟')
-  if (confirmed) {
-    try {
-      await contactStore.deleteContact(contactId)
-    } catch (error) {
-      this.notificationStore.showNotification(this.$t('contactList.deleteError'), 'error')
-    }
-  }
+/**
+ * مدیریت به‌روزرسانی فیلد مرتب‌سازی
+ * @param {string} newValue - فیلد جدید برای مرتب‌سازی
+ */
+function handleSortFieldUpdate(newValue) {
+  contactStore.setSortCriteria(newValue, contactStore.sortOrder)
 }
+
+/**
+ * مدیریت به‌روزرسانی جهت مرتب‌سازی
+ * @param {string} newValue - جهت جدید برای مرتب‌سازی ('asc' یا 'desc')
+ */
+function handleSortOrderUpdate(newValue) {
+  contactStore.setSortCriteria(contactStore.sortField, newValue)
+}
+
+// ===============================
+// 11. اکسپورت‌ها
+// ===============================
+
+// اکسپورت متغیرها و توابع برای استفاده در تمپلیت
+// ... existing code ...
 </script>
-
-<style scoped>
-/* **استایل‌های کلی کانتینر صفحه** */
-.contact-list-wrapper {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 0 20px;
-}
-
-h2 {
-  text-align: center;
-  color: var(--color-text-primary); /* تغییر کرد */
-  margin-bottom: 20px;
-}
-
-/* **استایل‌های کانتینر کنترل‌ها (جستجو، مرتب‌سازی، فیلتر)** */
-.controls-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-/* استایل بخش جستجو و مرتب‌سازی */
-.search-control,
-.sort-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* استایل عمومی برای Input و Select در کنترل‌ها */
-.control-input,
-.control-select {
-  padding: 8px;
-  border: 1px solid var(--color-border-medium); /* تغییر کرد */
-  border-radius: 4px;
-  font-size: 1em;
-  background-color: var(--color-background-light); /* تغییر کرد */
-  color: var(--color-text-primary); /* تغییر کرد */
-}
-
-/* استایل دکمه نمایش/پنهان‌سازی فیلتر */
-.toggle-filter-button {
-  background: var(--glass-bg);
-  color: var(--color-text-primary);
-  padding: 8px 15px;
-  border: 1px solid var(--color-border-medium);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-size: 1em;
-  transition: all 0.2s ease;
-  font-family: inherit;
-  backdrop-filter: blur(8px);
-}
-
-.toggle-filter-button:hover {
-  background: var(--glass-bg-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-/* **استایل بخش قابل گسترش فیلتر پیشرفته** */
-.advanced-filter-section {
-  border: 1px solid var(--color-border-light); /* تغییر کرد */
-  padding: 15px;
-  border-radius: 8px;
-  background-color: var(--color-background-darker-light); /* تغییر کرد */
-  margin-bottom: 20px;
-}
-
-.advanced-filter-section h3 {
-  margin-top: 0;
-  margin-bottom: 15px;
-  color: var(--color-text-secondary); /* تغییر کرد */
-  border-bottom: 1px dashed var(--color-border-medium); /* تغییر کرد */
-  padding-bottom: 10px;
-}
-
-/* استایل فرم اضافه کردن قانون فیلتر */
-.add-rule-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 15px;
-  padding: 10px;
-  border: 1px dashed var(--color-border-medium); /* تغییر کرد */
-  border-radius: 4px;
-  background-color: var(--color-background-light); /* تغییر کرد */
-  flex-direction: column;
-}
-
-.add-rule-form h4 {
-  width: 100%;
-  margin: 0 0 10px 0;
-  color: var(--color-text-primary); /* تغییر کرد */
-}
-
-.add-rule-form .btn {
-  width: 100%;
-}
-
-/* استایل عمومی برای Input و Select در فرم افزودن قانون */
-.rule-control {
-  flex-basis: 180px;
-  flex-grow: 1;
-}
-
-/* استایل placeholder وقتی فیلدی انتخاب نشده */
-.rule-control-placeholder {
-  flex-basis: 180px;
-  flex-grow: 1;
-  padding: 8px 12px;
-  color: var(--color-text-tertiary); /* تغییر کرد */
-  border: 1px solid var(--color-border-light); /* تغییر کرد */
-  border-radius: 4px;
-  background-color: var(--color-background-light); /* تغییر کرد */
-  font-size: 0.9em;
-  line-height: 1.5;
-}
-
-/* استایل لیست قوانین فیلتر فعال */
-.current-rules-list {
-  margin-top: 15px;
-  padding-top: 15px;
-}
-
-.current-rules-list h4 {
-  margin: 0 0 10px 0;
-  color: var(--color-text-primary); /* تغییر کرد */
-}
-
-.no-rules-message {
-  text-align: center;
-  color: var(--color-text-secondary); /* تغییر کرد */
-  font-style: italic;
-  margin-top: 10px;
-}
-
-/* استایل هر آیتم قانون فیلتر در لیست */
-.filter-rule-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-  padding: 8px;
-  border: 1px solid var(--color-border-light); /* تغییر کرد */
-  border-radius: 4px;
-  background-color: var(--color-background-light); /* تغییر کرد */
-  flex-wrap: wrap;
-  justify-content: space-between;
-  box-shadow: 0 1px 3px var(--color-shadow); /* اضافه شد برای عمق بیشتر */
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.filter-rule-item p {
-  margin: 0;
-  flex-grow: 1;
-  word-break: break-word;
-  margin-bottom: 5px;
-}
-
-.filter-rule-item .btn {
-  width: auto;
-  align-self: flex-end;
-}
-
-.rule-field-label {
-  font-weight: bold;
-  color: var(--color-link-primary); /* تغییر کرد */
-}
-
-.rule-operator-label {
-  font-style: italic;
-  color: var(--color-text-secondary); /* تغییر کرد */
-}
-
-.rule-value {
-  font-weight: bold;
-  color: var(--color-text-primary); /* تغییر کرد */
-}
-
-.rule-value-none {
-  font-style: italic;
-  color: var(--color-text-tertiary); /* تغییر کرد */
-}
-
-/* استایل کانتینر دکمه‌های اعمال/پاک کردن فیلتر */
-.filter-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-  justify-content: flex-end;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.filter-actions .btn {
-  width: 100%;
-}
-
-.filter-section-separator {
-  margin: 15px 0;
-  border: none;
-  border-top: 1px dashed var(--color-border-medium); /* تغییر کرد */
-}
-
-/* **استایل خط جداکننده اصلی** */
-.separator {
-  margin: 20px 0;
-  border: none;
-  border-top: 1px solid var(--color-border-light); /* تغییر کرد */
-}
-
-/* **استایل پیام‌های وضعیت (لودینگ، خطا، عدم نتیجه)** */
-.status-message {
-  text-align: center;
-  padding: 15px;
-  margin-bottom: 20px;
-  border-radius: 4px;
-}
-
-.status-message.loading {
-  background-color: var(--color-success-light); /* تغییر کرد */
-  color: var(--color-success); /* تغییر کرد */
-  border: 1px solid var(--color-success-dark); /* تغییر کرد */
-}
-
-.status-message.error {
-  background-color: var(--color-danger-light); /* تغییر کرد */
-  color: var(--color-danger); /* تغییر کرد */
-  border: 1px solid var(--color-danger-dark); /* تغییر کرد */
-}
-
-.status-message.no-results {
-  background-color: var(--color-warning-light); /* تغییر کرد */
-  color: var(--color-warning); /* تغییر کرد */
-  border: 1px solid var(--color-warning-dark); /* تغییر کرد */
-}
-
-/* **استایل لیست مخاطبین (ul)** */
-.contact-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-/* **استایل هر آیتم مخاطب (li)** */
-.contact-item {
-  background: var(--glass-bg, rgba(255, 255, 255, 0.18));
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  border-radius: 18px;
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  transition:
-    box-shadow 0.3s,
-    border 0.3s,
-    background 0.3s;
-  margin-bottom: 18px;
-  padding: 18px 22px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px;
-  align-items: flex-start;
-  position: relative;
-  flex-direction: column;
-  align-items: stretch;
-}
-.contact-item:hover {
-  box-shadow: 0 12px 32px 0 rgba(31, 38, 135, 0.22);
-  border: 1.5px solid rgba(255, 255, 255, 0.35);
-  background: var(--glass-bg-hover, rgba(255, 255, 255, 0.24));
-}
-
-/* کانتینر اطلاعات مخاطب */
-.contact-info {
-  flex-grow: 1;
-  min-width: 0;
-}
-
-/* استایل لینک نام مخاطب */
-.contact-name-link {
-  color: var(--color-link-primary); /* تغییر کرد */
-  text-decoration: none;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 1.1em;
-  margin-bottom: 5px;
-  display: inline-block;
-}
-
-.contact-name-link:hover {
-  text-decoration: underline;
-}
-
-/* استایل پاراگراف‌های اطلاعات داخل آیتم */
-.contact-item p {
-  margin: 3px 0;
-  font-size: 0.9em;
-  color: var(--color-text-secondary); /* تغییر کرد */
-  word-break: break-word;
-}
-
-/* استایل عنوان‌های فیلد */
-.contact-item p strong {
-  color: var(--color-text-primary); /* تغییر کرد */
-  margin-left: 5px;
-}
-
-/* استایل بخش‌های اطلاعات اضافی */
-.additional-info {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--color-border-light); /* تغییر کرد */
-}
-
-.additional-info strong {
-  display: block;
-  margin-bottom: 5px;
-  color: var(--color-text-primary); /* تغییر کرد */
-}
-
-.additional-info ul {
-  list-style: disc;
-  padding-left: 20px;
-  margin-top: 5px;
-  margin-bottom: 0;
-}
-
-.additional-info ul li {
-  font-size: 0.9em;
-  color: var(--color-text-secondary); /* تغییر کرد */
-  margin-bottom: 3px;
-  word-break: break-word;
-}
-
-/* استایل برای بخش یادداشت مخاطب */
-.contact-notes {
-  font-style: italic;
-  color: var(--color-text-secondary); /* اضافه شد */
-}
-
-/* استایل برای تاریخ‌های ایجاد و ویرایش */
-.date-info {
-  font-size: 0.8em;
-  color: var(--color-text-tertiary); /* تغییر کرد */
-}
-
-/* کانتینر دکمه‌های ویرایش و حذف */
-.contact-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
-}
-
-/* Button Styles */
-.button {
-  padding: 8px 15px;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-size: 0.9em;
-  transition:
-    background-color 0.3s ease,
-    opacity 0.3s ease,
-    transform 0.2s ease;
-  font-family: inherit;
-}
-
-.button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Action Buttons */
-.edit-button {
-  background: linear-gradient(120deg, var(--color-warning) 60%, transparent 100%);
-  color: var(--color-black);
-  border: none;
-  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.1);
-}
-
-.edit-button:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.2);
-}
-
-.delete-button {
-  background: linear-gradient(120deg, var(--color-danger) 60%, transparent 100%);
-  color: var(--color-white);
-  border: none;
-  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.1);
-}
-
-.delete-button:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.2);
-}
-
-/* Filter Rules */
-.add-rule-btn {
-  background: linear-gradient(120deg, var(--accent-color) 60%, transparent 100%);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.add-rule-btn:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 4px 16px rgba(var(--accent-color-rgb, 108, 99, 255), 0.18);
-}
-
-.add-rule-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Pagination Controls */
-.pagination-button,
-.page-number-button {
-  background: var(--glass-bg);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border-medium);
-  padding: 8px 15px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(8px);
-}
-
-.pagination-button:hover:not(:disabled),
-.page-number-button:hover:not(:disabled) {
-  background: var(--glass-bg-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.pagination-button:disabled,
-.page-number-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* استایل‌های موبایل اگر نیاز بود */
-@media (max-width: 768px) {
-  .advanced-filter-button {
-    padding: 10px 15px; /* پدینگ مناسب‌تر در موبایل */
-    font-size: 0.9em; /* فونت کمی کوچکتر */
-  }
-}
-
-/* **استایل کنترل‌های صفحه‌بندی** */
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-  gap: 10px;
-  flex-wrap: wrap;
-  direction: rtl; /* حفظ جهت rtl */
-}
-
-/* استایل عمومی دکمه‌های صفحه‌بندی */
-.pagination-button,
-.page-number-button {
-  padding: 8px 15px;
-  border: 1px solid var(--color-border-medium); /* تغییر کرد */
-  background-color: var(--color-background-darker-light); /* تغییر کرد */
-  color: var(--color-text-primary); /* تغییر کرد */
-  cursor: pointer;
-  border-radius: 5px;
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease,
-    border-color 0.3s ease;
-  font-family: inherit;
-}
-
-.pagination-button:hover:not(:disabled),
-.page-number-button:hover:not(:disabled) {
-  background-color: var(--color-border-light); /* تغییر کرد */
-  border-color: var(--color-link-primary); /* تغییر کرد */
-  color: var(--color-text-primary); /* برای حفظ رنگ متن در هاور */
-}
-
-.pagination-button:disabled,
-.page-number-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background-color: var(--color-background-darker-light); /* تغییر کرد */
-  color: var(--color-text-tertiary); /* تغییر کرد */
-  border-color: var(--color-border-light); /* تغییر کرد */
-}
-
-/* استایل دکمه صفحه فعال */
-.page-number-button.active {
-  background-color: var(--color-link-primary); /* تغییر کرد */
-  color: white; /* این ثابت می‌مونه */
-  border-color: var(--color-link-primary); /* تغییر کرد */
-}
-
-.pagination-controls span {
-  font-weight: bold;
-  margin: 0 5px;
-  color: var(--color-text-primary); /* اضافه شد */
-}
-
-/* کانتینر شماره صفحات */
-.page-numbers {
-  display: flex;
-  gap: 5px;
-  margin-left: 5px;
-}
-
-.page-numbers button {
-  min-width: 35px;
-  text-align: center;
-  justify-content: center;
-}
-
-/* ** واکنش‌گرایی برای نمایش بهتر در موبایل ** */
-@media (max-width: 600px) {
-  .contact-list-wrapper {
-    padding: 0 10px;
-  }
-
-  .controls-container {
-    flex-direction: column;
-    gap: 15px;
-    align-items: stretch;
-    padding: 0 10px;
-  }
-
-  .search-control,
-  .sort-controls {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-    width: 100%;
-  }
-
-  .search-control label,
-  .sort-controls label {
-    margin-right: 0;
-    margin-bottom: 5px;
-  }
-
-  .search-control input[type='text'],
-  .sort-controls select {
-    width: 100%;
-    flex-basis: auto;
-  }
-
-  .rule-control-placeholder {
-    width: 100%;
-    flex-basis: auto;
-    text-align: center;
-  }
-
-  .toggle-filter-button {
-    width: 100%;
-    text-align: center;
-  }
-
-  .advanced-filter-section {
-    margin-left: 10px;
-    margin-right: 10px;
-    width: calc(100% - 20px);
-  }
-
-  .add-rule-form {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .add-rule-form .btn {
-    width: 100%;
-  }
-
-  .filter-rule-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-  }
-
-  .filter-rule-item p {
-    margin-bottom: 5px;
-  }
-  .filter-rule-item .btn {
-    width: auto;
-    align-self: flex-end;
-  }
-
-  .filter-actions {
-    flex-direction: column;
-    gap: 10px;
-    align-items: stretch;
-  }
-
-  .filter-actions .btn {
-    width: 100%;
-  }
-
-  .contact-item {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 15px;
-  }
-
-  .contact-actions {
-    flex-direction: row;
-    justify-content: space-evenly;
-    width: 100%;
-    gap: 10px;
-    margin-top: 10px;
-  }
-
-  .contact-actions .button {
-    flex-grow: 1;
-    text-align: center;
-  }
-
-  .pagination-controls {
-    flex-direction: column;
-    gap: 10px;
-  }
-  .page-numbers {
-    margin-left: 0;
-  }
-  .pagination-button,
-  .page-number-button {
-    width: 100%;
-    text-align: center;
-  }
-  .page-numbers button {
-    min-width: auto;
-  }
-}
-</style>

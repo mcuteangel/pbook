@@ -47,15 +47,27 @@ const router = createRouter({
     // Route برای ویرایش مخاطب
     {
       path: '/contact/:id/edit', // مسیر با پارامتر ID مخاطب برای ویرایش
-      name: 'edit-contact',      // نام مسیر
+      name: 'edit-contact', // نام مسیر
       component: () => import('@/components/contact/ContactForm.vue'), // همان فرم افزودن، اما در حالت ویرایش
-      props: true                // id به عنوان prop به ContactForm ارسال می‌شود
+      props: true, // id به عنوان prop به ContactForm ارسال می‌شود
     },
 
     {
       path: '/settings', // آدرسی که می‌خوایم صفحه تنظیمات باهاش باز بشه
       name: 'settings', // یه اسم منحصر به فرد برای این مسیر (مفید برای ناوبری با نام)
       component: () => import('@/views/SettingsView.vue'), // کامپوننتی که باید برای این مسیر نمایش داده بشه
+    },
+    // مسیر تستی برای کامپوننت DatePicker (با خط تیره)
+    {
+      path: '/test-date-picker',
+      name: 'test-date-picker',
+      component: () => import('../views/TestDatePickerView.vue'),
+    },
+    // مسیر تستی برای کامپوننت DatePicker (بدون خط تیره - طبق درخواست کاربر)
+    {
+      path: '/test-datepicker',
+      name: 'TestDatePicker',
+      component: () => import('../views/TestDatePickerView.vue'),
     },
     // می‌تونی Routes دیگه هم اینجا اضافه کنی
   ],

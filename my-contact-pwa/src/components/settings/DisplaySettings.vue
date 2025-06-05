@@ -4,7 +4,8 @@
     <p>{{ $t('settings.displaySettingsDescription') }}</p>
 
     <div v-if="settingsStore.isLoading" class="loading-message">
-      <IconWrapper icon="fa-solid fa-spinner fa-spin" /> {{ $t('settings.loadingSettings') }}
+      <!-- آیکون لودینگ تنظیمات با پراپ‌های استاندارد و انیمیشن -->
+<IconWrapper icon="spinner" prefix="fa-solid" animation="fa-spin" /> {{ $t('settings.loadingSettings') }}
     </div>
 
     <div class="checkbox-group">
@@ -19,7 +20,8 @@
     </div>
 
     <button type="button" @click="settingsStore.resetToDefaults" class="reset-button glass-btn">
-      <IconWrapper icon="fa-solid fa-undo" /> {{ $t('settings.resetToDefaults') }}
+      <!-- آیکون بازنشانی تنظیمات با پراپ‌های استاندارد -->
+<IconWrapper icon="undo" prefix="fa-solid" /> {{ $t('settings.resetToDefaults') }}
     </button>
   </section>
 </template>
@@ -29,7 +31,7 @@ import { computed } from 'vue'
 import { useSettingsStore } from '@/store/settings'
 import { useCustomFieldStore } from '@/store/customFields'
 import AppSettingsItem from './AppSettingsItem.vue'
-import IconWrapper from '@/components/icons/IconWrapper.vue'
+import IconWrapper from '@/components/common/IconWrapper.vue'
 import { useI18n } from 'vue-i18n' // Import useI18n
 
 const settingsStore = useSettingsStore()

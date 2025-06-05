@@ -3,8 +3,13 @@
     <div class="main-fields-grid">
       <div class="form-group">
         <label for="name">
-          <span :title="$t('contactForm.nameRequired')">
-            <IconWrapper icon="fa-solid fa-signature" />
+          <span class="icon-wrapper" :title="$t('contactForm.nameRequired')">
+            <!-- آیکون نام -->
+            <IconWrapper 
+              icon="signature" 
+              prefix="fa-solid" 
+              class="field-icon name-icon" 
+            />
           </span>
           {{ $t('contactForm.name') }}:
           <span class="required-star" :title="$t('contactForm.requiredField')">*</span>
@@ -23,8 +28,13 @@
       </div>
       <div class="form-group">
         <label for="lastName">
-          <span :title="$t('contactForm.lastNameRequired')">
-            <IconWrapper icon="fa-solid fa-signature" />
+          <span class="icon-wrapper" :title="$t('contactForm.lastNameRequired')">
+            <!-- آیکون نام خانوادگی -->
+            <IconWrapper 
+              icon="signature" 
+              prefix="fa-solid" 
+              class="field-icon lastname-icon" 
+            />
           </span>
           {{ $t('contactForm.lastName') }}:
           <span class="required-star" :title="$t('contactForm.requiredField')">*</span>
@@ -44,7 +54,13 @@
       <div class="form-group">
         <label for="phone">
           <span :title="$t('contactForm.phoneHint')">
-            <IconWrapper icon="fa-solid fa-phone" />
+            <!-- آیکون تلفن -->
+            <IconWrapper 
+              icon="phone" 
+              prefix="fa-solid" 
+              class="field-icon phone-icon" 
+              :title="$t('contactForm.phoneHint')" 
+            />
           </span>
           {{ $t('contactForm.phone') }}:
           <span class="required-star" :title="$t('contactForm.requiredField')">*</span>
@@ -63,7 +79,14 @@
       </div>
       <div class="form-group">
         <label for="title">
-          <span><IconWrapper icon="fa-solid fa-briefcase" /></span>
+          <!-- آیکون عنوان شغلی -->
+          <span class="icon-wrapper">
+            <IconWrapper 
+              icon="briefcase" 
+              prefix="fa-solid" 
+              class="field-icon title-icon" 
+            />
+          </span>
           {{ $t('contactForm.title') }}:
         </label>
         <input
@@ -77,7 +100,14 @@
       </div>
       <div class="form-group">
         <label for="gender">
-          <span><IconWrapper icon="fa-solid fa-venus-mars" /></span>
+          <!-- آیکون جنسیت -->
+          <span class="icon-wrapper">
+            <IconWrapper 
+              icon="venus-mars" 
+              prefix="fa-solid" 
+              class="field-icon gender-icon" 
+            />
+          </span>
           {{ $t('contactForm.gender') }}:
         </label>
         <select
@@ -95,7 +125,14 @@
       </div>
       <div class="form-group">
         <label for="group">
-          <span><IconWrapper icon="fa-solid fa-layer-group" /></span>
+          <!-- آیکون گروه‌بندی -->
+          <span class="icon-wrapper">
+            <IconWrapper 
+              icon="layer-group" 
+              prefix="fa-solid" 
+              class="field-icon group-icon" 
+            />
+          </span>
           {{ $t('contactForm.group') }}:
         </label>
         <select
@@ -112,7 +149,14 @@
         </select>
         <div v-if="isCreatingNewGroup" class="new-group-input">
           <label for="newGroupName">
-            <span><IconWrapper icon="fa-solid fa-plus" /></span>
+            <!-- آیکون اضافه کردن -->
+            <span class="icon-wrapper">
+              <IconWrapper 
+                icon="plus" 
+                prefix="fa-solid" 
+                class="field-icon add-icon" 
+              />
+            </span>
             {{ $t('contactForm.newGroupName') }}:
           </label>
           <input
@@ -127,7 +171,14 @@
       </div>
       <div class="form-group">
         <label for="position">
-          <span><IconWrapper icon="fa-solid fa-user-tie" /></span>
+          <!-- آیکون سمت سازمانی -->
+        <span class="icon-wrapper">
+          <IconWrapper 
+            icon="user-tie" 
+            prefix="fa-solid" 
+            class="field-icon position-icon" 
+          />
+        </span>
           {{ $t('contactForm.position') }}:
         </label>
         <input
@@ -141,7 +192,14 @@
       </div>
       <div class="form-group">
         <label for="birthDate">
-          <span><IconWrapper icon="fa-solid fa-cake-candles" /></span>
+          <!-- آیکون تاریخ تولد -->
+          <span class="icon-wrapper">
+            <IconWrapper 
+              icon="cake-candles" 
+              prefix="fa-solid" 
+              class="field-icon birthday-icon" 
+            />
+          </span>
           {{ $t('contactForm.birthDate') }}:
         </label>
         <date-picker
@@ -161,7 +219,8 @@
 </template>
 
 <script setup>
-import IconWrapper from '@/components/icons/IconWrapper.vue'
+// ایمپورت مستقیم کامپوننت IconWrapper
+import IconWrapper from '@/components/common/IconWrapper.vue'
 import DatePicker from 'vue3-persian-datetime-picker'
 
 defineProps({

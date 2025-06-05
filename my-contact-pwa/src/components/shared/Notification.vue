@@ -38,13 +38,20 @@ const { removeNotification } = notificationStore
 
 // Get notification title based on type
 const getNotificationTitle = (type) => {
-  const titles = {
-    success: t('notification.success'),
-    error: t('notification.error'),
-    warning: t('notification.warning'),
-    info: t('notification.info')
+  try {
+    // تلاش برای دریافت عنوان از فایل ترجمه با استفاده از پیشوند notification
+    const title = t(`notification.${type}`)
+    // اگر ترجمه پیدا شد و با خود کلید (همراه با پیشوند) برابر نبود، آن را برگردان
+    if (title && title !== `notification.${type}`) {
+      return title
+    }
+    // در غیر این‌صورت، نوع (بدون پیشوند) را به عنوان پیش‌فرض برگردان
+    // این کار باعث می‌شود اگر ترجمه پیدا نشد، حداقل خود کلمه success یا error نمایش داده شود
+    return type
+  } catch (error) {
+    console.warn(`خطا در دریافت عنوان نوتیفیکیشن (${type}):`, error)
+    return type
   }
-  return titles[type] || type
 }
 </script>
 

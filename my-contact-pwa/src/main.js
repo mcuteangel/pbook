@@ -2,19 +2,22 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
-import i18n from './plugins/i18n' // ایمپورت کردن i18n از فایل جدید
+import i18n from './plugins/i18n'
 import './assets/styles/theme.css'
 import './assets/styles/glassmorphism.css'
-import './assets/styles/common-components.css' // استایل‌های مشترک کامپوننت‌ها
+import './assets/styles/common-components.css'
 
 // Font Awesome
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { 
-  faMagnifyingGlass, 
-  faArrowUpAZ, 
-  faSliders, 
+import {
+  faMagnifyingGlass,
+  faArrowUpAZ,
+  faSliders,
   faChevronDown,
+  faChevronUp,
+  faList,
+  faCheck,
   faSignature,
   faPhone,
   faBriefcase,
@@ -43,7 +46,20 @@ import {
   faEarthAmericas,
   faBarcode,
   faMobileScreenButton,
-  faFax
+  faFax,
+  faArrowRight,
+  faArrowLeft,
+  faCircle,
+  faInfoCircle,
+  faSpinner,
+  faAddressBook,
+  faExclamationCircle,
+  faCalendarAlt,
+  faTimes,
+  faAngleLeft,
+  faAngleRight,
+  faAngleDoubleLeft,
+  faAngleDoubleRight,
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add icons to the library
@@ -80,7 +96,23 @@ library.add(
   faEarthAmericas,
   faBarcode,
   faMobileScreenButton,
-  faFax
+  faFax,
+  faArrowRight,
+  faArrowLeft,
+  faCircle,
+  faInfoCircle,
+  faSpinner,
+  faAddressBook,
+  faExclamationCircle,
+  faChevronUp,
+  faList,
+  faCheck,
+  faCalendarAlt,
+  faTimes,
+  faAngleLeft,
+  faAngleRight,
+  faAngleDoubleLeft,
+  faAngleDoubleRight,
 )
 
 import { useSettingsStore } from '@/store/settings'
@@ -95,8 +127,8 @@ app.config.warnHandler = () => {} // Disable Vue warnings
 
 app.use(pinia)
 app.use(router)
-app.use(i18n) // استفاده از i18n ایمپورت شده
-app.component('font-awesome-icon', FontAwesomeIcon) // ثبت کامپوننت آیکون‌ها
+app.use(i18n)
+app.component('font-awesome-icon', FontAwesomeIcon)
 
 const settingsStore = useSettingsStore(pinia)
 settingsStore.loadSettings().then(() => {

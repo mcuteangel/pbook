@@ -1,6 +1,7 @@
 // src/utils/formatters.js
 
 import moment from 'moment-jalaali'
+import { useI18n } from 'vue-i18n'
 
 // Enable Jalaali support in moment-jalaali
 moment.loadPersian({ usePersianDigits: false })
@@ -21,6 +22,7 @@ export function parseJalaaliStringToGregorianMoment(jalaaliString) {
 
 // تابع اصلی: فرمت دهی تاریخ میلادی به فرمت نمایش شمسی
 export function formatGregorianDateToShamsi(gregorianDate, includeTime = false) {
+  const { t } = useI18n()
   if (!gregorianDate) {
     return ''
   }
@@ -29,11 +31,11 @@ export function formatGregorianDateToShamsi(gregorianDate, includeTime = false) 
   try {
     momentObj = moment(gregorianDate)
   } catch (e) {
-    return 'خطا در پارس تاریخ میلادی'
+    return t('formatters.date.errorParsingGregorian')
   }
 
   if (!momentObj || !momentObj.isValid()) {
-    return 'تاریخ نامعتبر'
+    return t('formatters.date.invalid')
   }
 
   const formatString = includeTime ? 'jYYYY/jM/jD HH:mm:ss' : 'jYYYY/jM/jD'
@@ -43,6 +45,7 @@ export function formatGregorianDateToShamsi(gregorianDate, includeTime = false) 
 
 // تابع برای فرمت‌دهی مقادیر فیلدهای سفارشی بر اساس نوع
 export function formatCustomFieldValue(value, type, options = []) {
+  const { t } = useI18n()
   if (value === undefined || value === null || value === '') {
     return ''
   }
@@ -55,7 +58,7 @@ export function formatCustomFieldValue(value, type, options = []) {
     case 'date':
       return formatGregorianDateToShamsi(value)
     case 'boolean':
-      return value ? 'بله' : 'خیر'
+      return value ? t('formatters.boolean.yes') : t('formatters.boolean.no')
     case 'select':
       const selectedOption = options.find((opt) => opt.value === value)
       return selectedOption ? selectedOption.label : value
@@ -66,37 +69,39 @@ export function formatCustomFieldValue(value, type, options = []) {
 
 // تابع برای نمایش جنسیت (از کد قبلی شما)
 export const displayGender = (genderValue) => {
+  const { t } = useI18n()
   switch (genderValue) {
     case 'male':
-      return 'آقا'
+      return t('formatters.gender.male')
     case 'female':
-      return 'خانم'
+      return t('formatters.gender.female')
     case 'other':
-      return 'غیره'
+      return t('formatters.gender.other')
     case 'not_specified':
-      return 'ترجیح نمی‌دهم'
+      return t('formatters.gender.notSpecified')
     default:
-      return genderValue || 'نامشخص'
+      return genderValue || t('formatters.gender.unknown')
   }
 }
 
 // تابع برای نمایش نوع تلفن (از کد قبلی شما)
 export const displayPhoneType = (typeValue) => {
+  const { t } = useI18n()
   switch (typeValue) {
     case 'mobile':
-      return 'موبایل'
+      return t('formatters.phoneType.mobile')
     case 'home':
-      return 'منزل'
+      return t('formatters.phoneType.home')
     case 'work':
-      return 'محل کار'
+      return t('formatters.phoneType.work')
     case 'office':
-      return 'مطب/دفتر'
+      return t('formatters.phoneType.office')
     case 'fax':
-      return 'فکس'
+      return t('formatters.phoneType.fax')
     case 'other':
-      return 'دیگر'
+      return t('formatters.phoneType.other')
     default:
-      return typeValue || 'نامشخص'
+      return typeValue || t('formatters.phoneType.unknown')
   }
 }
 
@@ -113,14 +118,15 @@ export const formatAddress = (address) => {
 }
 
 export const displayAddressType = (typeValue) => {
+  const { t } = useI18n()
   switch (typeValue) {
     case 'home':
-      return 'منزل'
+      return t('formatters.addressType.home')
     case 'work':
-      return 'محل کار'
+      return t('formatters.addressType.work')
     case 'other':
-      return 'دیگر'
+      return t('formatters.addressType.other')
     default:
-      return typeValue || 'نامشخص'
+      return typeValue || t('formatters.addressType.unknown')
   }
 }

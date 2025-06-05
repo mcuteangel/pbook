@@ -5,7 +5,12 @@
         :to="{ name: 'contact-detail', params: { id: contact.contact.id } }"
         class="contact-name-link"
       >
-        <IconWrapper icon="fa-solid fa-user" />
+        <!-- آیکون کاربر در کنار نام مخاطب -->
+        <IconWrapper 
+          icon="user" 
+          prefix="fa-solid" 
+          class="contact-icon" 
+        />
         {{ contact.contact.name }} {{ contact.contact.lastName }}
       </router-link>
       <p v-for="fieldData in contact.displayData" :key="fieldData.key">
@@ -51,20 +56,33 @@
         @click="$emit('edit', contact.contact)"
         :disabled="loading"
       >
-        <IconWrapper icon="fa-solid fa-pen-to-square" /> {{ $t('contactList.editButton') }}
+        <!-- آیکون ویرایش -->
+        <IconWrapper 
+          icon="pen-to-square" 
+          prefix="fa-solid" 
+          class="action-icon" 
+        />
+        {{ $t('contactList.editButton') }}
       </button>
       <button
         class="button delete-button"
         type="button"
         @click="$emit('delete', contact.contact.id)"
       >
-        <IconWrapper icon="fa-solid fa-trash" /> {{ $t('contactList.deleteButton') }}
+        <!-- آیکون سطل زباله برای حذف -->
+        <IconWrapper 
+          icon="trash" 
+          prefix="fa-solid" 
+          class="action-icon" 
+        />
+        {{ $t('contactList.deleteButton') }}
       </button>
     </div>
   </li>
 </template>
 <script setup>
-import { IconWrapper } from '@/components/common/commonComponents'
+// ایمپورت مستقیم IconWrapper
+import IconWrapper from '@/components/common/IconWrapper.vue'
 import { displayPhoneType, displayAddressType, formatAddress } from '@/utils/formatters'
 const props = defineProps({
   contact: Object,

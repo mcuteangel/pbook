@@ -8,26 +8,30 @@
     <div class="backup-actions action-group">
       <h4>{{ $t('settings.backupRestore.backupTitle') }}</h4>
       <AppSettingsItem :label="$t('settings.backupRestore.backupContactsLabel')">
-        <button @click="backupContactsHandler" class="action-button glass-btn">
-          <IconWrapper icon="fa-solid fa-download" />
-          {{ $t('settings.backupRestore.backupContactsButton') }}
-        </button>
+        <!-- دکمه دانلود مخاطبین با آیکون استاندارد و کامنت فارسی -->
+<button @click="backupContactsHandler" class="action-button glass-btn">
+  <IconWrapper icon="download" prefix="fa-solid" />
+  {{ $t('settings.backupRestore.backupContactsButton') }}
+</button>
       </AppSettingsItem>
       <AppSettingsItem :label="$t('settings.backupRestore.backupGroupsLabel')">
-        <button @click="backupGroupsHandler" class="action-button glass-btn">
-          <IconWrapper icon="fa-solid fa-download" />
-          {{ $t('settings.backupRestore.backupGroupsButton') }}
-        </button>
+        <!-- دکمه دانلود گروه‌ها با آیکون استاندارد و کامنت فارسی -->
+<button @click="backupGroupsHandler" class="action-button glass-btn">
+  <IconWrapper icon="download" prefix="fa-solid" />
+  {{ $t('settings.backupRestore.backupGroupsButton') }}
+</button>
       </AppSettingsItem>
       <AppSettingsItem :label="$t('settings.backupRestore.backupCustomFieldsLabel')">
-        <button @click="backupCustomFieldsHandler" class="action-button glass-btn">
-          <IconWrapper icon="fa-solid fa-download" />
-          {{ $t('settings.backupRestore.backupCustomFieldsButton') }}
-        </button>
+        <!-- دکمه دانلود فیلدهای سفارشی با آیکون استاندارد و کامنت فارسی -->
+<button @click="backupCustomFieldsHandler" class="action-button glass-btn">
+  <IconWrapper icon="download" prefix="fa-solid" />
+  {{ $t('settings.backupRestore.backupCustomFieldsButton') }}
+</button>
       </AppSettingsItem>
       <AppSettingsItem :label="$t('settings.backupRestore.backupAllLabel')">
         <button @click="backupAllDataHandler" class="action-button glass-btn primary-action">
-          <IconWrapper icon="fa-solid fa-archive" />
+          <!-- آیکون آرشیو با پراپ‌های استاندارد -->
+<IconWrapper icon="archive" prefix="fa-solid" />
           {{ $t('settings.backupRestore.backupAllButton') }}
         </button>
       </AppSettingsItem>
@@ -36,7 +40,8 @@
     <div class="restore-actions action-group">
       <h4>{{ $t('settings.backupRestore.restoreTitle') }}</h4>
       <p class="warning-text">
-        <IconWrapper icon="fa-solid fa-triangle-exclamation" />
+        <!-- آیکون هشدار با پراپ‌های استاندارد -->
+<IconWrapper icon="triangle-exclamation" prefix="fa-solid" />
         {{ $t('settings.backupRestore.restoreWarning') }}
       </p>
       <AppSettingsItem :label="$t('settings.backupRestore.restoreContactsLabel')">
@@ -46,14 +51,15 @@
           accept=".json"
           class="file-input"
         />
-        <button
-          @click="restoreContactsHandler"
-          :disabled="!uploadedFiles.contacts"
-          class="action-button glass-btn"
-        >
-          <IconWrapper icon="fa-solid fa-upload" />
-          {{ $t('settings.backupRestore.restoreContactsButton') }}
-        </button>
+        <!-- دکمه آپلود مخاطبین با آیکون استاندارد و کامنت فارسی -->
+<button
+  @click="restoreContactsHandler"
+  :disabled="!uploadedFiles.contacts"
+  class="action-button glass-btn"
+>
+  <IconWrapper icon="upload" prefix="fa-solid" />
+  {{ $t('settings.backupRestore.restoreContactsButton') }}
+</button>
       </AppSettingsItem>
       <AppSettingsItem :label="$t('settings.backupRestore.restoreGroupsLabel')">
         <input
@@ -62,14 +68,15 @@
           accept=".json"
           class="file-input"
         />
-        <button
-          @click="restoreGroupsHandler"
-          :disabled="!uploadedFiles.groups"
-          class="action-button glass-btn"
-        >
-          <IconWrapper icon="fa-solid fa-upload" />
-          {{ $t('settings.backupRestore.restoreGroupsButton') }}
-        </button>
+        <!-- دکمه آپلود گروه‌ها با آیکون استاندارد و کامنت فارسی -->
+<button
+  @click="restoreGroupsHandler"
+  :disabled="!uploadedFiles.groups"
+  class="action-button glass-btn"
+>
+  <IconWrapper icon="upload" prefix="fa-solid" />
+  {{ $t('settings.backupRestore.restoreGroupsButton') }}
+</button>
       </AppSettingsItem>
       <AppSettingsItem :label="$t('settings.backupRestore.restoreCustomFieldsLabel')">
         <input
@@ -78,14 +85,15 @@
           accept=".json"
           class="file-input"
         />
-        <button
-          @click="restoreCustomFieldsHandler"
-          :disabled="!uploadedFiles.customFields"
-          class="action-button glass-btn"
-        >
-          <IconWrapper icon="fa-solid fa-upload" />
-          {{ $t('settings.backupRestore.restoreCustomFieldsButton') }}
-        </button>
+        <!-- دکمه آپلود فیلدهای سفارشی با آیکون استاندارد و کامنت فارسی -->
+<button
+  @click="restoreCustomFieldsHandler"
+  :disabled="!uploadedFiles.customFields"
+  class="action-button glass-btn"
+>
+  <IconWrapper icon="upload" prefix="fa-solid" />
+  {{ $t('settings.backupRestore.restoreCustomFieldsButton') }}
+</button>
       </AppSettingsItem>
       <AppSettingsItem :label="$t('settings.backupRestore.restoreAllLabel')">
         <input
@@ -94,14 +102,15 @@
           accept=".json"
           class="file-input"
         />
-        <button
-          @click="restoreAllDataHandler"
-          :disabled="!uploadedFiles.all"
-          class="action-button glass-btn primary-action"
-        >
-          <IconWrapper icon="fa-solid fa-upload" />
-          {{ $t('settings.backupRestore.restoreAllButton') }}
-        </button>
+        <!-- دکمه آپلود همه داده‌ها با آیکون استاندارد و کامنت فارسی -->
+<button
+  @click="restoreAllDataHandler"
+  :disabled="!uploadedFiles.all"
+  class="action-button glass-btn primary-action"
+>
+  <IconWrapper icon="upload" prefix="fa-solid" />
+  {{ $t('settings.backupRestore.restoreAllButton') }}
+</button>
       </AppSettingsItem>
     </div>
 
@@ -115,7 +124,7 @@
 import { ref } from 'vue'
 import { useSettingsStore } from '@/store/settings'
 import AppSettingsItem from './AppSettingsItem.vue'
-import IconWrapper from '@/components/icons/IconWrapper.vue'
+import IconWrapper from '@/components/common/IconWrapper.vue'
 
 const settingsStore = useSettingsStore()
 

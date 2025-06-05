@@ -1,7 +1,14 @@
 <template>
   <div v-if="sortedCustomFieldDefinitions.length > 0" class="custom-fields-wrapper">
     <h3>
-      <span><IconWrapper icon="fa-solid fa-cogs" /></span>
+      <!-- آیکون تنظیمات فیلدهای سفارشی -->
+      <span class="icon-wrapper">
+        <IconWrapper 
+          icon="cogs" 
+          prefix="fa-solid" 
+          class="custom-fields-icon" 
+        />
+      </span>
       {{ $t('contactForm.customFields') }}
     </h3>
     <div
@@ -11,52 +18,132 @@
     >
       <label :for="'custom-field-' + fieldDef.id">
         <span v-if="fieldDef.type === 'date'">
-          <IconWrapper icon="fa-solid fa-calendar" />
+          <!-- آیکون تاریخ -->
+          <IconWrapper 
+            icon="calendar" 
+            prefix="fa-solid" 
+            class="field-icon date-icon" 
+          />
         </span>
         <span v-else-if="fieldDef.type === 'text'">
-          <IconWrapper icon="fa-solid fa-font" />
+          <!-- آیکون متن ساده -->
+          <IconWrapper 
+            icon="font" 
+            prefix="fa-solid" 
+            class="field-icon text-icon" 
+          />
         </span>
         <span v-else-if="fieldDef.type === 'number'">
-          <IconWrapper icon="fa-solid fa-hashtag" />
+          <!-- آیکون عدد -->
+          <IconWrapper 
+            icon="hashtag" 
+            prefix="fa-solid" 
+            class="field-icon number-icon" 
+          />
         </span>
         <span v-else-if="fieldDef.type === 'textarea'">
-          <IconWrapper icon="fa-solid fa-paragraph" />
+          <!-- آیکون پاراگراف -->
+          <IconWrapper 
+            icon="paragraph" 
+            prefix="fa-solid" 
+            class="field-icon textarea-icon" 
+          />
         </span>
         <span v-else-if="fieldDef.type === 'checkbox'">
-          <IconWrapper icon="fa-solid fa-check-square" />
+          <!-- آیکون چک باکس -->
+          <IconWrapper 
+            icon="square-check" 
+            prefix="fa-solid" 
+            class="field-icon checkbox-icon" 
+          />
         </span>
         <span v-else-if="fieldDef.type === 'select'">
-          <IconWrapper icon="fa-solid fa-list" />
+          <!-- آیکون لیست کشویی -->
+          <IconWrapper 
+            icon="list" 
+            prefix="fa-solid" 
+            class="field-icon select-icon" 
+          />
         </span>
         <span v-else-if="fieldDef.type === 'radio'">
-          <IconWrapper icon="fa-solid fa-circle-dot" />
+          <!-- آیکون دکمه رادیویی -->
+          <IconWrapper 
+            icon="circle-dot" 
+            prefix="fa-solid" 
+            class="field-icon radio-icon" 
+          />
         </span>
         <span v-else-if="fieldDef.type === 'url'">
-          <IconWrapper icon="fa-solid fa-link" />
+          <!-- آیکون لینک -->
+          <IconWrapper 
+            icon="link" 
+            prefix="fa-solid" 
+            class="field-icon url-icon" 
+          />
         </span>
         <span v-else-if="fieldDef.type === 'email'">
-          <IconWrapper icon="fa-solid fa-envelope" />
+          <!-- آیکون ایمیل -->
+          <IconWrapper 
+            icon="envelope" 
+            prefix="fa-solid" 
+            class="field-icon email-icon" 
+          />
         </span>
         <span v-else-if="fieldDef.type === 'phone'">
-          <IconWrapper icon="fa-solid fa-phone" />
+          <!-- آیکون تلفن -->
+          <IconWrapper 
+            icon="phone" 
+            prefix="fa-solid" 
+            class="field-icon phone-icon" 
+          />
         </span>
         <span v-else-if="fieldDef.type === 'color'">
-          <IconWrapper icon="fa-solid fa-palette" />
+          <!-- آیکون رنگ‌آمیزی -->
+          <IconWrapper 
+            icon="palette" 
+            prefix="fa-solid" 
+            class="field-icon color-icon" 
+          />
         </span>
         <span v-else-if="fieldDef.type === 'file'">
-          <IconWrapper icon="fa-solid fa-file" />
+          <!-- آیکون فایل -->
+          <IconWrapper 
+            icon="file" 
+            prefix="fa-solid" 
+            class="field-icon file-icon" 
+          />
         </span>
         <span v-else-if="fieldDef.type === 'range'">
-          <IconWrapper icon="fa-solid fa-sliders" />
+          <!-- آیکون اسلایدر -->
+          <IconWrapper 
+            icon="sliders" 
+            prefix="fa-solid" 
+            class="field-icon range-icon" 
+          />
         </span>
         <span v-else-if="fieldDef.type === 'time'">
-          <IconWrapper icon="fa-solid fa-clock" />
+          <!-- آیکون زمان -->
+          <IconWrapper 
+            icon="clock" 
+            prefix="fa-solid" 
+            class="field-icon time-icon" 
+          />
         </span>
         <span v-else-if="fieldDef.type === 'datetime-local'">
-          <IconWrapper icon="fa-solid fa-calendar-clock" />
+          <!-- آیکون تاریخ و زمان -->
+          <IconWrapper 
+            icon="calendar-clock" 
+            prefix="fa-solid" 
+            class="field-icon datetime-icon" 
+          />
         </span>
         <span v-else>
-          <IconWrapper icon="fa-solid fa-question-circle" />
+          <!-- آیکون پیش‌فرض برای انواع ناشناخته -->
+          <IconWrapper 
+            icon="circle-question" 
+            prefix="fa-solid" 
+            class="field-icon unknown-icon" 
+          />
         </span>
         {{ fieldDef.name }}:
         <span v-if="fieldDef.required" class="required-star" :title="$t('contactForm.requiredField')">*</span>
@@ -167,7 +254,8 @@
 </template>
 
 <script setup>
-import IconWrapper from '@/components/icons/IconWrapper.vue';
+// ایمپورت مستقیم کامپوننت IconWrapper
+import IconWrapper from '@/components/common/IconWrapper.vue';
 import DatePicker from 'vue3-persian-datetime-picker';
 import { useI18n } from 'vue-i18n';
 

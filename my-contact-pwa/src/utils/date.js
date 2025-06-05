@@ -1,31 +1,27 @@
-// d:\vscode\wpacontactsbook\wpacontactsbook\my-contact-pwa\src\utils\date.js
+// src/utils/date.js
+import moment from 'moment-jalaali'
 
 /**
- * Formats a date value into a readable string.
- * @param {string | Date | number} dateValue - The date value to format.
- * @returns {string} The formatted date string.
+ * فرمت‌دهی تاریخ با استفاده از moment-jalaali
+ * @param {string|Date|moment.Moment} date - تاریخ ورودی
+ * @param {string} format - فرمت مورد نظر برای نمایش (پیش‌فرض: 'jYYYY/jMM/jDD')
+ * @returns {string} تاریخ فرمت‌بندی شده
  */
-export function formatDate(dateValue) {
-  if (!dateValue) {
+export function formatDate(date, format = 'jYYYY/jMM/jDD') {
+  // اگر تاریخ ورودی وجود نداشت، رشته خالی برگردان
+  if (!date) {
     return ''
   }
 
-  try {
-    // Attempt to create a Date object
-    const date = new Date(dateValue)
+  // تبدیل تاریخ به شیء moment-jalaali
+  const m = moment(date)
 
-    // Check if the date is valid
-    if (isNaN(date.getTime())) {
-      // If invalid, return the original value or an error message
-      console.error('Invalid date value provided:', dateValue)
-      return String(dateValue) // Return original value as string
-    }
-
-    // Use toLocaleDateString for basic formatting. Adjust options as needed.
-    // This will use the user's locale for formatting.
-    return date.toLocaleDateString()
-  } catch (error) {
-    console.error('Error formatting date:', dateValue, error)
-    return String(dateValue) // Return original value as string on error
+  // بررسی معتبر بودن شیء moment
+  if (!m.isValid()) {
+    console.warn(`[formatDate] Invalid date provided: ${date}`)
+    return String(date) // برگرداندن ورودی اصلی اگر نامعتبر بود
   }
+
+  // فرمت‌دهی و برگرداندن تاریخ
+  return m.format(format)
 }

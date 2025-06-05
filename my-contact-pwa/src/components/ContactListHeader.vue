@@ -1,4 +1,5 @@
 <template>
+  <h1>این کامپوننت هدر لیست مخاطبین نسخه جدید است!!!!</h1>
   <div class="controls-container">
     <div class="search-control">
       <label for="search">
@@ -42,6 +43,7 @@
   </div>
 </template>
 <script setup>
+console.log('اسکریپت ContactListHeader.vue نسخه جدید اجرا شد!')
 import IconWrapper from './icons/IconWrapper.vue'
 const props = defineProps({
   searchQuery: String,
@@ -55,5 +57,7 @@ const emits = defineEmits([
   'update:sortField',
   'update:sortOrder',
   'toggleFilterSection',
+  'add',
+
 ])
 </script>

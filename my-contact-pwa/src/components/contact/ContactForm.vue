@@ -7,7 +7,12 @@
           $t(contactStore.contactToEdit ? 'contactForm.editContact' : 'contactForm.addNewContact')
         "
       >
-        <IconWrapper icon="fa-solid fa-user-edit" />
+        <!-- آیکون ویرایش کاربر -->
+        <IconWrapper 
+          icon="user-edit" 
+          prefix="fa-solid" 
+          class="form-title-icon" 
+        />
       </span>
       {{ $t(contactStore.contactToEdit ? 'contactForm.editContact' : 'contactForm.addNewContact') }}
     </h2>
@@ -63,7 +68,14 @@
 
     <div class="form-group">
       <label for="notes">
-        <span><IconWrapper icon="fa-solid fa-note-sticky" /></span>
+        <!-- آیکون یادداشت -->
+        <span class="icon-wrapper">
+          <IconWrapper 
+            icon="note-sticky" 
+            prefix="fa-solid" 
+            class="notes-icon" 
+          />
+        </span>
         {{ $t('contactForm.notes') }}:
       </label>
       <textarea
@@ -77,14 +89,34 @@
 
     <div class="form-actions">
       <button type="submit" class="submit-btn flat-input" :disabled="isSubmitting">
-        <span v-if="isSubmitting"><IconWrapper icon="fa-solid fa-spinner fa-spin" /></span>
-        <span v-else><IconWrapper icon="fa-solid fa-save" /></span>
+        <!-- آیکون‌های دکمه ارسال فرم -->
+        <span v-if="isSubmitting" class="icon-wrapper">
+          <IconWrapper 
+            icon="spinner" 
+            prefix="fa-solid" 
+            class="submit-icon" 
+            animation="fa-spin" 
+          />
+        </span>
+        <span v-else class="icon-wrapper">
+          <IconWrapper 
+            icon="save" 
+            prefix="fa-solid" 
+            class="save-icon" 
+          />
+        </span>
         {{
           $t(contactStore.contactToEdit ? 'contactForm.updateContact' : 'contactForm.addContact')
         }}
       </button>
       <button type="button" @click="handleCancel" class="cancel-btn flat-input">
-        <IconWrapper icon="fa-solid fa-times" /> {{ $t('contactForm.cancel') }}
+        <!-- آیکون انصراف -->
+        <IconWrapper 
+          icon="xmark" 
+          prefix="fa-solid" 
+          class="cancel-icon" 
+        />
+        {{ $t('contactForm.cancel') }}
       </button>
       <button
         type="button"
@@ -92,7 +124,13 @@
         @click="handleDelete"
         class="delete-btn flat-input"
       >
-        <IconWrapper icon="fa-solid fa-trash" /> {{ $t('contactForm.deleteContact') }}
+        <!-- آیکون حذف مخاطب -->
+        <IconWrapper 
+          icon="trash" 
+          prefix="fa-solid" 
+          class="delete-icon" 
+        />
+        {{ $t('contactForm.deleteContact') }}
       </button>
     </div>
   </form>

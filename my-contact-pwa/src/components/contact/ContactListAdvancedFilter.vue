@@ -1,152 +1,108 @@
 <template>
   <div class="advanced-filter-section">
-    <!-- ...کد فیلتر پیشرفته مشابه ساختار فعلی... -->
     <slot />
     <h3>
-      <span style="margin-left: 4px"><IconWrapper icon="fa-solid fa-list" /></span>
+      <!-- آیکون لیست برای عنوان فیلترها -->
+      <span class="icon-wrapper">
+        <IconWrapper icon="list" prefix="fa-solid" class="filter-title-icon" />
+      </span>
       {{ $t('contactList.filterRulesTitle') }}
     </h3>
 
-    <div class="add-rule-form">
-      <h4>{{ $t('contactList.addRuleTitle') }}:</h4>
-      <select v-model="newRule.field" class="rule-control flat-select">
-        <option value="" disabled>{{ $t('contactList.selectFieldPlaceholder') }}</option>
-        <option v-for="field in filterableFields" :key="field.value" :value="field.value">
-          {{ field.label }}
-        </option>
-      </select>
-      <select
-        v-model="newRule.operator"
-        class="rule-control flat-select"
-        :disabled="!newRule.field"
-      >
-        <option value="" disabled>{{ $t('contactList.selectOperatorPlaceholder') }}</option>
-        <option
-          v-for="operator in availableOperators"
-          :key="operator.value"
-          :value="operator.value"
-        >
-          {{ operator.label }}
-        </option>
-      </select>
-      <template v-if="selectedNewRuleFieldDefinition">
-        <input
-          v-if="['text', 'textarea'].includes(selectedNewRuleFieldDefinition.type)"
-          v-model="newRule.value"
-          :placeholder="
-            $t('contactList.filterValuePlaceholder', {
-              fieldLabel: selectedNewRuleFieldDefinition.label,
-            })
-          "
-          class="rule-control flat-input"
-          :disabled="
-            !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
-          "
-          :type="selectedNewRuleFieldDefinition.type === 'textarea' ? 'text' : 'text'"
-        />
-        <input
-          v-else-if="selectedNewRuleFieldDefinition.type === 'number'"
-          v-model.number="newRule.value"
-          :placeholder="
-            $t('contactList.filterNumberValuePlaceholder', {
-              fieldLabel: selectedNewRuleFieldDefinition.label,
-            })
-          "
-          class="rule-control flat-input"
-          :disabled="
-            !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
-          "
-          type="number"
-        />
-        <PersianDatePicker
-          v-else-if="selectedNewRuleFieldDefinition.type === 'date'"
-          v-model="newRule.value"
-          :placeholder="$t('contactList.selectDatePlaceholder')"
-          :disabled="
-            !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
-          "
-          clearable
-          input-class="rule-control flat-input"
-        />
+    <div class="rule-builder">
+      <div class="rule-row">
+        <!-- Field Selection -->
         <select
-          v-else-if="
-            ['select', 'boolean', 'gender', 'group'].includes(selectedNewRuleFieldDefinition.type)
-          "
-          v-model="newRule.value"
+          v-model="newRule.field"
+          @change="onFieldChange"
           class="rule-control flat-select"
-          :disabled="
-            !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
-          "
+          :disabled="!filterableFields.length"
         >
-          <option value="" disabled>{{ $t('contactList.selectValue') }}</option>
-          <option v-for="option in valueSelectOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
+          <option value="" disabled>{{ $t('contactList.selectFieldPlaceholder') }}</option>
+          <option v-for="field in filterableFields" :key="field.value" :value="field.value">
+            {{ field.label }}
           </option>
         </select>
-        <input
-          v-else
-          v-model="newRule.value"
-          :placeholder="$t('contactList.filterValueUnknownPlaceholder')"
-          class="rule-control flat-input"
+
+        <!-- Operator Selection -->
+        <RuleOperatorSelect
+          v-model:operator="newRule.operator"
+          :field="newRule.field"
+          :filterable-fields="filterableFields"
+          @change="onOperatorChange"
+        />
+
+        <!-- Value Input (Dynamic based on field type) -->
+        <RuleInputField
+          v-if="selectedNewRuleFieldDefinition"
+          v-model:value="newRule.value"
+          :field="newRule.field"
+          :operator="newRule.operator"
+          :filterable-fields="filterableFields"
+          :select-options="valueSelectOptions"
+          :placeholder="getValuePlaceholder()"
           :disabled="
             !newRule.operator || newRule.operator === 'isNull' || newRule.operator === 'isNotNull'
           "
-          type="text"
         />
-      </template>
-      <span v-else class="rule-control-placeholder">
-        {{ $t('contactList.selectFieldPrompt') }}
-      </span>
-      <button
-        type="button"
-        class="button add-rule-btn"
-        @click="addNewRule"
-        :disabled="
-          !newRule.field ||
-          !newRule.operator ||
-          (newRule.operator !== 'isNull' &&
-            newRule.operator !== 'isNotNull' &&
-            (newRule.value === null || newRule.value === ''))
-        "
-      >
-        ➕ {{ $t('contactList.addRuleButton') }}
-      </button>
+
+        <!-- Add Rule Button -->
+        <button
+          type="button"
+          class="button add-rule-button"
+          @click="addNewRule"
+          :disabled="!canAddRule"
+        >
+          <!-- آیکون + برای افزودن قانون جدید -->
+          <IconWrapper icon="plus" prefix="fa-solid" class="add-icon" />
+          {{ $t('contactList.addRuleButton') }}
+        </button>
+      </div>
     </div>
 
+    <!-- Current Rules List -->
     <div class="current-rules-list">
       <h4>{{ $t('contactList.activeFilterRules') }}:</h4>
       <p v-if="filterRules.length === 0" class="no-rules-message">
         {{ $t('contactList.noRulesMessage') }}
       </p>
 
-      <div v-for="(rule, index) in filterRules" :key="index" class="filter-rule-item">
-        <p>
-          <span class="rule-field-label">
-            {{ filterableFields.find((f) => f.value === rule.field)?.label || rule.field }}:
-          </span>
-          <span class="rule-operator-label"> {{ getRuleOperatorLabel(rule) }} </span>
-          <span
-            v-if="
-              rule.value !== null &&
-              rule.operator !== 'isNull' &&
-              rule.operator !== 'isNotNull' &&
-              rule.value !== ''
-            "
-            class="rule-value"
-          >
-            "{{ formatRuleValue(rule) }}"
-          </span>
-          <span
-            v-else-if="rule.operator === 'isNull' || rule.operator === 'isNotNull'"
-            class="rule-value-none"
-          >
-            ({{ $t('contactList.noValueNeeded') }})
-          </span>
-        </p>
-        <button type="button" class="button delete-button" @click="removeRule(index)">
-          🗑️ {{ $t('contactList.deleteRuleButton') }}
-        </button>
-      </div>
+      <ul v-else class="rules-list">
+        <li v-for="(rule, index) in filterRules" :key="index" class="rule-item">
+          <div class="rule-content">
+            <span class="rule-text">
+              <strong>{{ getFieldLabel(rule.field) }}</strong>
+              {{ getRuleOperatorLabel(rule) }}
+              <span
+                v-if="
+                  rule.value !== null &&
+                  rule.operator !== 'isNull' &&
+                  rule.operator !== 'isNotNull' &&
+                  rule.value !== ''
+                "
+                class="rule-value"
+              >
+                &quot;{{ formatRuleValue(rule) }}&quot;
+              </span>
+              <span
+                v-else-if="rule.operator === 'isNull' || rule.operator === 'isNotNull'"
+                class="rule-value-none"
+              >
+                ({{ $t('contactList.noValueNeeded') }})
+              </span>
+            </span>
+            <button
+              type="button"
+              class="remove-rule-button"
+              @click="removeRule(index)"
+              :title="$t('contactList.removeRuleTooltip')"
+            >
+              <!-- آیکون سطل زباله برای حذف قانون -->
+              <IconWrapper icon="trash" prefix="fa-solid" class="delete-icon" />
+            </button>
+          </div>
+        </li>
+      </ul>
     </div>
 
     <hr v-if="filterRules.length > 0" class="filter-section-separator" />
@@ -158,7 +114,9 @@
         @click="applyFilters"
         :disabled="filterRules.length === 0"
       >
-        <IconWrapper icon="fa-solid fa-check" /> {{ $t('contactList.applyFilterButton') }}
+        <!-- آیکون تیک برای اعمال فیلتر -->
+        <IconWrapper icon="check" prefix="fa-solid" class="apply-icon" />
+        {{ $t('contactList.applyFilterButton') }}
       </button>
       <button
         type="button"
@@ -166,149 +124,338 @@
         @click="clearFilters"
         :disabled="filterRules.length === 0"
       >
-        <IconWrapper icon="fa-solid fa-xmark" /> {{ $t('contactList.clearFilterButton') }}
+        <!-- آیکون ضربدر برای پاک کردن فیلترها -->
+        <IconWrapper icon="xmark" prefix="fa-solid" class="clear-icon" />
+        {{ $t('contactList.clearFilterButton') }}
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { IconWrapper, PersianDatePicker } from '@/components/common/commonComponents'
-// import { formatDate } from '@/utils/date' // این خط رو نگه می‌دارم چون فایل date.js رو ساختم و لازمه
+/**
+ * کامپوننت فیلتر پیشرفته برای لیست مخاطبین
+ * امکان ایجاد، حذف و مدیریت قوانین فیلتر را فراهم می‌کند
+ */
+import { reactive, toRefs, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-// defineProps و defineEmits در <script setup> نیازی به ایمپورت ندارند
-// import { defineProps, defineEmits } from 'vue'
+// کامپوننت‌های مورد نیاز
+import IconWrapper from '@/components/common/IconWrapper.vue'
+import { PersianDatePicker } from '@/components/common/commonComponents'
+import { formatDate } from '@/utils/date'
+import moment from 'moment-jalaali'
 
+// تعریف پراپرتی‌های کامپوننت
 const props = defineProps({
-  filterRules: {
-    type: Array,
-    required: true,
-  },
+  /**
+   * لیست فیلدهای قابل فیلتر
+   * @type {Array<{value: string, label: string, type: string}>}
+   */
   filterableFields: {
     type: Array,
     required: true,
+    default: () => [],
   },
-  valueSelectOptions: {
+
+  /**
+   * لیست قوانین فیلتر فعلی
+   * @type {Array<{field: string, operator: string, value: any}>}
+   */
+  modelValue: {
     type: Array,
     required: true,
+    default: () => [],
   },
 })
 
-const emits = defineEmits(['addRule', 'removeRule', 'applyFilters', 'clearFilters'])
+// تعریف رویدادهای قابل ارسال به کامپوننت والد
+const emits = defineEmits([
+  /** رویداد به‌روزرسانی قوانین فیلتر */
+  'update:modelValue',
+  /** رویداد اعمال فیلترها */
+  'apply',
+  /** رویداد پاک کردن تمام فیلترها */
+  'clear',
+])
 
-const newRule = ref({
-  field: null,
-  operator: null,
-  value: null,
+// استفاده از i18n برای ترجمه متون
+const { t } = useI18n()
+
+/**
+ * مدیریت وضعیت داخلی کامپوننت
+ * @property {Object} newRule - قانون جدید در حال ایجاد
+ * @property {string|null} newRule.field - فیلد انتخاب شده
+ * @property {string|null} newRule.operator - اپراتور انتخاب شده
+ * @property {any} newRule.value - مقدار وارد شده
+ */
+const state = reactive({
+  newRule: {
+    field: null,
+    operator: null,
+    value: null,
+  },
 })
 
+// تبدیل state به refهای واکنش‌پذیر
+const { newRule } = toRefs(state)
+
+/**
+ * ایجاد یک رفرنس برای قوانین فیلتر فعلی
+ */
+const filterRules = computed({
+  get: () => props.modelValue,
+  set: (value) => emits('update:modelValue', value),
+})
+
+/**
+ * تعریف فیلد انتخاب شده در قانون جدید
+ * @returns {Object|null} تعریف فیلد انتخاب شده یا null در صورت عدم انتخاب
+ */
 const selectedNewRuleFieldDefinition = computed(() => {
+  // بررسی وجود newRule
+  if (!newRule.value) return null
+
+  // بررسی انتخاب فیلد
   if (!newRule.value.field) return null
+
+  // یافتن تعریف فیلد مربوطه
   return props.filterableFields.find((field) => field.value === newRule.value.field)
 })
 
+/**
+ * لیست اپراتورهای در دسترس بر اساس نوع فیلد انتخاب شده
+ * @returns {Array<Object>} آرایه‌ای از اپراتورهای قابل استفاده
+ */
 const availableOperators = computed(() => {
-  if (!selectedNewRuleFieldDefinition.value) return []
+  // اگر فیلدی انتخاب نشده باشد، لیست خالی برگردانده می‌شود
+  if (!newRule.value?.field) return []
 
-  const fieldType = selectedNewRuleFieldDefinition.value.type
+  // یافتن تعریف فیلد انتخاب شده
+  const field = props.filterableFields.find((f) => f.value === newRule.value.field)
+  if (!field) return [] // در حالت عادی نباید اتفاق بیفتد
+
+  // تعیین نوع فیلد (پیش‌فرض: متن)
+  const fieldType = field.type || 'text'
   const operators = []
 
-  // Text fields (generic text, text area)
+  // اپراتورهای فیلدهای متنی
   if (['text', 'textarea'].includes(fieldType)) {
     operators.push(
-      { value: 'contains', label: 'شامل' },
-      { value: 'notContains', label: 'شامل نباشد' },
-      { value: 'equals', label: 'برابر با' },
-      { value: 'notEquals', label: 'نابرابر با' },
-      { value: 'startsWith', label: 'شروع با' },
-      { value: 'endsWith', label: 'پایان با' },
+      { value: 'contains', label: t('operators.contains') }, // شامل
+      { value: 'notContains', label: t('operators.notContains') }, // شامل نباشد
+      { value: 'equals', label: t('operators.equals') }, // مساوی با
+      { value: 'notEquals', label: t('operators.notEquals') }, // مخالف
+      { value: 'startsWith', label: t('operators.startsWith') }, // شروع شود با
+      { value: 'endsWith', label: t('operators.endsWith') }, // پایان یابد با
     )
   }
-  // Numeric fields
+  // اپراتورهای فیلدهای عددی
   else if (fieldType === 'number') {
     operators.push(
-      { value: 'equals', label: 'برابر با' },
-      { value: 'notEquals', label: 'نابرابر با' },
-      { value: 'greaterThan', label: 'بزرگتر از' },
-      { value: 'lessThan', label: 'کوچکتر از' },
-      { value: 'greaterThanOrEqual', label: 'بزرگتر یا مساوی' },
-      { value: 'lessThanOrEqual', label: 'کوچکتر یا مساوی' },
+      { value: 'equals', label: t('operators.equals') }, // مساوی با
+      { value: 'notEquals', label: t('operators.notEquals') }, // مخالف
+      { value: 'greaterThan', label: t('operators.greaterThan') }, // بزرگتر از
+      { value: 'lessThan', label: t('operators.lessThan') }, // کوچکتر از
+      { value: 'greaterThanOrEqual', label: t('operators.greaterThanOrEqual') }, // بزرگتر یا مساوی
+      { value: 'lessThanOrEqual', label: t('operators.lessThanOrEqual') }, // کوچکتر یا مساوی
     )
   }
-  // Date fields
+  // اپراتورهای فیلدهای تاریخ
   else if (fieldType === 'date') {
     operators.push(
-      { value: 'equals', label: 'برابر با' },
-      { value: 'notEquals', label: 'نابرابر با' },
-      { value: 'before', label: 'قبل از' },
-      { value: 'after', label: 'بعد از' },
+      { value: 'equals', label: t('operators.equals') }, // برابر با
+      { value: 'notEquals', label: t('operators.notEquals') }, // مخالف
+      { value: 'before', label: t('operators.before') }, // قبل از
+      { value: 'after', label: t('operators.after') }, // بعد از
+      { value: 'onOrBefore', label: t('operators.onOrBefore') }, // در تاریخ یا قبل از
+      { value: 'onOrAfter', label: t('operators.onOrAfter') }, // در تاریخ یا بعد از
     )
   }
-  // Select, boolean fields
+  // اپراتورهای فیلدهای انتخابی و بولین
   else if (['select', 'boolean', 'gender', 'group'].includes(fieldType)) {
     operators.push(
-      { value: 'equals', label: 'برابر با' },
-      { value: 'notEquals', label: 'نابرابر با' },
+      { value: 'equals', label: t('operators.equals') }, // مساوی با
+      { value: 'notEquals', label: t('operators.notEquals') }, // مخالف
+    )
+  } else {
+    // اپراتورهای پیش‌فرض برای انواع ناشناخته
+    operators.push(
+      { value: 'contains', label: t('operators.contains') },
+      { value: 'equals', label: t('operators.equals') },
+      { value: 'notEquals', label: t('operators.notEquals') },
     )
   }
 
-  // Add isNull/isNotNull for all types
-  operators.push({ value: 'isNull', label: 'خالی است' }, { value: 'isNotNull', label: 'خالی نیست' })
+  // اضافه کردن اپراتورهای عمومی برای همه انواع فیلدها
+  operators.push(
+    { value: 'isNull', label: t('operators.isNull') }, // خالی باشد
+    { value: 'isNotNull', label: t('operators.isNotNull') }, // خالی نباشد
+  )
 
   return operators
 })
 
+/**
+ * دریافت برچسب اپراتور بر اساس قانون داده شده
+ * @param {Object} rule - قانون فیلتر شامل فیلد و اپراتور
+ * @returns {string} برچسب خوانا برای اپراتور
+ */
 function getRuleOperatorLabel(rule) {
-  const operator = availableOperators.value.find((op) => op.value === rule.operator)
-  return operator ? operator.label : rule.operator
-}
+  // Find the field definition to determine its type, then find operator label
+  // This is a simplified version; a more robust one might involve a map or more complex logic
+  // For now, directly find from availableOperators (which should be correct if field context is maintained)
+  const fieldDef = props.filterableFields.find((f) => f.value === rule.field)
+  let opsSource = availableOperators.value // Default to current field's operators
 
-function formatRuleValue(rule) {
-  if (rule.value === null || rule.value === '') return ''
-
-  const fieldDef = props.filterableFields.find((field) => field.value === rule.field)
-  if (!fieldDef) return rule.value
-
-  if (fieldDef.type === 'date' && rule.value) {
-    return formatDate(rule.value)
-  } else if (['select', 'boolean', 'gender', 'group'].includes(fieldDef.type)) {
-    const option = props.valueSelectOptions.find((opt) => opt.value === rule.value)
-    return option ? option.label : rule.value
+  if (fieldDef) {
+    // If we want to be super precise, regenerate operators for the rule's field type
+    // For simplicity, we assume availableOperators is sufficient or rule.operator is globally unique enough
   }
 
-  return rule.value
+  const operator = opsSource.find((op) => op.value === rule.operator)
+  return operator ? operator.label : rule.operator // Fallback to raw operator value
 }
 
+/**
+ * قالب‌بندی مقدار قانون برای نمایش به کاربر
+ * @param {Object} rule - قانون فیلتر شامل فیلد، اپراتور و مقدار
+ * @returns {string} مقدار قالب‌بندی شده برای نمایش
+ */
+function formatRuleValue(rule) {
+  if (rule.value === null || rule.value === '') return '' // Or a placeholder like '-'
+
+  const fieldDef = props.filterableFields.find((field) => field.value === rule.field)
+  if (!fieldDef) return rule.value // Fallback if field definition not found
+
+  if (fieldDef.type === 'date' && rule.value) {
+    // Ensure formatDate can handle the value (e.g., it's a valid date string or Date object)
+    return formatDate(rule.value) // Assumes formatDate returns a user-friendly string
+  } else if (['select', 'boolean', 'gender', 'group'].includes(fieldDef.type)) {
+    // For select types, find the label corresponding to the value
+    const option = props.valueSelectOptions.find((opt) => opt.value === rule.value)
+    return option ? option.label : rule.value // Fallback to raw value if label not found
+  }
+  // For boolean, you might want specific labels like 'Yes'/'No'
+  if (fieldDef.type === 'boolean') {
+    return rule.value ? 'بله' : 'خیر' // Or use $t for localization
+  }
+
+  return rule.value // Default formatting
+}
+
+/**
+ * مدیریت تغییر فیلد در فرم اضافه کردن قانون جدید
+ * ریست کردن اپراتور و مقدار هنگام تغییر فیلد
+ */
+function onFieldChange() {
+  console.log(
+    '[ContactListAdvancedFilter] onFieldChange started. Current newRule:',
+    JSON.parse(JSON.stringify(newRule.value)),
+  )
+  // ریست کردن operator و value هنگام تغییر فیلد
+  newRule.value.operator = null
+  newRule.value.value = null
+  console.log(
+    '[ContactListAdvancedFilter] onFieldChange finished. Updated newRule:',
+    JSON.parse(JSON.stringify(newRule.value)),
+  )
+}
+
+/**
+ * مدیریت تغییر اپراتور در فرم اضافه کردن قانون جدید
+ * تنظیم مقدار به null برای اپراتورهای isNull/isNotNull
+ */
+function onOperatorChange() {
+  console.log(
+    '[ContactListAdvancedFilter] onOperatorChange started. Current newRule:',
+    JSON.parse(JSON.stringify(newRule.value)),
+  )
+  if (newRule.value.operator === 'isNull' || newRule.value.operator === 'isNotNull') {
+    console.log(
+      '[ContactListAdvancedFilter] Operator is isNull or isNotNull, setting value to null.',
+    )
+    // تنظیم مقدار به null برای اپراتورهای isNull/isNotNull
+    newRule.value.value = null
+  } else {
+    // اگر اپراتور به چیزی تغییر کرد که نیاز به مقدار دارد، مقدار قبلی رو نگه می‌داریم
+    // فیلد ورودی فعال می‌شود و کاربر می‌تواند مقدار جدید را وارد کند
+  }
+  console.log(
+    '[ContactListAdvancedFilter] onOperatorChange finished. Updated newRule:',
+    JSON.parse(JSON.stringify(newRule.value)),
+  )
+}
+
+/**
+ * اضافه کردن قانون جدید به لیست فیلترها
+ * انجام اعتبارسنجی‌های لازم قبل از اضافه کردن قانون
+ */
 function addNewRule() {
-  if (
-    !newRule.value.field ||
-    !newRule.value.operator ||
-    (newRule.value.operator !== 'isNull' &&
-      newRule.value.operator !== 'isNotNull' &&
-      (newRule.value.value === null || newRule.value.value === ''))
-  ) {
+  console.log(
+    '[ContactListAdvancedFilter] addNewRule called. Current newRule.value:',
+    JSON.parse(JSON.stringify(newRule.value)),
+  )
+
+  // Basic validation
+  if (!newRule.value?.field || !newRule.value?.operator) {
+    console.error('[ContactListAdvancedFilter] Validation Failed: Field or Operator is missing.')
+    if (!newRule.value?.field) console.error('--- Field is missing or falsy:', newRule.value?.field)
+    if (!newRule.value?.operator)
+      console.error('--- Operator is missing or falsy:', newRule.value?.operator)
     return
   }
 
-  emits('addRule', { ...newRule.value })
-
-  // Reset form
-  newRule.value = {
-    field: null,
-    operator: null,
-    value: null,
+  // Check if value is required and provided
+  if (
+    newRule.value.operator !== 'isNull' &&
+    newRule.value.operator !== 'isNotNull' &&
+    (newRule.value.value === null || newRule.value.value === '')
+  ) {
+    console.error(
+      '[ContactListAdvancedFilter] Validation Failed: Value is missing for the selected operator.',
+    )
+    console.error('--- Operator:', newRule.value.operator)
+    console.error('--- Value:', newRule.value.value)
+    return
   }
+
+  // Create a clean rule object to emit
+  const ruleToAdd = {
+    field: newRule.value.field,
+    operator: newRule.value.operator,
+    value: newRule.value.value,
+  }
+
+  console.log('[ContactListAdvancedFilter] Emitting addRule event with rule:', ruleToAdd)
+  emits('addRule', ruleToAdd)
+
+  // Reset the form for the next rule
+  newRule.value.field = null
+  newRule.value.operator = null
+  newRule.value.value = null
 }
 
+/**
+ * حذف قانون از لیست قوانین فیلتر
+ * @param {number} index - ایندکس قانونی که باید حذف شود
+ */
 function removeRule(index) {
   emits('removeRule', index)
 }
 
+/**
+ * اعمال فیلترهای تعریف شده
+ * این تابع رویداد applyFilters را به کامپوننت والد ارسال می‌کند
+ */
 function applyFilters() {
   emits('applyFilters')
 }
 
+/**
+ * پاک کردن تمام فیلترهای اعمال شده
+ * این تابع رویداد clearFilters را به کامپوننت والد ارسال می‌کند
+ */
 function clearFilters() {
   emits('clearFilters')
 }

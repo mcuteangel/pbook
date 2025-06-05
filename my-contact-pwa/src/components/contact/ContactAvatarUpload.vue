@@ -4,7 +4,7 @@
     <div class="avatar-upload-wrapper">
       <img
         :src="avatarPreview || defaultAvatar"
-        alt="Avatar Preview"
+        :alt="$t('contactForm.avatarPreviewAlt')"
         class="avatar-preview"
         @error="onAvatarError"
       />
@@ -17,7 +17,13 @@
         ref="avatarInput"
       />
       <button type="button" @click="triggerAvatarUpload" class="upload-avatar-btn">
-        <IconWrapper icon="fa-solid fa-upload" /> {{ $t('contactForm.uploadAvatar') }}
+        <!-- آیکون آپلود آواتار -->
+        <IconWrapper 
+          icon="upload" 
+          prefix="fa-solid" 
+          class="upload-icon" 
+        />
+        {{ $t('contactForm.uploadAvatar') }}
       </button>
       <button
         type="button"
@@ -25,7 +31,13 @@
         @click="removeAvatar"
         class="remove-avatar-btn"
       >
-        <IconWrapper icon="fa-solid fa-trash" /> {{ $t('contactForm.removeAvatar') }}
+        <!-- آیکون حذف آواتار -->
+        <IconWrapper 
+          icon="trash" 
+          prefix="fa-solid" 
+          class="delete-icon" 
+        />
+        {{ $t('contactForm.removeAvatar') }}
       </button>
     </div>
     <span v-if="avatarError" class="field-error">{{ $t(avatarError) }}</span>
@@ -34,7 +46,8 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import IconWrapper from '@/components/icons/IconWrapper.vue'
+// ایمپورت مستقیم کامپوننت IconWrapper
+import IconWrapper from '@/components/common/IconWrapper.vue'
 import defaultAvatar from '@/assets/img/icons/default-avatar.svg' // مسیر آواتار پیش‌فرض
 
 const props = defineProps({

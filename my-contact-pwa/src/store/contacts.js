@@ -2,9 +2,11 @@
 
 import { defineStore } from 'pinia'
 import { db } from '../db'
-import moment from 'moment-jalaali' // مطمئن شو که moment-jalaali وارد شده
-import { useCustomFieldStore } from './customFields' // مطمئن شو که استور فیلدهای سفارشی وارد شده
+import moment from 'moment-jalaali'
+import { useCustomFieldStore } from './customFields'
 import { parseJalaaliStringToGregorianMoment } from '../utils/formatters'
+import { useI18n } from 'vue-i18n'
+import { useNotificationStore } from './notificationStore'
 
 // ** تابع ruleMatches - اصلاح شده برای هندل کردن تاریخ‌های میلادی و رشته خالی برای گروه **
 // این تابع یک فیلد مخاطب را با یک قانون فیلتر مقایسه می‌کند
@@ -484,6 +486,140 @@ export const useContactStore = defineStore('contactStore', {
     },
   },
   actions: {
+    // اکشن برای اضافه کردن مخاطبین نمونه
+    async addSampleContacts(t) {
+      // تابع ترجمه باید از کامپوننت فراخوانی‌کننده دریافت شود
+      const confirmed = window.confirm(t('contactList.confirmAddSamples'))
+      if (!confirmed) {
+        return // اگر کاربر تأیید نکرد، عملیات را متوقف کن
+      }
+
+      this.loading = true
+      this.error = null
+
+      try {
+        // اضافه کردن مخاطبین نمونه
+        const sampleContacts = [
+          {
+            id: 'sample-1',
+            name: 'علی احمدی',
+            phone: '09123456789',
+            email: 'ali.ahmadi@example.com',
+            group: 'خانواده',
+            birthDate: '1370/01/15',
+            title: 'مهندس',
+            company: 'شرکت الف',
+            jobTitle: 'مدیر پروژه',
+            notes: 'دوست قدیمی',
+            website: 'www.aliahmadi.com',
+            address: {
+              street: 'خیابان آزادی',
+              city: 'تهران',
+              state: 'تهران',
+              zip: '12345',
+              country: 'ایران',
+            },
+            gender: 'مرد',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            customFields: {
+              favoriteColor: 'آبی',
+            },
+          },
+          {
+            id: 'sample-2',
+            name: 'زهرا حسینی',
+            phone: '09351234567',
+            email: 'zahra.hosseini@example.com',
+            group: 'دوستان',
+            birthDate: '1375/05/20',
+            title: 'خانم',
+            company: 'شرکت ب',
+            jobTitle: 'طراح گرافیک',
+            notes: 'همکار سابق',
+            website: 'www.zahrahosseini.com',
+            address: {
+              street: 'خیابان انقلاب',
+              city: 'اصفهان',
+              state: 'اصفهان',
+              zip: '67890',
+              country: 'ایران',
+            },
+            gender: 'زن',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            customFields: {
+              favoriteColor: 'سبز',
+            },
+          },
+          {
+            id: 'sample-3',
+            name: 'محمد رضایی',
+            phone: '09909876543',
+            email: 'mohammad.rezaei@example.com',
+            group: 'کار',
+            birthDate: '1368/11/01',
+            title: 'آقا',
+            company: 'شرکت ج',
+            jobTitle: 'برنامه نویس',
+            notes: 'ملاقات در کنفرانس',
+            website: 'www.mohammadrezaei.com',
+            address: {
+              street: 'خیابان ولیعصر',
+              city: 'شیراز',
+              state: 'فارس',
+              zip: '11223',
+              country: 'ایران',
+            },
+            gender: 'مرد',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            customFields: {
+              favoriteColor: 'قرمز',
+            },
+          },
+        ]
+
+        // حذف تمام مخاطبین موجود
+        await db.contacts.clear()
+
+        for (const contact of sampleContacts) {
+          // تاریخ‌های شمسی را به میلادی تبدیل کن قبل از ذخیره
+          if (contact.birthDate) {
+            const jalaaliMoment = moment(contact.birthDate, 'jYYYY/jMM/jDD')
+            if (jalaaliMoment.isValid()) {
+              contact.birthDate = jalaaliMoment.format('YYYY-MM-DD')
+            } else {
+              console.warn(
+                `تاریخ تولد نامعتبر برای ${contact.name}: ${contact.birthDate}. به عنوان رشته ذخیره می‌شود.`,
+              )
+            }
+          }
+          // اضافه کردن تاریخ ایجاد و به‌روزرسانی
+          contact.createdAt = new Date().toISOString()
+          contact.updatedAt = new Date().toISOString()
+          await db.contacts.add(contact)
+        }
+        this.contacts = await db.contacts.toArray()
+        // Return success status and message
+        return { 
+          success: true, 
+          message: t('contactList.samplesAdded'),
+          key: 'samplesAdded' // اضافه کردن کلید برای استفاده در کامپوننت
+        }
+      } catch (error) {
+        console.error('خطا در افزودن مخاطبین نمونه:', error)
+        // Return error status and message
+        return { 
+          success: false, 
+          message: t('contactList.samplesError'),
+          error: error.message 
+        }
+      } finally {
+        this.loading = false
+      }
+    },
+
     // اکشن برای افزودن یک مخاطب جدید
     async addContact(contactData) {
       this.loading = true // وضعیت لودینگ
@@ -516,14 +652,30 @@ export const useContactStore = defineStore('contactStore', {
 
     // اکشن برای خواندن همه مخاطبین از دیتابیس
     async loadContacts() {
+      console.log('شروع لود مخاطبین از دیتابیس...') // اضافه کردن لاگ
       this.loading = true // وضعیت لودینگ رو true می‌کنیم
       this.error = null // خطا رو ریست می‌کنیم
       try {
+        // لاگ کردن اطلاعات دیتابیس
+        console.log('اطلاعات دیتابیس:', db)
+        console.log('نام دیتابیس:', db.name)
+        console.log('ورژن دیتابیس:', db.verno)
+
+        // دریافت لیست جداول
+        const tables = await db.tables
+        console.log(
+          'جداول موجود در دیتابیس:',
+          tables.map((t) => t.name),
+        )
+
         // از Dexie برای خواندن همه آیتم‌ها از استور 'contacts' استفاده می‌کنیم
         const allContacts = await db.contacts.toArray()
+        console.log('تعداد مخاطبین خوانده شده:', allContacts.length)
         console.log('مخاطبین با موفقیت از دیتابیس خوانده شدند:', allContacts)
+
         // اطلاعات خوانده شده رو توی State ذخیره می‌کنیم
         this.contacts = allContacts
+        console.log('مخاطبین در استور ذخیره شدند. تعداد:', this.contacts.length)
       } catch (error) {
         console.error('خطا در خواندن مخاطبین:', error)
         this.error = 'امکان خواندن مخاطبین وجود ندارد.'
@@ -601,7 +753,7 @@ export const useContactStore = defineStore('contactStore', {
     },
     // اکشن برای به‌روزرسانی عبارت جستجو
     setSearchQuery(query) {
-      this.searchQuery = query
+      this.searchQuery = query ? query.trim() : ''
       // نیازی به loadContacts دوباره نیست، چون getter خودش reactive هست و با تغییر searchQuery به‌روز میشه
     },
 

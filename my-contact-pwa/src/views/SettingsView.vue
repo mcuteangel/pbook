@@ -6,7 +6,8 @@
     <section class="theme-toggle-section settings-section glass-section">
       <h3>{{ $t('settingsView.themeSectionTitle') }}</h3>
       <button @click="toggleTheme" class="theme-toggle-button glass-btn">
-        <IconWrapper :icon="isDarkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon'" />
+        <!-- آیکون حالت شب/روز با پراپ‌های داینامیک و استاندارد -->
+<IconWrapper :icon="isDarkMode ? 'sun' : 'moon'" prefix="fa-solid" />
         {{
           $t('settingsView.toggleThemeButton', {
             theme: isDarkMode ? $t('settingsView.lightTheme') : $t('settingsView.darkTheme'),
@@ -30,7 +31,7 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { useSettingsStore } from '@/store/settings'
-import IconWrapper from '@/components/icons/IconWrapper.vue'
+import IconWrapper from '@/components/common/IconWrapper.vue'
 import DisplaySettings from '@/components/settings/DisplaySettings.vue'
 import BackupRestoreSettings from '@/components/settings/BackupRestoreSettings.vue'
 
