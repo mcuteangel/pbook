@@ -73,4 +73,23 @@ export default {
     today: 'امروز',
     disabledDate: 'تاریخ غیرفعال',
   },
+  shamsi: 'شمسی',
+  gregorian: 'میلادی',
+  placeholder: 'تاریخ را انتخاب کنید',
+  aria: {
+    calendar: 'تقویم',
+    previousYear: 'سال قبل',
+    nextYear: 'سال بعد',
+    previousMonth: 'ماه قبل',
+    nextMonth: 'ماه بعد',
+  },
+  weekdays: {
+    sh: 'ش',
+    ye: 'ی',
+    do: 'د',
+    se: 'س',
+    ch: 'چ',
+    pa: 'پ',
+    jo: 'ج',
+  },
 }

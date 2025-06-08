@@ -1,7 +1,7 @@
 // src/store/settings.js
 import { defineStore } from 'pinia'
 // ایمپورت کردن instance دیتابیس
-import { db } from '@/db'
+import { db } from '../db/index.js'
 
 export const useSettingsStore = defineStore('settings', {
   state: () => ({

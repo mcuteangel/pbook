@@ -1,75 +1,90 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 /**
  * کامپوزابل برای مدیریت صفحه‌بندی
  * @param {Ref<Array>} items آرایه آیتم‌هایی که باید صفحه‌بندی شوند
- * @param {Number} defaultItemsPerPage تعداد آیتم در هر صفحه (پیش‌فرض)
+ * @param {Number} itemsPerPage تعداد آیتم در هر صفحه (پیش‌فرض)
  * @returns {Object} ابزارها و متغیرهای لازم برای صفحه‌بندی
  */
-export function usePagination(items, defaultItemsPerPage = 10) {
-  // متغیرهای پایه
+export function usePagination(items, itemsPerPage = 10) {
   const currentPage = ref(1)
-  const itemsPerPage = ref(defaultItemsPerPage)
-  
-  // محاسبه تعداد کل صفحات
+  const pageSize = ref(itemsPerPage)
+  const itemsRef = ref([])
+
+  // به‌روزرسانی itemsRef هر زمان که items تغییر کند
+  watch(
+    items,
+    (newItems) => {
+      console.log('Items changed in usePagination:', newItems)
+      itemsRef.value = newItems || []
+      console.log('Updated itemsRef:', itemsRef.value)
+    },
+    { immediate: true },
+  )
+
   const totalPages = computed(() => {
-    return Math.ceil(items.value.length / itemsPerPage.value) || 1
+    return Math.ceil(itemsRef.value.length / pageSize.value)
   })
-  
-  // محاسبه آیتم‌های صفحه فعلی
+
   const paginatedItems = computed(() => {
-    const startIndex = (currentPage.value - 1) * itemsPerPage.value
-    const endIndex = startIndex + itemsPerPage.value
-    return items.value.slice(startIndex, endIndex)
+    console.log('Calculating paginated items...')
+    console.log('Current page:', currentPage.value)
+    console.log('Page size:', pageSize.value)
+    console.log('Total items:', itemsRef.value.length)
+
+    const start = (currentPage.value - 1) * pageSize.value
+    const end = start + pageSize.value
+    const result = itemsRef.value.slice(start, end)
+
+    console.log('Start index:', start)
+    console.log('End index:', end)
+    console.log('Paginated result:', result)
+
+    return result
   })
-  
-  /**
-   * رفتن به صفحه مشخص
-   * @param {Number} page شماره صفحه
-   */
-  function goToPage(page) {
+
+  const hasNextPage = computed(() => currentPage.value < totalPages.value)
+  const hasPrevPage = computed(() => currentPage.value > 1)
+
+  const nextPage = () => {
+    if (hasNextPage.value) {
+      currentPage.value++
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  const prevPage = () => {
+    if (hasPrevPage.value) {
+      currentPage.value--
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  const goToPage = (page) => {
     if (page >= 1 && page <= totalPages.value) {
       currentPage.value = page
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }
-  
-  /**
-   * رفتن به صفحه بعدی
-   */
-  function nextPage() {
-    if (currentPage.value < totalPages.value) {
-      currentPage.value++
+
+  const setPageSize = (size) => {
+    const newSize = parseInt(size)
+    if (!isNaN(newSize) && newSize > 0) {
+      pageSize.value = newSize
+      currentPage.value = 1 // بازگشت به صفحه اول
     }
   }
-  
-  /**
-   * رفتن به صفحه قبلی
-   */
-  function prevPage() {
-    if (currentPage.value > 1) {
-      currentPage.value--
-    }
-  }
-  
-  /**
-   * تغییر تعداد آیتم‌ها در هر صفحه
-   * @param {Number} count تعداد جدید
-   */
-  function setItemsPerPage(count) {
-    itemsPerPage.value = count
-    // بازگشت به صفحه اول برای جلوگیری از مشکلات محدوده
-    currentPage.value = 1
-  }
-  
-  // بازگرداندن ابزارها و متغیرهای لازم
+
   return {
     currentPage,
-    itemsPerPage,
+    pageSize,
     totalPages,
     paginatedItems,
-    goToPage,
+    hasNextPage,
+    hasPrevPage,
     nextPage,
     prevPage,
-    setItemsPerPage
+    goToPage,
+    setPageSize,
   }
 }

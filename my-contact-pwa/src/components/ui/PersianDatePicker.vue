@@ -137,10 +137,16 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
-import moment from 'moment-jalaali' // moment-jalaali already includes moment itself
+import moment from 'moment-jalaali'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+
+// Initialize moment-jalaali
+moment.loadPersian({
+  usePersianDigits: true,
+  dialect: 'persian-modern',
+})
 
 // --- Props ---
 const props = defineProps({
@@ -281,7 +287,8 @@ const daysGrid = computed(() => {
   }
 
   // Day of the week (0 for Sunday, ..., 6 for Saturday for gregorian; for shamsi, moment-jalaali's jDay() is 0 for Shanbeh)
-  let firstDayOfWeek = currentCalendarView.value === 'shamsi' ? m.jDay() : m.day()
+  let firstDayOfWeek =
+    currentCalendarView.value === 'shamsi' ? moment(m).startOf('jMonth').day() : m.day()
 
   // Adjust for Shamsi if library uses different start (e.g. moment-jalaali jDay() 0 is Shanbe)
   // Our dayNames array for Shamsi starts with Shanbe, so if jDay() is 0, it's the first column.

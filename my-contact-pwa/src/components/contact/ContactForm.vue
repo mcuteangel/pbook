@@ -8,11 +8,7 @@
         "
       >
         <!-- آیکون ویرایش کاربر -->
-        <IconWrapper 
-          icon="user-edit" 
-          prefix="fa-solid" 
-          class="form-title-icon" 
-        />
+        <IconWrapper icon="user-edit" prefix="fa-solid" class="form-title-icon" />
       </span>
       {{ $t(contactStore.contactToEdit ? 'contactForm.editContact' : 'contactForm.addNewContact') }}
     </h2>
@@ -70,11 +66,7 @@
       <label for="notes">
         <!-- آیکون یادداشت -->
         <span class="icon-wrapper">
-          <IconWrapper 
-            icon="note-sticky" 
-            prefix="fa-solid" 
-            class="notes-icon" 
-          />
+          <IconWrapper icon="note-sticky" prefix="fa-solid" class="notes-icon" />
         </span>
         {{ $t('contactForm.notes') }}:
       </label>
@@ -91,19 +83,10 @@
       <button type="submit" class="submit-btn flat-input" :disabled="isSubmitting">
         <!-- آیکون‌های دکمه ارسال فرم -->
         <span v-if="isSubmitting" class="icon-wrapper">
-          <IconWrapper 
-            icon="spinner" 
-            prefix="fa-solid" 
-            class="submit-icon" 
-            animation="fa-spin" 
-          />
+          <IconWrapper icon="spinner" prefix="fa-solid" class="submit-icon" animation="fa-spin" />
         </span>
         <span v-else class="icon-wrapper">
-          <IconWrapper 
-            icon="save" 
-            prefix="fa-solid" 
-            class="save-icon" 
-          />
+          <IconWrapper icon="save" prefix="fa-solid" class="save-icon" />
         </span>
         {{
           $t(contactStore.contactToEdit ? 'contactForm.updateContact' : 'contactForm.addContact')
@@ -111,11 +94,7 @@
       </button>
       <button type="button" @click="handleCancel" class="cancel-btn flat-input">
         <!-- آیکون انصراف -->
-        <IconWrapper 
-          icon="xmark" 
-          prefix="fa-solid" 
-          class="cancel-icon" 
-        />
+        <IconWrapper icon="xmark" prefix="fa-solid" class="cancel-icon" />
         {{ $t('contactForm.cancel') }}
       </button>
       <button
@@ -125,11 +104,7 @@
         class="delete-btn flat-input"
       >
         <!-- آیکون حذف مخاطب -->
-        <IconWrapper 
-          icon="trash" 
-          prefix="fa-solid" 
-          class="delete-icon" 
-        />
+        <IconWrapper icon="trash" prefix="fa-solid" class="delete-icon" />
         {{ $t('contactForm.deleteContact') }}
       </button>
     </div>
@@ -142,15 +117,18 @@ import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import moment from 'moment' // یا 'moment-jalaali' برای تاریخ شمسی
 import { v4 as uuidv4 } from 'uuid'
+import Input from '../ui/Input.vue'
+import Button from '../ui/Button.vue'
+import IconWrapper from '@/components/common/IconWrapper.vue'
+import { useValidation } from '@/services/validation.service'
+import { useNotification } from '@/services/notification.service'
 
 // استورها
-import { useContactStore } from '@/store/contacts'
-import { useGroupStore } from '@/store/groups'
-import { useNotificationStore } from '@/store/notificationStore'
-import { useCustomFieldStore } from '@/store/customFields'
+import { useContactStore } from '../../store/contacts'
+import { useGroupStore } from '../../store/groups'
+import { useCustomFieldStore } from '../../store/customFields'
 
 // کامپوننت‌ها
-import IconWrapper from '@/components/icons/IconWrapper.vue'
 import ContactAvatarUpload from './ContactAvatarUpload.vue'
 import ContactMainFields from './ContactMainFields.vue'
 import ContactCustomFields from './ContactCustomFields.vue'
@@ -158,14 +136,14 @@ import ContactAddresses from './ContactAddresses.vue'
 import ContactAdditionalPhones from './ContactAdditionalPhones.vue'
 
 // آیکون‌ها و ابزارها
-import defaultAvatar from '@/assets/img/icons/default-avatar.svg'
-
+import defaultAvatar from '../../assets/img/icons/default-avatar.svg'
 
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
 const router = useRouter() // استفاده صحیح از useRouter
 const { t } = useI18n()
 const customFieldStore = useCustomFieldStore() // مقداردهی store
+const notificationService = useNotification()
 
 // متغیرهای فرم
 const name = ref('')
@@ -200,9 +178,7 @@ const isSubmitting = ref(false)
 
 const sortedCustomFieldDefinitions = computed(() => customFieldStore.sortedFieldDefinitions || [])
 
-
-
-
+const { validateText, validateEmail, validatePhone, validateDate } = useValidation()
 
 const addAddress = () => {
   contactAddresses.value.push({
@@ -246,8 +222,6 @@ const resetCustomFieldValues = () => {
   }
   customFieldValues.value = newValues
 }
-
-
 
 const addAdditionalPhone = () => {
   additionalPhones.value.push({
@@ -404,87 +378,82 @@ const updateAdditionalPhone = ({ id, updatedPhone }) => {
 
 const validateForm = () => {
   let isValid = true
-  nameError.value = name.value.trim() === '' ? 'contactForm.validation.nameRequired' : ''
-  if (nameError.value) isValid = false
 
-  lastNameError.value =
-    lastName.value.trim() === '' ? 'contactForm.validation.lastNameRequired' : ''
-  if (lastNameError.value) isValid = false
+  // اعتبارسنجی نام
+  const nameValidation = validateText(name.value, { required: true })
+  nameError.value = nameValidation.isValid ? '' : nameValidation.message
+  if (!nameValidation.isValid) isValid = false
 
-  if (phone.value.trim() === '') {
-    phoneError.value = 'contactForm.validation.phoneRequired'
-    isValid = false
-  } else if (!/^([\d\s+\-()]*)$/.test(phone.value)) {
-    phoneError.value = 'contactForm.validation.phoneInvalid'
-    isValid = false
-  } else {
-    phoneError.value = ''
+  // اعتبارسنجی نام خانوادگی
+  const lastNameValidation = validateText(lastName.value, { required: true })
+  lastNameError.value = lastNameValidation.isValid ? '' : lastNameValidation.message
+  if (!lastNameValidation.isValid) isValid = false
+
+  // اعتبارسنجی تلفن
+  const phoneValidation = validatePhone(phone.value, { required: true })
+  phoneError.value = phoneValidation.isValid ? '' : phoneValidation.message
+  if (!phoneValidation.isValid) isValid = false
+
+  // اعتبارسنجی ایمیل (اگر وارد شده باشد)
+  if (email.value) {
+    const emailValidation = validateEmail(email.value)
+    emailError.value = emailValidation.isValid ? '' : emailValidation.message
+    if (!emailValidation.isValid) isValid = false
   }
 
-  // Basic validation for additional phone numbers (if any)
-  additionalPhones.value.forEach((p) => {
-    if (p.number.trim() !== '' && !/^([\d\s+\-()]*)$/.test(p.number)) {
-      // Ideally, show error next to the specific additional phone input
-      // For now, let's set a general error or log it
-      console.warn(`Invalid additional phone number: ${p.number}`)
-      // You might want to add a more user-facing error message here
+  // اعتبارسنجی تاریخ تولد (اگر وارد شده باشد)
+  if (birthDate.value) {
+    const birthDateValidation = validateDate(birthDate.value)
+    birthDateError.value = birthDateValidation.isValid ? '' : birthDateValidation.message
+    if (!birthDateValidation.isValid) isValid = false
+  }
+
+  // اعتبارسنجی نام گروه جدید (اگر در حال ایجاد گروه جدید باشد)
+  if (isCreatingNewGroup.value) {
+    const groupNameValidation = validateText(newGroupName.value, { required: true })
+    if (!groupNameValidation.isValid) {
+      groupStore.error = t('contactForm.validation.groupNameRequired')
       isValid = false
     }
-  })
-
-  // Basic validation for birthDate (if provided)
-  if (birthDate.value && !moment(birthDate.value, 'jYYYY/jMM/jDD', true).isValid()) {
-    // Ideally, show error next to the birth date input
-    console.warn(`Invalid birth date: ${birthDate.value}`)
-    // You might want to add a more user-facing error message here
-    isValid = false
-  }
-
-  // Validate new group name if creating a new group
-  if (isCreatingNewGroup.value && newGroupName.value.trim() === '') {
-    groupStore.error = 'contactForm.validation.groupNameRequired' // This already exists, but good to have it as part of overall validation
-    isValid = false
-  } else if (isCreatingNewGroup.value) {
-    groupStore.error = null // Clear previous error if name is now provided
   }
 
   return isValid
 }
 
 const handleSubmit = async () => {
-  isSubmitting.value = true;
-  
+  isSubmitting.value = true
+
   try {
     // اعتبارسنجی فرم
     if (!validateForm()) {
-      return; // اگر فرم معتبر نبود، خارج می‌شویم
+      return // اگر فرم معتبر نبود، خارج می‌شویم
     }
 
     // مدیریت گروه جدید
-    let finalContactGroupName = contactGroup.value;
+    let finalContactGroupName = contactGroup.value
     if (isCreatingNewGroup.value) {
       if (newGroupName.value.trim() === '') {
-        groupStore.error = 'contactForm.validation.groupNameRequired';
-        return;
+        groupStore.error = 'contactForm.validation.groupNameRequired'
+        return
       }
-      groupStore.error = null;
+      groupStore.error = null
 
-      await groupStore.addGroup(newGroupName.value.trim());
+      await groupStore.addGroup(newGroupName.value.trim())
 
       if (groupStore.error) {
-        console.error('Error creating group:', groupStore.error);
-        return;
+        console.error('Error creating group:', groupStore.error)
+        return
       }
 
-      finalContactGroupName = newGroupName.value.trim();
+      finalContactGroupName = newGroupName.value.trim()
     }
 
     // پردازش فیلدهای سفارشی
-    const processedCustomFields = [];
+    const processedCustomFields = []
     if (sortedCustomFieldDefinitions.value && Array.isArray(sortedCustomFieldDefinitions.value)) {
       for (const fieldDef of sortedCustomFieldDefinitions.value) {
-        const rawValue = customFieldValues.value[fieldDef.id];
-        let valueToStore = rawValue;
+        const rawValue = customFieldValues.value[fieldDef.id]
+        let valueToStore = rawValue
 
         if (
           rawValue !== null &&
@@ -492,21 +461,20 @@ const handleSubmit = async () => {
           (rawValue !== '' || fieldDef.type === 'boolean')
         ) {
           if (fieldDef.type === 'date' && rawValue) {
-            valueToStore = moment(rawValue, 'YYYY-MM-DD').toISOString();
+            valueToStore = moment(rawValue, 'YYYY-MM-DD').toISOString()
           }
           if (fieldDef.type === 'number' && rawValue !== null && rawValue !== '') {
-            valueToStore = parseFloat(rawValue);
-            if (isNaN(valueToStore)) valueToStore = null;
+            valueToStore = parseFloat(rawValue)
+            if (isNaN(valueToStore)) valueToStore = null
           }
 
           processedCustomFields.push({
             fieldId: fieldDef.id,
             value: valueToStore,
-          });
+          })
         }
       }
     }
-
 
     // ایجاد شیء اطلاعات تماس
     const contactDataPayload = {
@@ -537,36 +505,36 @@ const handleSubmit = async () => {
       // avatar: avatar.value, // We'll handle actual avatar upload logic later
       createdAt: contactStore.contactToEdit?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    };
+    }
 
     // ذخیره یا به‌روزرسانی مخاطب
-    let success = false;
+    let success = false
     if (contactStore.contactToEdit) {
-      success = await contactStore.updateContact(contactStore.contactToEdit.id, contactDataPayload);
+      success = await contactStore.updateContact(contactStore.contactToEdit.id, contactDataPayload)
     } else {
-      success = await contactStore.addContact(contactDataPayload);
+      success = await contactStore.addContact(contactDataPayload)
     }
 
     // بررسی نتیجه عملیات
     if (success && !contactStore.error) {
-      clearForm();
-      router.push({ name: 'contact-list' });
+      clearForm()
+      router.push({ name: 'contact-list' })
     } else if (contactStore.error) {
-      console.error('Error saving contact:', contactStore.error);
+      console.error('Error saving contact:', contactStore.error)
       // در اینجا می‌توانید یک اعلان خطا به کاربر نمایش دهید
-      // مثلاً:
-      notificationStore.showError(t('contactForm.errorSavingContact'));
+      notificationService.showError(t('contactForm.errorSavingContact'))
     }
   } catch (error) {
     // مدیریت خطاهای پیش‌بینی نشده
-    console.error('An unexpected error occurred:', error);
+    console.error('An unexpected error occurred:', error)
     // نمایش پیام خطا به کاربر
-    notificationStore.showError(t('contactForm.unexpectedError'));
+    notificationService.showError(t('contactForm.unexpectedError'))
   } finally {
     // در هر صورت (موفقیت یا خطا) مقدار isSubmitting را به false برمی‌گردانیم
-    isSubmitting.value = false;
+    isSubmitting.value = false
   }
 }
+
 // در Composition API نیازی به تعریف جداگانه کامپوننت‌ها نیست
 </script>
 
@@ -649,8 +617,6 @@ const handleSubmit = async () => {
   margin-top: 5px;
   display: block;
 }
-
-
 
 /* استایل‌های بخش دکمه‌های عملیات */
 .form-actions {

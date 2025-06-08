@@ -1,12 +1,29 @@
 // src/store/contacts.js
 
 import { defineStore } from 'pinia'
-import { db } from '../db'
+import { db } from '../db/index.js'
 import moment from 'moment-jalaali'
-import { useCustomFieldStore } from './customFields'
-import { parseJalaaliStringToGregorianMoment } from '../utils/formatters'
+import processedSampleContacts from '../data/sampleContacts.js' // مخاطبین نمونه از فایل جداگانه
+import { useCustomFieldStore } from './customFields.js'
+import { parseJalaaliStringToGregorianMoment } from '../utils/formatters/index'
 import { useI18n } from 'vue-i18n'
-import { useNotificationStore } from './notificationStore'
+import { useNotification } from '@/services/notification.service'
+
+// تعریف فیلدهای استاندارد و نوع آن‌ها
+const STANDARD_FIELDS_CONFIG = [
+  { value: 'firstName', type: 'text' },
+  { value: 'lastName', type: 'text' },
+  { value: 'name', type: 'text' },
+  { value: 'phone', type: 'text' },
+  { value: 'email', type: 'text' },
+  { value: 'title', type: 'text' },
+  { value: 'notes', type: 'textarea' },
+  { value: 'createdAt', type: 'date' },
+  { value: 'updatedAt', type: 'date' },
+  { value: 'birthDate', type: 'date' },
+  { value: 'gender', type: 'select' },
+  { value: 'group', type: 'select' },
+]
 
 // ** تابع ruleMatches - اصلاح شده برای هندل کردن تاریخ‌های میلادی و رشته خالی برای گروه **
 // این تابع یک فیلد مخاطب را با یک قانون فیلتر مقایسه می‌کند
@@ -276,70 +293,40 @@ export const useContactStore = defineStore('contactStore', {
       // این فیلتر بعد از فیلتر جستجوی متنی اعمال می‌شود
       if (state.filterRules && state.filterRules.length > 0) {
         filtered = filtered.filter((contact) => {
-          // یک مخاطب باید با *تمام* قوانین فیلتر پیشرفته (با منطق AND) مطابقت داشته باشد
-          // از متد every() روی آرایه قوانین استفاده می‌کنیم
           return state.filterRules.every((rule) => {
-            // برای هر قانون، مقدار فیلد مربوطه را در مخاطب پیدا می‌کنیم
-            // و نوع فیلد را بر اساس تعریف فیلد (برای سفارشی) یا نام فیلد (برای استاندارد) تعیین می‌کنیم.
-
-            // Skip rules that are somehow invalid or incomplete
             if (!rule || !rule.field || !rule.operator) {
               console.warn('Skipping invalid filter rule:', rule)
-              return true // قانون نامعتبر باعث حذف مخاطب نمی‌شود
+              return true
             }
 
             let fieldValue = null
-            let fieldType = 'text' // نوع پیش‌فرض برای مقایسه/ارزیابی
+            let fieldType = 'text'
 
-            // تعیین اینکه قانون روی فیلد استاندارد است یا سفارشی
-            const standardFieldsConfig = [
-              { value: 'name', type: 'text' },
-              { value: 'lastName', type: 'text' },
-              { value: 'phone', type: 'text' },
-              { value: 'title', type: 'text' },
-              { value: 'notes', type: 'textarea' },
-              { value: 'createdAt', type: 'date' },
-              { value: 'updatedAt', type: 'date' },
-              { value: 'birthDate', type: 'date' },
-              { value: 'gender', type: 'select' },
-              { value: 'group', type: 'select' },
-            ]
-
-            const standardFieldDef = standardFieldsConfig.find((f) => f.value === rule.field)
+            // بررسی اینکه آیا فیلد استاندارد است یا سفارشی
+            const standardFieldDef = STANDARD_FIELDS_CONFIG.find((f) => f.value === rule.field)
 
             if (standardFieldDef) {
+              // اگر فیلد استاندارد است
               fieldValue = contact[rule.field]
               fieldType = standardFieldDef.type
-              // اگر نوع خاصی برای فیلد استاندارد لازم است، اینجا override می‌کنیم
-              if (['phone', 'notes', 'name', 'lastName', 'title'].includes(rule.field)) {
-                fieldType = 'text'
-              }
             } else {
-              // فرض می‌کنیم field شناسه یک فیلد سفارشی است
+              // اگر فیلد سفارشی است
               const customFieldId = rule.field
-              const fieldDefinition = customFieldStore.getFieldDefinitionById(customFieldId) // تعریف فیلد سفارشی را پیدا می‌کنیم
+              const fieldDefinition = customFieldStore.getFieldDefinitionById(customFieldId)
 
               if (!fieldDefinition) {
                 console.warn(
                   `Filter rule on unknown custom field ID: ${customFieldId}. Skipping rule.`,
                 )
-                return true // اگر تعریف فیلد پیدا نشد، این قانون باعث حذف مخاطب نمی‌شود
+                return true
               }
-              fieldType = fieldDefinition.type // نوع را از تعریف فیلد می‌گیریم
 
-              // مقدار این فیلد سفارشی را در آرایه customFields آن مخاطب پیدا می‌کنیم
+              fieldType = fieldDefinition.type
               const contactField = contact.customFields?.find((cf) => cf.fieldId === customFieldId)
               fieldValue = contactField ? contactField.value : null
             }
 
-            // ** حالا، با استفاده از تابع کمکی ruleMatches، مقدار فیلد مخاطب را با مقدار قانون و عملگر مقایسه می‌کنیم **
-            // چون تابع ruleMatches را قبل از defineStore تعریف کرده‌ایم، اینجا قابل دسترسی است
-            const match = ruleMatches(fieldValue, rule.operator, rule.value, fieldType)
-
-            // برای دیباگ کردن قوانین فیلتر، می‌تونید این خط رو فعال کنید
-            // console.log(` Rule: Field: ${rule.field}, Op: ${rule.operator}, Val: ${rule.value}, Contact Value: ${fieldValue}, Type: ${fieldType}, Match: ${match}`);
-
-            return match // نتیجه مقایسه را برمی‌گردانیم
+            return ruleMatches(fieldValue, rule.operator, rule.value, fieldType)
           })
         })
       }
@@ -484,136 +471,65 @@ export const useContactStore = defineStore('contactStore', {
 
       return sorted // لیست فیلتر شده و مرتب شده رو برمی‌گردونیم
     },
+
+    // Getter برای دریافت یک مخاطب با ID مشخص
+    getContactById: (state) => (id) => {
+      console.log('getContactById - Searching for ID:', id)
+      console.log('getContactById - Available contacts:', state.contacts)
+      const found = state.contacts.find((contact) => contact.id === id)
+      console.log('getContactById - Found contact:', found)
+      return found
+    },
   },
   actions: {
     // اکشن برای اضافه کردن مخاطبین نمونه
     async addSampleContacts(t) {
-      // تابع ترجمه باید از کامپوننت فراخوانی‌کننده دریافت شود
-      const confirmed = window.confirm(t('contactList.confirmAddSamples'))
-      if (!confirmed) {
-        return // اگر کاربر تأیید نکرد، عملیات را متوقف کن
-      }
-
-      this.loading = true
-      this.error = null
-
       try {
-        // اضافه کردن مخاطبین نمونه
-        const sampleContacts = [
-          {
-            id: 'sample-1',
-            name: 'علی احمدی',
-            phone: '09123456789',
-            email: 'ali.ahmadi@example.com',
-            group: 'خانواده',
-            birthDate: '1370/01/15',
-            title: 'مهندس',
-            company: 'شرکت الف',
-            jobTitle: 'مدیر پروژه',
-            notes: 'دوست قدیمی',
-            website: 'www.aliahmadi.com',
-            address: {
-              street: 'خیابان آزادی',
-              city: 'تهران',
-              state: 'تهران',
-              zip: '12345',
-              country: 'ایران',
-            },
-            gender: 'مرد',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            customFields: {
-              favoriteColor: 'آبی',
-            },
-          },
-          {
-            id: 'sample-2',
-            name: 'زهرا حسینی',
-            phone: '09351234567',
-            email: 'zahra.hosseini@example.com',
-            group: 'دوستان',
-            birthDate: '1375/05/20',
-            title: 'خانم',
-            company: 'شرکت ب',
-            jobTitle: 'طراح گرافیک',
-            notes: 'همکار سابق',
-            website: 'www.zahrahosseini.com',
-            address: {
-              street: 'خیابان انقلاب',
-              city: 'اصفهان',
-              state: 'اصفهان',
-              zip: '67890',
-              country: 'ایران',
-            },
-            gender: 'زن',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            customFields: {
-              favoriteColor: 'سبز',
-            },
-          },
-          {
-            id: 'sample-3',
-            name: 'محمد رضایی',
-            phone: '09909876543',
-            email: 'mohammad.rezaei@example.com',
-            group: 'کار',
-            birthDate: '1368/11/01',
-            title: 'آقا',
-            company: 'شرکت ج',
-            jobTitle: 'برنامه نویس',
-            notes: 'ملاقات در کنفرانس',
-            website: 'www.mohammadrezaei.com',
-            address: {
-              street: 'خیابان ولیعصر',
-              city: 'شیراز',
-              state: 'فارس',
-              zip: '11223',
-              country: 'ایران',
-            },
-            gender: 'مرد',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            customFields: {
-              favoriteColor: 'قرمز',
-            },
-          },
-        ]
+        // مخاطبین نمونه از فایل جداگانه خوانده می‌شوند
+        const contactsToAdd = processedSampleContacts
 
         // حذف تمام مخاطبین موجود
         await db.contacts.clear()
 
-        for (const contact of sampleContacts) {
-          // تاریخ‌های شمسی را به میلادی تبدیل کن قبل از ذخیره
-          if (contact.birthDate) {
-            const jalaaliMoment = moment(contact.birthDate, 'jYYYY/jMM/jDD')
+        for (const contact of contactsToAdd) {
+          // یک کپی از آبجکت مخاطب ایجاد می‌کنیم تا داده اصلی تغییر نکند
+          // و همچنین بتوانیم تاریخ تولد را در صورت نیاز تغییر فرمت دهیم
+          const contactToSave = { ...contact }
+
+          // تاریخ‌های شمسی (jYYYY/jMM/jDD) را به میلادی (YYYY-MM-DD) تبدیل کن قبل از ذخیره
+          // داده‌های نمونه در sampleContacts.js از قبل دارای birthDate با فرمت jYYYY/jMM/jDD هستند
+          if (contactToSave.birthDate) {
+            const jalaaliMoment = moment(contactToSave.birthDate, 'jYYYY/jMM/jDD')
             if (jalaaliMoment.isValid()) {
-              contact.birthDate = jalaaliMoment.format('YYYY-MM-DD')
+              contactToSave.birthDate = jalaaliMoment.format('YYYY-MM-DD')
             } else {
               console.warn(
-                `تاریخ تولد نامعتبر برای ${contact.name}: ${contact.birthDate}. به عنوان رشته ذخیره می‌شود.`,
+                `تاریخ تولد نامعتبر برای مخاطب با شناسه ${contactToSave.id}: "${contactToSave.birthDate}". این فیلد بدون تغییر ذخیره می‌شود.`,
               )
+              // اگر می‌خواهید در صورت نامعتبر بودن، فیلد birthDate حذف یا null شود، اینجا مدیریت کنید
+              // contactToSave.birthDate = null; // مثال
             }
           }
-          // اضافه کردن تاریخ ایجاد و به‌روزرسانی
-          contact.createdAt = new Date().toISOString()
-          contact.updatedAt = new Date().toISOString()
-          await db.contacts.add(contact)
+
+          // createdAt و updatedAt از قبل در processedSampleContacts با فرمت ISOString موجود هستند
+          // و نیازی به تنظیم مجدد در اینجا نیست. Dexie می‌تواند ISOString را مدیریت کند.
+
+          await db.contacts.add(contactToSave)
         }
         this.contacts = await db.contacts.toArray()
         // Return success status and message
-        return { 
-          success: true, 
+        return {
+          success: true,
           message: t('contactList.samplesAdded'),
-          key: 'samplesAdded' // اضافه کردن کلید برای استفاده در کامپوننت
+          key: 'samplesAdded', // اضافه کردن کلید برای استفاده در کامپوننت
         }
       } catch (error) {
         console.error('خطا در افزودن مخاطبین نمونه:', error)
         // Return error status and message
-        return { 
-          success: false, 
+        return {
+          success: false,
           message: t('contactList.samplesError'),
-          error: error.message 
+          error: error.message,
         }
       } finally {
         this.loading = false
@@ -652,36 +568,20 @@ export const useContactStore = defineStore('contactStore', {
 
     // اکشن برای خواندن همه مخاطبین از دیتابیس
     async loadContacts() {
-      console.log('شروع لود مخاطبین از دیتابیس...') // اضافه کردن لاگ
-      this.loading = true // وضعیت لودینگ رو true می‌کنیم
-      this.error = null // خطا رو ریست می‌کنیم
+      console.log('Loading contacts...')
+      this.loading = true
+      this.error = null
       try {
-        // لاگ کردن اطلاعات دیتابیس
-        console.log('اطلاعات دیتابیس:', db)
-        console.log('نام دیتابیس:', db.name)
-        console.log('ورژن دیتابیس:', db.verno)
-
-        // دریافت لیست جداول
-        const tables = await db.tables
-        console.log(
-          'جداول موجود در دیتابیس:',
-          tables.map((t) => t.name),
-        )
-
-        // از Dexie برای خواندن همه آیتم‌ها از استور 'contacts' استفاده می‌کنیم
-        const allContacts = await db.contacts.toArray()
-        console.log('تعداد مخاطبین خوانده شده:', allContacts.length)
-        console.log('مخاطبین با موفقیت از دیتابیس خوانده شدند:', allContacts)
-
-        // اطلاعات خوانده شده رو توی State ذخیره می‌کنیم
-        this.contacts = allContacts
-        console.log('مخاطبین در استور ذخیره شدند. تعداد:', this.contacts.length)
+        const contacts = await db.contacts.toArray()
+        console.log('Contacts loaded from DB:', contacts)
+        this.contacts = contacts
+        return contacts
       } catch (error) {
-        console.error('خطا در خواندن مخاطبین:', error)
-        this.error = 'امکان خواندن مخاطبین وجود ندارد.'
-        throw error // خطا رو دوباره پرتاب می‌کنیم
+        console.error('Error loading contacts:', error)
+        this.error = error.message
+        throw error
       } finally {
-        this.loading = false // وضعیت لودینگ رو false می‌کنیم
+        this.loading = false
       }
     },
 

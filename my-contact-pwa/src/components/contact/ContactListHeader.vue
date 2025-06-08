@@ -4,17 +4,13 @@
       <label for="search">
         <!-- آیکون ذره‌بین برای جستجو -->
         <span class="icon-wrapper">
-          <IconWrapper 
-            icon="magnifying-glass" 
-            prefix="fa-solid" 
-            class="search-icon" 
-          />
+          <IconWrapper icon="magnifying-glass" prefix="fa-solid" class="search-icon" />
         </span>
         {{ $t('contactList.searchLabel') }}
       </label>
       <input
         id="search"
-        :value="searchQuery"
+        v-model="searchQuery"
         @input="$emit('update:searchQuery', $event.target.value)"
         :placeholder="$t('contactList.searchPlaceholder')"
         class="control-input flat-input"
@@ -25,18 +21,14 @@
       <label for="sortField">
         <!-- آیکون مرتب‌سازی -->
         <span class="icon-wrapper">
-          <IconWrapper 
-            icon="arrow-up-a-z" 
-            prefix="fa-solid" 
-            class="sort-icon" 
-          />
+          <IconWrapper icon="arrow-up-a-z" prefix="fa-solid" class="sort-icon" />
         </span>
         {{ $t('contactList.sortByLabel') }}
       </label>
-      <select 
-        id="sortField" 
-        :value="sortField" 
-        @change="$emit('update:sortField', $event.target.value)" 
+      <select
+        id="sortField"
+        v-model="sortField"
+        @change="$emit('update:sortField', $event.target.value)"
         class="control-select flat-select"
       >
         <option v-for="option in sortOptions" :key="option.value" :value="option.value">
@@ -44,10 +36,10 @@
         </option>
       </select>
       <label for="sortOrder">{{ $t('contactList.sortOrderLabel') }}</label>
-      <select 
-        id="sortOrder" 
-        :value="sortOrder" 
-        @change="$emit('update:sortOrder', $event.target.value)" 
+      <select
+        id="sortOrder"
+        v-model="sortOrder"
+        @change="$emit('update:sortOrder', $event.target.value)"
         class="control-select flat-select"
       >
         <option value="asc">{{ $t('contactList.sortOrderAsc') }}</option>
@@ -61,19 +53,15 @@
     >
       <!-- آیکون تنظیمات فیلتر پیشرفته -->
       <span class="icon-wrapper">
-        <IconWrapper 
-          icon="sliders" 
-          prefix="fa-solid" 
-          class="filter-icon" 
-        />
+        <IconWrapper icon="sliders" prefix="fa-solid" class="filter-icon" />
       </span>
       {{ $t('contactList.filterRulesTitle') }}
       <!-- آیکون فلش بالا/پایین -->
       <span class="icon-wrapper">
-        <IconWrapper 
-          :icon="isFilterSectionVisible ? 'chevron-up' : 'chevron-down'" 
-          prefix="fa-solid" 
-          class="toggle-icon" 
+        <IconWrapper
+          :icon="isFilterSectionVisible ? 'chevron-up' : 'chevron-down'"
+          prefix="fa-solid"
+          class="toggle-icon"
         />
       </span>
     </button>
@@ -82,6 +70,8 @@
 <script setup>
 // ایمپورت مستقیم IconWrapper
 import IconWrapper from '@/components/common/IconWrapper.vue'
+import { ref, watch } from 'vue'
+
 const props = defineProps({
   searchQuery: String,
   sortField: String,
@@ -89,11 +79,53 @@ const props = defineProps({
   sortOptions: Array,
   isFilterSectionVisible: Boolean,
 })
+
 const emits = defineEmits([
   'update:searchQuery',
   'update:sortField',
   'update:sortOrder',
   'toggle',
   'add',
+  'toggleFilterSection',
 ])
+
+// ایجاد ref‌های محلی برای v-model
+const searchQuery = ref(props.searchQuery)
+const sortField = ref(props.sortField)
+const sortOrder = ref(props.sortOrder)
+
+// تماشای تغییرات props و به‌روزرسانی ref‌ها
+watch(
+  () => props.searchQuery,
+  (newValue) => {
+    searchQuery.value = newValue
+  },
+)
+
+watch(
+  () => props.sortField,
+  (newValue) => {
+    sortField.value = newValue
+  },
+)
+
+watch(
+  () => props.sortOrder,
+  (newValue) => {
+    sortOrder.value = newValue
+  },
+)
+
+// تماشای تغییرات ref‌ها و emit کردن تغییرات
+watch(searchQuery, (newValue) => {
+  emits('update:searchQuery', newValue)
+})
+
+watch(sortField, (newValue) => {
+  emits('update:sortField', newValue)
+})
+
+watch(sortOrder, (newValue) => {
+  emits('update:sortOrder', newValue)
+})
 </script>

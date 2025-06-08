@@ -1,0 +1,101 @@
+:root {
+  /* رنگ‌های اصلی */
+  --color-primary: #4f46e5;
+  --color-primary-light: #6366f1;
+  --color-primary-dark: #4338ca;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+
+  /* رنگ‌های پس‌زمینه */
+  --color-background: #f8fafc;
+  --color-background-soft: rgba(255, 255, 255, 0.8);
+  --color-background-mute: rgba(255, 255, 255, 0.6);
+  --color-background-light: rgba(255, 255, 255, 0.4);
+
+  /* رنگ‌های متن */
+  --color-text: #1e293b;
+  --color-text-light: #64748b;
+  --color-text-lighter: #94a3b8;
+  --color-heading: #0f172a;
+
+  /* سایه‌ها */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+  --shadow-glow: 0 0 15px rgba(79, 70, 229, 0.2);
+
+  /* افکت‌های گلس مورفیسم */
+  --glass-background: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  --glass-blur: blur(10px);
+
+  /* حاشیه‌ها و گردی */
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 20px;
+  --border-radius-xl: 30px;
+  --border-radius-full: 9999px;
+
+  /* فاصله‌ها */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+
+  /* سایز فونت‌ها */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+
+  /* وزن فونت‌ها */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* انیمیشن‌ها */
+  --transition-fast: 150ms;
+  --transition-normal: 300ms;
+  --transition-slow: 500ms;
+  --easing-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* زد-ایندکس‌ها */
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+}
+
+/* تم تاریک */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #0f172a;
+    --color-background-soft: rgba(30, 41, 59, 0.8);
+    --color-background-mute: rgba(30, 41, 59, 0.6);
+    --color-background-light: rgba(30, 41, 59, 0.4);
+
+    --color-text: #e2e8f0;
+    --color-text-light: #94a3b8;
+    --color-text-lighter: #64748b;
+    --color-heading: #f8fafc;
+
+    --glass-background: rgba(30, 41, 59, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+}

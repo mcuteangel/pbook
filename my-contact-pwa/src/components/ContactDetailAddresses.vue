@@ -25,7 +25,7 @@
   </div>
 </template>
 <script setup>
-import { displayAddressType } from '@/utils/formatters'
+import { displayAddressType } from '@/utils/formatters/index'
 const props = defineProps({
   addresses: Array,
 })

@@ -1,8 +1,8 @@
 <template>
   <div class="notification-container">
     <transition-group name="notification">
-      <div 
-        v-for="notification in notifications" 
+      <div
+        v-for="notification in notifications"
         :key="notification.id"
         class="notification"
         :class="`notification-${notification.type}`"
@@ -26,15 +26,17 @@
 </template>
 
 <script setup>
-import { useNotificationStore } from '@/store/notificationStore'
+import { useNotificationStore } from '../../store/notificationStore'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
-import { getNotificationIcon } from '@/utils/icons'
+import { getNotificationIcon } from '../../utils/icons'
+import { useNotification } from '@/services/notification.service'
 
 const { t } = useI18n()
 const notificationStore = useNotificationStore()
 const { notifications } = storeToRefs(notificationStore)
 const { removeNotification } = notificationStore
+const notificationService = useNotification()
 
 // Get notification title based on type
 const getNotificationTitle = (type) => {
@@ -236,7 +238,7 @@ const getNotificationTitle = (type) => {
     left: 2.5%;
     max-width: none;
   }
-  
+
   .notification {
     padding: 14px;
   }

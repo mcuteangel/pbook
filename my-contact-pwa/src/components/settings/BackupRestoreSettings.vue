@@ -122,9 +122,9 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useSettingsStore } from '@/store/settings'
+import { useSettingsStore } from '../../store/settings'
 import AppSettingsItem from './AppSettingsItem.vue'
-import IconWrapper from '@/components/common/IconWrapper.vue'
+import IconWrapper from '../common/IconWrapper.vue'
 
 const settingsStore = useSettingsStore()
 

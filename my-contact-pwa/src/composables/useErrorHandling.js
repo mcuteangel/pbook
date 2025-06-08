@@ -1,19 +1,14 @@
-import { useNotificationStore } from '@/store/notificationStore'
+import { useNotification } from '@/services/notification.service'
 
 export function useErrorHandling() {
-  const notificationStore = useNotificationStore()
-  
-  const handleAsyncError = async (asyncFn, errorMessage = 'An error occurred') => {
-    try {
-      return await asyncFn()
-    } catch (error) {
-      console.error(`${errorMessage}:`, error)
-      notificationStore.showError(errorMessage)
-      throw error
-    }
+  const notificationService = useNotification()
+
+  const handleError = (error, errorMessage) => {
+    console.error(error)
+    notificationService.showError(errorMessage)
   }
 
   return {
-    handleAsyncError
+    handleError,
   }
 }

@@ -30,10 +30,10 @@
 
 <script setup>
 import { computed, onMounted } from 'vue'
-import { useSettingsStore } from '@/store/settings'
-import IconWrapper from '@/components/common/IconWrapper.vue'
-import DisplaySettings from '@/components/settings/DisplaySettings.vue'
-import BackupRestoreSettings from '@/components/settings/BackupRestoreSettings.vue'
+import { useSettingsStore } from '../store/settings'
+import IconWrapper from '../components/common/IconWrapper.vue'
+import DisplaySettings from '../components/settings/DisplaySettings.vue'
+import BackupRestoreSettings from '../components/settings/BackupRestoreSettings.vue'
 
 const settingsStore = useSettingsStore()
 

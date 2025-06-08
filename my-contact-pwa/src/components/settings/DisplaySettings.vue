@@ -28,10 +28,10 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useSettingsStore } from '@/store/settings'
-import { useCustomFieldStore } from '@/store/customFields'
+import { useSettingsStore } from '../../store/settings'
+import { useCustomFieldStore } from '../../store/customFields'
 import AppSettingsItem from './AppSettingsItem.vue'
-import IconWrapper from '@/components/common/IconWrapper.vue'
+import IconWrapper from '../common/IconWrapper.vue'
 import { useI18n } from 'vue-i18n' // Import useI18n
 
 const settingsStore = useSettingsStore()

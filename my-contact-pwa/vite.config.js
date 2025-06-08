@@ -8,10 +8,14 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // تنظیمات resolve به صورت پیش‌فرض در Vite وجود دارد
-  // نیازی به تعریف مجدد آن نیست
   plugins: [
-    vue(),
+    vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag.includes('-'),
+        },
+      },
+    }),
     vueDevTools(),
     VitePWA({
       // <-- پیکربندی پایه پلاگین PWA
@@ -154,11 +158,23 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-      dexie: 'dexie/dist/dexie.mjs', // اضافه کردن Alias برای Dexie
+      dexie: 'dexie/dist/dexie.mjs',
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vue-vendor': ['vue', 'vue-router', 'vue-i18n'],
+          'moment-vendor': ['moment-jalaali'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
   optimizeDeps: {
-    exclude: ['vue-persian-datetime-picker', 'dexie'], // Added exclude
+    include: ['vue', 'vue-router', 'vue-i18n', 'moment-jalaali'],
+    exclude: ['vue-persian-datetime-picker', 'dexie'],
   },
   test: {
     globals: true,

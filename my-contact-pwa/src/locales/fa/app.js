@@ -8,5 +8,6 @@ export default {
     groups: 'گروه‌ها',
     fields: 'فیلدها',
     settings: 'تنظیمات',
+    testNotifications: 'تست اعلان‌ها'
   },
 }

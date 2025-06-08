@@ -3,6 +3,9 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import i18n from './plugins/i18n'
+import Toast from 'vue-toastification'
+import 'vue-toastification/dist/index.css'
+import NotificationService from '@/services/notification.service'
 import './assets/styles/theme.css'
 import './assets/styles/glassmorphism.css'
 import './assets/styles/common-components.css'
@@ -115,7 +118,7 @@ library.add(
   faAngleDoubleRight,
 )
 
-import { useSettingsStore } from '@/store/settings'
+import { useSettingsStore } from './store/settings'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -125,9 +128,36 @@ app.config.productionTip = false
 app.config.silent = true
 app.config.warnHandler = () => {} // Disable Vue warnings
 
+// نصب پلاگین‌های اصلی
 app.use(pinia)
 app.use(router)
 app.use(i18n)
+
+// نصب پلاگین toastification
+const toastOptions = {
+  position: 'top-right',
+  timeout: 5000,
+  closeOnClick: true,
+  pauseOnFocusLoss: true,
+  pauseOnHover: true,
+  draggable: true,
+  draggablePercent: 0.6,
+  showCloseButtonOnHover: false,
+  hideProgressBar: false,
+  closeButton: 'button',
+  icon: true,
+  rtl: true,
+  transition: 'Vue-Toastification__fade',
+  maxToasts: 5,
+  newestOnTop: true
+}
+
+app.use(Toast, toastOptions)
+
+// نصب سرویس اعلان‌های اختصاصی
+app.use(NotificationService)
+
+// کامپوننت‌های سراسری
 app.component('font-awesome-icon', FontAwesomeIcon)
 
 const settingsStore = useSettingsStore(pinia)

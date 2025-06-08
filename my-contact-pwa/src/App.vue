@@ -45,6 +45,16 @@
             <i class="fa-solid fa-gear"></i>
             <span>{{ $t('app.nav.settings') }}</span>
           </RouterLink>
+          <!-- لینک تست اعلان‌ها - فقط در حالت توسعه نمایش داده می‌شود -->
+          <RouterLink
+            v-if="isDevelopment"
+            :to="{ name: 'test-notifications' }"
+            active-class="active-link"
+            class="nav-item"
+          >
+            <i class="fa-solid fa-bell"></i>
+            <span>{{ $t('app.nav.testNotifications') }}</span>
+          </RouterLink>
         </nav>
       </header>
 
@@ -93,6 +103,16 @@
           <i class="fa-solid fa-gear"></i>
           <span>{{ $t('app.nav.settings') }}</span>
         </RouterLink>
+        <!-- لینک تست اعلان‌ها در موبایل - فقط در حالت توسعه -->
+        <RouterLink
+          v-if="isDevelopment"
+          :to="{ name: 'test-notifications' }"
+          class="mobile-nav-item"
+          active-class="active-mobile-link"
+        >
+          <i class="fa-solid fa-bell"></i>
+          <span>{{ $t('app.nav.testNotifications') }}</span>
+        </RouterLink>
       </nav>
       <Notification />
     </div>
@@ -100,15 +120,17 @@
 </template>
 
 <script setup>
-import Notification from '@/components/shared/Notification.vue'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
-import { useContactStore } from '@/store/contacts'
-import { useGroupStore } from '@/store/groups'
-import { useCustomFieldStore } from '@/store/customFields'
+import { useContactStore } from './store/contacts.js'
+import { useGroupStore } from './store/groups.js'
+import { useCustomFieldStore } from './store/customFields.js'
 import './assets/styles/glassmorphism.css'
 import './assets/styles/theme.css'
 import '@fortawesome/fontawesome-free/css/all.min.css'
+
+// تعریف متغیرهای رفرنس شده برای استفاده در تمپلیت
+const isDevelopment = ref(import.meta.env.DEV)
 
 const deferredPrompt = ref(null)
 const showInstallButton = ref(false)
@@ -161,6 +183,184 @@ onUnmounted(() => {
   console.log('Event listener for beforeinstallprompt removed.')
 })
 </script>
+
+<style>
+@import './assets/styles/variables.css';
+
+/* استایل‌های پایه */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family:
+    'Vazirmatn',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background: var(--color-background);
+  color: var(--color-text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* کلاس‌های کمکی گلس مورفیسم */
+.glass {
+  background: var(--glass-background);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-card {
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  background: var(--glass-background);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-button {
+  background: var(--glass-background);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-normal) var(--easing-default);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.glass-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.glass-button:active {
+  transform: translateY(0);
+}
+
+/* انیمیشن‌های پایه */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--transition-normal) var(--easing-default);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all var(--transition-normal) var(--easing-default);
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* استایل‌های فرم */
+.form-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-text-light);
+  font-size: var(--font-size-sm);
+}
+
+.form-input {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-background);
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  transition: all var(--transition-normal) var(--easing-default);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+/* استایل‌های لیست */
+.list {
+  list-style: none;
+}
+
+.list-item {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--glass-border);
+  transition: background var(--transition-fast) var(--easing-default);
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.list-item:hover {
+  background: var(--glass-background);
+}
+
+/* استایل‌های گرید */
+.grid {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* رسپانسیو */
+@media (max-width: 1024px) {
+  .grid-4 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
 
 <style scoped>
 @import './assets/styles/custom-fields.css';

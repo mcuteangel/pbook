@@ -1,6 +1,16 @@
 export default {
+  common: {
+    enterValue: 'Enter value',
+    enterText: 'Enter text',
+    enterNumber: 'Enter number',
+    selectDate: 'Select date',
+    selectDateTime: 'Select date and time',
+    selectOption: 'Select option',
+    loading: 'Loading...',
+    clear: 'Clear',
+  },
   datePicker: {
-    placeholder: 'Select Date',
+    placeholder: 'Select date',
     shamsi: 'Shamsi',
     gregorian: 'Gregorian',
   },

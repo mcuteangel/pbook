@@ -90,6 +90,9 @@
               >
                 ({{ $t('contactList.noValueNeeded') }})
               </span>
+              <span class="rule-description" :title="getRuleOperatorDescription(rule)">
+                <IconWrapper icon="info-circle" prefix="fa-solid" class="info-icon" />
+              </span>
             </span>
             <button
               type="button"
@@ -142,9 +145,12 @@ import { useI18n } from 'vue-i18n'
 
 // کامپوننت‌های مورد نیاز
 import IconWrapper from '@/components/common/IconWrapper.vue'
-import { PersianDatePicker } from '@/components/common/commonComponents'
-import { formatDate } from '@/utils/date'
+import PersianDatePicker from '@/components/ui/PersianDatePicker.vue'
+import { formatDate } from '@/utils/formatters/index'
 import moment from 'moment-jalaali'
+import { getOperatorsForFieldType } from '@/utils/filterOperators'
+import RuleOperatorSelect from '@/components/contact/filters/RuleOperatorSelect.vue'
+import RuleInputField from '@/components/contact/filters/RuleInputField.vue'
 
 // تعریف پراپرتی‌های کامپوننت
 const props = defineProps({
@@ -169,14 +175,18 @@ const props = defineProps({
   },
 })
 
-// تعریف رویدادهای قابل ارسال به کامپوننت والد
+// تعریف رویدادهای کامپوننت
 const emits = defineEmits([
   /** رویداد به‌روزرسانی قوانین فیلتر */
   'update:modelValue',
-  /** رویداد اعمال فیلترها */
-  'apply',
+  /** رویداد حذف قانون */
+  'removeRule',
+  /** رویداد افزودن قانون جدید */
+  'addRule',
   /** رویداد پاک کردن تمام فیلترها */
-  'clear',
+  'clearRules',
+  /** رویداد اعمال فیلترها */
+  'applyFilters',
 ])
 
 // استفاده از i18n برای ترجمه متون
@@ -199,6 +209,37 @@ const state = reactive({
 
 // تبدیل state به refهای واکنش‌پذیر
 const { newRule } = toRefs(state)
+
+/**
+ * گزینه‌های قابل انتخاب برای مقدار فیلد، در صورتی که فیلد انتخابی باشد
+ * @type {import('vue').ComputedRef<Array<{value: any, label: string}>>}
+ */
+const valueSelectOptions = computed(() => {
+  if (!newRule.value.field) {
+    return [] // اگر فیلدی انتخاب نشده، گزینه‌ای وجود ندارد
+  }
+
+  const fieldDefinition = props.filterableFields.find((f) => f.value === newRule.value.field)
+
+  if (fieldDefinition && fieldDefinition.options && Array.isArray(fieldDefinition.options)) {
+    // اگر فیلد انتخاب شده، خودش گزینه‌هایی در پراپرتی options دارد
+    return fieldDefinition.options.map((opt) => {
+      if (typeof opt === 'object' && opt !== null && 'value' in opt && 'label' in opt) {
+        return opt // اگر ساختار {value, label} دارد
+      }
+      return { value: opt, label: String(opt) } // در غیر این صورت، خود مقدار را به عنوان value و label در نظر بگیر
+    })
+  }
+
+  // TODO: در اینجا می‌توان منطق بیشتری برای انواع دیگر فیلدهای select اضافه کرد
+  // مثلاً اگر گزینه‌ها از یک منبع دیگر یا یک store خاص (مانند گروه‌ها) می‌آیند.
+  // برای مثال، اگر فیلد 'group' باشد، می‌توان از groupStore.groups گزینه‌ها را ساخت.
+  // if (fieldDefinition && fieldDefinition.value === 'group' && groupStore) {
+  //   return groupStore.groups.map(g => ({ value: g.id, label: g.name }));
+  // }
+
+  return [] // در غیر این صورت، آرایه خالی
+})
 
 /**
  * ایجاد یک رفرنس برای قوانین فیلتر فعلی
@@ -229,72 +270,43 @@ const selectedNewRuleFieldDefinition = computed(() => {
  */
 const availableOperators = computed(() => {
   // اگر فیلدی انتخاب نشده باشد، لیست خالی برگردانده می‌شود
-  if (!newRule.value?.field) return []
+  if (!newRule.value?.field) {
+    console.debug('[ContactListAdvancedFilter] No field selected')
+    return []
+  }
 
   // یافتن تعریف فیلد انتخاب شده
   const field = props.filterableFields.find((f) => f.value === newRule.value.field)
-  if (!field) return [] // در حالت عادی نباید اتفاق بیفتد
+  if (!field) {
+    console.warn(
+      `[ContactListAdvancedFilter] Field definition not found for: ${newRule.value.field}`,
+    )
+    return []
+  }
 
-  // تعیین نوع فیلد (پیش‌فرض: متن)
+  // تعیین نوع فیلد با پشتیبانی از انواع پیشرفته
   const fieldType = field.type || 'text'
-  const operators = []
 
-  // اپراتورهای فیلدهای متنی
-  if (['text', 'textarea'].includes(fieldType)) {
-    operators.push(
-      { value: 'contains', label: t('operators.contains') }, // شامل
-      { value: 'notContains', label: t('operators.notContains') }, // شامل نباشد
-      { value: 'equals', label: t('operators.equals') }, // مساوی با
-      { value: 'notEquals', label: t('operators.notEquals') }, // مخالف
-      { value: 'startsWith', label: t('operators.startsWith') }, // شروع شود با
-      { value: 'endsWith', label: t('operators.endsWith') }, // پایان یابد با
-    )
-  }
-  // اپراتورهای فیلدهای عددی
-  else if (fieldType === 'number') {
-    operators.push(
-      { value: 'equals', label: t('operators.equals') }, // مساوی با
-      { value: 'notEquals', label: t('operators.notEquals') }, // مخالف
-      { value: 'greaterThan', label: t('operators.greaterThan') }, // بزرگتر از
-      { value: 'lessThan', label: t('operators.lessThan') }, // کوچکتر از
-      { value: 'greaterThanOrEqual', label: t('operators.greaterThanOrEqual') }, // بزرگتر یا مساوی
-      { value: 'lessThanOrEqual', label: t('operators.lessThanOrEqual') }, // کوچکتر یا مساوی
-    )
-  }
-  // اپراتورهای فیلدهای تاریخ
-  else if (fieldType === 'date') {
-    operators.push(
-      { value: 'equals', label: t('operators.equals') }, // برابر با
-      { value: 'notEquals', label: t('operators.notEquals') }, // مخالف
-      { value: 'before', label: t('operators.before') }, // قبل از
-      { value: 'after', label: t('operators.after') }, // بعد از
-      { value: 'onOrBefore', label: t('operators.onOrBefore') }, // در تاریخ یا قبل از
-      { value: 'onOrAfter', label: t('operators.onOrAfter') }, // در تاریخ یا بعد از
-    )
-  }
-  // اپراتورهای فیلدهای انتخابی و بولین
-  else if (['select', 'boolean', 'gender', 'group'].includes(fieldType)) {
-    operators.push(
-      { value: 'equals', label: t('operators.equals') }, // مساوی با
-      { value: 'notEquals', label: t('operators.notEquals') }, // مخالف
-    )
-  } else {
-    // اپراتورهای پیش‌فرض برای انواع ناشناخته
-    operators.push(
-      { value: 'contains', label: t('operators.contains') },
-      { value: 'equals', label: t('operators.equals') },
-      { value: 'notEquals', label: t('operators.notEquals') },
-    )
-  }
+  // دریافت عملگرهای مناسب برای نوع فیلد
+  let operators = getOperatorsForFieldType(fieldType)
 
-  // اضافه کردن اپراتورهای عمومی برای همه انواع فیلدها
-  operators.push(
-    { value: 'isNull', label: t('operators.isNull') }, // خالی باشد
-    { value: 'isNotNull', label: t('operators.isNotNull') }, // خالی نباشد
-  )
+  // اضافه کردن عملگرهای سفارشی اگر در تعریف فیلد وجود داشته باشند
+  if (field.customOperators && Array.isArray(field.customOperators)) {
+    operators = [...operators, ...field.customOperators]
+  }
 
   return operators
 })
+
+/**
+ * دریافت برچسب فیلد بر اساس شناسه فیلد
+ * @param {string} fieldId - شناسه فیلد
+ * @returns {string} برچسب فیلد
+ */
+function getFieldLabel(fieldId) {
+  const field = props.filterableFields.find((f) => f.value === fieldId)
+  return field ? field.label : fieldId
+}
 
 /**
  * دریافت برچسب اپراتور بر اساس قانون داده شده
@@ -302,19 +314,38 @@ const availableOperators = computed(() => {
  * @returns {string} برچسب خوانا برای اپراتور
  */
 function getRuleOperatorLabel(rule) {
-  // Find the field definition to determine its type, then find operator label
-  // This is a simplified version; a more robust one might involve a map or more complex logic
-  // For now, directly find from availableOperators (which should be correct if field context is maintained)
   const fieldDef = props.filterableFields.find((f) => f.value === rule.field)
-  let opsSource = availableOperators.value // Default to current field's operators
-
-  if (fieldDef) {
-    // If we want to be super precise, regenerate operators for the rule's field type
-    // For simplicity, we assume availableOperators is sufficient or rule.operator is globally unique enough
+  if (!fieldDef) {
+    console.warn(`[ContactListAdvancedFilter] Field definition not found for: ${rule.field}`)
+    return rule.operator
   }
 
-  const operator = opsSource.find((op) => op.value === rule.operator)
-  return operator ? operator.label : rule.operator // Fallback to raw operator value
+  const fieldType = fieldDef.type || 'text'
+  const operators = getOperatorsForFieldType(fieldType)
+  const operator = operators.find((op) => op.value === rule.operator)
+
+  if (!operator) {
+    console.warn(`[ContactListAdvancedFilter] Operator not found: ${rule.operator}`)
+    return rule.operator
+  }
+
+  return t(operator.label)
+}
+
+/**
+ * دریافت توضیحات اپراتور بر اساس قانون داده شده
+ * @param {Object} rule - قانون فیلتر شامل فیلد و اپراتور
+ * @returns {string} توضیحات اپراتور
+ */
+function getRuleOperatorDescription(rule) {
+  const fieldDef = props.filterableFields.find((f) => f.value === rule.field)
+  if (!fieldDef) return ''
+
+  const fieldType = fieldDef.type || 'text'
+  const operators = getOperatorsForFieldType(fieldType)
+  const operator = operators.find((op) => op.value === rule.operator)
+
+  return operator?.description || ''
 }
 
 /**
@@ -323,25 +354,23 @@ function getRuleOperatorLabel(rule) {
  * @returns {string} مقدار قالب‌بندی شده برای نمایش
  */
 function formatRuleValue(rule) {
-  if (rule.value === null || rule.value === '') return '' // Or a placeholder like '-'
+  if (rule.value === null || rule.value === '') return ''
 
   const fieldDef = props.filterableFields.find((field) => field.value === rule.field)
-  if (!fieldDef) return rule.value // Fallback if field definition not found
+  if (!fieldDef) return rule.value
 
   if (fieldDef.type === 'date' && rule.value) {
-    // Ensure formatDate can handle the value (e.g., it's a valid date string or Date object)
-    return formatDate(rule.value) // Assumes formatDate returns a user-friendly string
+    return formatDate(rule.value)
   } else if (['select', 'boolean', 'gender', 'group'].includes(fieldDef.type)) {
-    // For select types, find the label corresponding to the value
-    const option = props.valueSelectOptions.find((opt) => opt.value === rule.value)
-    return option ? option.label : rule.value // Fallback to raw value if label not found
-  }
-  // For boolean, you might want specific labels like 'Yes'/'No'
-  if (fieldDef.type === 'boolean') {
-    return rule.value ? 'بله' : 'خیر' // Or use $t for localization
+    const option = valueSelectOptions.value.find((opt) => opt.value === rule.value)
+    return option ? option.label : rule.value
   }
 
-  return rule.value // Default formatting
+  if (fieldDef.type === 'boolean') {
+    return rule.value ? t('common.yes') : t('common.no')
+  }
+
+  return rule.value
 }
 
 /**
@@ -388,6 +417,20 @@ function onOperatorChange() {
 }
 
 /**
+ * بررسی امکان اضافه کردن قانون جدید
+ * @type {import('vue').ComputedRef<boolean>}
+ */
+const canAddRule = computed(() => {
+  if (!newRule.value?.field || !newRule.value?.operator) return false
+
+  // اگر اپراتور isNull یا isNotNull باشد، نیازی به مقدار نیست
+  if (newRule.value.operator === 'isNull' || newRule.value.operator === 'isNotNull') return true
+
+  // برای سایر اپراتورها، مقدار باید وجود داشته باشد
+  return newRule.value.value !== null && newRule.value.value !== ''
+})
+
+/**
  * اضافه کردن قانون جدید به لیست فیلترها
  * انجام اعتبارسنجی‌های لازم قبل از اضافه کردن قانون
  */
@@ -427,8 +470,11 @@ function addNewRule() {
     value: newRule.value.value,
   }
 
-  console.log('[ContactListAdvancedFilter] Emitting addRule event with rule:', ruleToAdd)
-  emits('addRule', ruleToAdd)
+  console.log('[ContactListAdvancedFilter] Adding new rule:', ruleToAdd)
+
+  // Add the new rule to the existing rules
+  const updatedRules = [...filterRules.value, ruleToAdd]
+  emits('update:modelValue', updatedRules)
 
   // Reset the form for the next rule
   newRule.value.field = null
@@ -441,23 +487,52 @@ function addNewRule() {
  * @param {number} index - ایندکس قانونی که باید حذف شود
  */
 function removeRule(index) {
-  emits('removeRule', index)
+  const updatedRules = [...filterRules.value]
+  updatedRules.splice(index, 1)
+  emits('update:modelValue', updatedRules)
 }
 
 /**
- * اعمال فیلترهای تعریف شده
- * این تابع رویداد applyFilters را به کامپوننت والد ارسال می‌کند
+ * اعمال فیلترها
  */
 function applyFilters() {
   emits('applyFilters')
 }
 
 /**
- * پاک کردن تمام فیلترهای اعمال شده
- * این تابع رویداد clearFilters را به کامپوننت والد ارسال می‌کند
+ * پاک کردن تمام فیلترها
  */
 function clearFilters() {
-  emits('clearFilters')
+  emits('clearRules')
+  emits('update:modelValue', [])
+}
+
+/**
+ * دریافت متن راهنما برای فیلد ورودی بر اساس نوع فیلد و عملگر
+ * @returns {string} متن راهنما
+ */
+const getValuePlaceholder = () => {
+  if (!newRule.field || !newRule.operator) return t('contactList.selectValuePlaceholder')
+
+  const fieldDef = filterableFields.find((f) => f.value === newRule.field)
+  if (!fieldDef) return t('contactList.selectValuePlaceholder')
+
+  switch (fieldDef.type) {
+    case 'text':
+    case 'textarea':
+      return t('contactList.enterTextPlaceholder')
+    case 'number':
+      return t('contactList.enterNumberPlaceholder')
+    case 'date':
+      return t('contactList.selectDatePlaceholder')
+    case 'datetime':
+      return t('contactList.selectDateTimePlaceholder')
+    case 'select':
+    case 'multiselect':
+      return t('contactList.selectOptionPlaceholder')
+    default:
+      return t('contactList.selectValuePlaceholder')
+  }
 }
 </script>
 
@@ -585,5 +660,20 @@ function clearFilters() {
     flex-direction: column;
     gap: 10px;
   }
+}
+
+.rule-description {
+  margin-right: 8px;
+  cursor: help;
+}
+
+.info-icon {
+  font-size: 14px;
+  color: var(--color-muted);
+  transition: color 0.2s ease;
+}
+
+.info-icon:hover {
+  color: var(--color-primary);
 }
 </style>

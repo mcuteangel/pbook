@@ -1,0 +1,21 @@
+export default {
+  operators: {
+    contains: 'Contains',
+    equals: 'Equals',
+    notEquals: 'Not Equals',
+    startsWith: 'Starts With',
+    endsWith: 'Ends With',
+    greaterThan: 'Greater Than',
+    lessThan: 'Less Than',
+    before: 'Before',
+    after: 'After',
+    isNull: 'Is Empty',
+    isNotNull: 'Is Not Empty',
+  },
+  apply: 'Apply Filter',
+  clear: 'Clear Filter',
+  addFilter: 'Add Filter',
+  removeFilter: 'Remove Filter',
+  noFilters: 'No filters applied',
+  activeFilters: 'Active Filters',
+}

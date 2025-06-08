@@ -8,5 +8,6 @@ export default {
     groups: 'Groups',
     fields: 'Fields',
     settings: 'Settings',
+    testNotifications: 'Test Notifications'
   },
 }

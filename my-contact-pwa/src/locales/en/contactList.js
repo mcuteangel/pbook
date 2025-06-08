@@ -1,3 +1,5 @@
+import { formatCustomFieldValue } from '@/utils/formatters/index'
+
 export default {
   title: 'Contacts',
   ariaLabel: 'Contact List Section',
@@ -7,7 +9,8 @@ export default {
   totalContacts: 'Total Contacts: {count}',
   addSampleContacts: 'Add Sample Contacts',
   addingSamples: 'Adding samples...',
-  confirmAddSamples: 'Are you sure you want to add sample contacts? This will add several example contacts to your list.',
+  confirmAddSamples:
+    'Are you sure you want to add sample contacts? This will add several example contacts to your list.',
   operationCancelled: 'Operation cancelled.',
   samplesAdded: 'Sample contacts have been added successfully',
   samplesAddedSuccessfully: 'Sample contacts added successfully!',
@@ -23,6 +26,9 @@ export default {
   sortOrderLabel: 'Order:',
   sortOrderAsc: 'Ascending',
   sortOrderDesc: 'Descending',
+  editButton: 'Edit',
+  deleteButton: 'Delete',
+  viewContactDetails: 'View details for {name}',
   fields: {
     name: 'Name',
     lastName: 'Last Name',
@@ -34,6 +40,34 @@ export default {
     birthDate: 'Birth Date',
     gender: 'Gender',
     group: 'Group',
+  },
+  // English comment: Translation keys for new fields added in ContactList.vue
+  contactFields: {
+    firstName: 'First Name',
+    lastName: 'Last Name',
+    email: 'Email',
+    phone: 'Phone',
+    company: 'Company',
+    jobTitle: 'Job Title',
+    birthday: 'Birthday',
+    gender: 'Gender',
+    notes: 'Notes',
+    address: 'Address',
+    website: 'Website',
+    relationship: 'Relationship',
+    nickname: 'Nickname',
+    pronouns: 'Pronouns',
+    groups: 'Groups',
+    // Adding missing fields
+    createdAt: 'Created At',
+    updatedAt: 'Last Updated',
+  },
+  // English comment: Translation keys for gender options
+  gender: {
+    male: 'Male',
+    female: 'Female',
+    other: 'Other',
+    prefer_not_to_say: 'Prefer not to say',
   },
   sortOptions: {
     firstName: 'First Name',
@@ -73,9 +107,72 @@ export default {
     removeFromFavorites: 'Remove from Favorites',
   },
   selectFieldPlaceholder: 'Select a field...',
+  selectOperatorPlaceholder: 'Select an operator...',
   addRuleButton: 'Add New Rule',
   activeFilterRules: 'Active Filter Rules:',
   noRulesMessage: 'No filter rules are currently applied.',
+  noValueNeeded: 'No value needed',
+  removeRuleTooltip: 'Remove rule',
   applyFilterButton: 'Apply Filters',
   clearFilterButton: 'Clear Filters',
+
+  // Operators
+  operators: {
+    contains: 'Contains',
+    notContains: 'Does not contain',
+    equals: 'Equals',
+    notEquals: 'Does not equal',
+    startsWith: 'Starts with',
+    endsWith: 'Ends with',
+    greaterThan: 'Greater than',
+    lessThan: 'Less than',
+    greaterThanOrEqual: 'Greater than or equal',
+    lessThanOrEqual: 'Less than or equal',
+    before: 'Before',
+    after: 'After',
+    isNull: 'Is empty',
+    isNotNull: 'Is not empty',
+    onOrBefore: 'On or before',
+    onOrAfter: 'On or after',
+  },
+
+  // Validation messages
+  validation: {
+    required: 'This field is required',
+    fieldRequired: 'Please select a field',
+    operatorRequired: 'Please select an operator',
+    invalidNumber: 'Please enter a valid number',
+    invalidDate: 'Please enter a valid date',
+  },
+
+  // Pagination keys
+  paginationPrev: 'Previous',
+  paginationNext: 'Next',
+  paginationPageInfo: 'Page {currentPage} of {totalPages}',
+
+  // Placeholders for filter inputs
+  selectValuePlaceholder: 'Enter value',
+  enterTextPlaceholder: 'Enter text',
+  enterNumberPlaceholder: 'Enter number',
+  selectDatePlaceholder: 'Select date',
+  selectDateTimePlaceholder: 'Select date and time',
+  selectOptionPlaceholder: 'Select option',
+
+  // Date Picker
+  datePicker: {
+    shamsi: 'Persian',
+    gregorian: 'Gregorian',
+    aria: {
+      calendar: 'Calendar',
+    },
+    weekdays: {
+      sh: 'Su',
+      ye: 'Mo',
+      do: 'Tu',
+      se: 'We',
+      ch: 'Th',
+      pa: 'Fr',
+      jo: 'Sa',
+    },
+  },
 }

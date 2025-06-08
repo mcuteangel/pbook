@@ -1,4 +1,14 @@
 export default {
+  common: {
+    enterValue: 'مقدار را وارد کنید',
+    enterText: 'متن را وارد کنید',
+    enterNumber: 'عدد را وارد کنید',
+    selectDate: 'تاریخ را انتخاب کنید',
+    selectDateTime: 'تاریخ و زمان را انتخاب کنید',
+    selectOption: 'گزینه را انتخاب کنید',
+    loading: 'در حال بارگذاری...',
+    clear: 'پاک کردن',
+  },
   datePicker: {
     placeholder: 'انتخاب تاریخ',
     shamsi: 'شمسی',

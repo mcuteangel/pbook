@@ -1,8 +1,8 @@
 // src/store/customFields.js
 import { toRaw } from 'vue' // این خط رو اضافه کن
 import { defineStore } from 'pinia'
-import { db } from '../db' // نمونه دیتابیس Dexie
-import i18n from '@/plugins/i18n';
+import { db } from '../db/index.js' // نمونه دیتابیس Dexie
+import i18n from '../plugins/i18n.js';
 
 export const useCustomFieldStore = defineStore('customFieldStore', {
   // <-- Store ID: 'customFieldStore'

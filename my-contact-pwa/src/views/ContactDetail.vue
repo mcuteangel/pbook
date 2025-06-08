@@ -1,114 +1,214 @@
 <template>
-  <div class="contact-detail-container">
-    <div v-if="loading" class="loading-message">
+  <div class="contact-detail" role="region" :aria-label="$t('contactDetail.title')">
+    <!-- نمایش وضعیت لودینگ -->
+    <div v-if="loading" class="loading-message" role="status" aria-live="polite">
+      <IconWrapper icon="spinner" prefix="fa-solid" class="loading-icon" animation="fa-spin" />
       {{ $t('contactDetail.loading') }}
-      <v-progress-circular indeterminate color="primary"></v-progress-circular>
     </div>
-    <div v-else-if="error" class="error-message">
-      <p>Error loading contact: {{ error }}</p>
-      <v-btn @click="fetchContactDetail" color="primary">{{
-        $t('contactDetail.retryButton')
-      }}</v-btn>
+
+    <!-- نمایش خطا -->
+    <div v-else-if="error" class="error-message" role="alert" aria-live="assertive">
+      <IconWrapper icon="exclamation-circle" prefix="fa-solid" class="error-icon" />
+      {{ error }}
+      <button @click="loadContactDetail" class="retry-button">
+        {{ $t('contactDetail.retry') }}
+      </button>
     </div>
-    <div v-else-if="contact" class="contact-details">
-      <h1 class="page-title">{{ $t('contactDetail.title') }}</h1>
 
-      <!-- Basic Info -->
-      <v-card class="mb-4">
-        <v-card-title>{{ $t('contactDetail.mainInfoTitle') }}</v-card-title>
-        <v-card-text>
-          <v-row>
-            <v-col cols="12" md="6">
-              <p>
-                <strong>{{ $t('contactForm.name') }}:</strong> {{ contact.name }}
-              </p>
-              <p>
-                <strong>{{ $t('contactForm.lastName') }}:</strong> {{ contact.lastName }}
-              </p>
-              <p v-if="contact.title">
-                <strong>{{ $t('contactDetail.titleLabel') }}:</strong> {{ contact.title }}
-              </p>
-              <p v-if="contact.mainPhone">
-                <strong>{{ $t('contactDetail.mainPhoneLabel') }}:</strong>
-                {{ contact.mainPhone }}
-              </p>
-              <p v-if="contact.gender">
-                <strong>{{ $t('contactDetail.genderLabel') }}:</strong> {{ contact.gender }}
-              </p>
-              <p v-if="contact.group">
-                <strong>{{ $t('contactDetail.groupLabel') }}:</strong> {{ contact.group.name }}
-              </p>
-              <p v-if="contact.birthDate">
-                <strong>{{ $t('contactDetail.birthDateLabel') }}:</strong>
-                {{ formatDate(contact.birthDate) }}
-              </p>
-            </v-col>
-            <v-col cols="12" md="6" class="text-center">
-              <v-avatar size="128">
-                <v-img :src="contact.avatar || defaultAvatar"></v-img>
-              </v-avatar>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
-
-      <!-- Additional Phones -->
-      <v-card v-if="contact.additionalPhones && contact.additionalPhones.length > 0" class="mb-4">
-        <v-card-title>{{ $t('contactDetail.additionalPhonesTitle') }}</v-card-title>
-        <v-card-text>
-          <p v-for="(phone, index) in contact.additionalPhones" :key="index">
-            <strong>{{ phone.type }}:</strong> {{ phone.number }}
-          </p>
-        </v-card-text>
-      </v-card>
-
-      <!-- Addresses -->
-      <ContactDetailAddresses :addresses="contact.addresses" />
-
-      <!-- Notes -->
-      <v-card v-if="contact.notes" class="mb-4">
-        <v-card-title>{{ $t('contactDetail.notesTitle') }}</v-card-title>
-        <v-card-text>
-          <p>{{ contact.notes }}</p>
-        </v-card-text>
-      </v-card>
-
-      <!-- Custom Fields -->
-      <v-card v-if="displayedCustomFields.length > 0" class="mb-4">
-        <v-card-title>{{ $t('contactDetail.customFieldsTitle') }}</v-card-title>
-        <v-card-text>
-          <div v-for="processedField in displayedCustomFields" :key="processedField.id">
-            <p>
-              <strong>{{ processedField.label }}:</strong> {{ processedField.formattedValue }}
-            </p>
-          </div>
-        </v-card-text>
-      </v-card>
-
-      <!-- System Info -->
-      <v-card class="mb-4">
-        <v-card-title>{{ $t('contactDetail.systemInfoTitle') }}</v-card-title>
-        <v-card-text>
-          <p>
-            <strong>{{ $t('contactDetail.createdAtLabel') }}:</strong>
-            {{ formatDate(contact.createdAt) }}
-          </p>
-          <p>
-            <strong>{{ $t('contactDetail.updatedAtLabel') }}:</strong>
-            {{ formatDate(contact.updatedAt) }}
-          </p>
-        </v-card-text>
-      </v-card>
-
-      <!-- Actions -->
-      <div class="actions">
-        <v-btn color="primary" @click="editContact">{{
-          $t('contactDetail.editContactButton')
-        }}</v-btn>
-        <v-btn @click="backToList">{{ $t('contactDetail.backToListButton') }}</v-btn>
+    <!-- نمایش اطلاعات مخاطب -->
+    <div v-else-if="contact" class="contact-info">
+      <!-- هدر مخاطب -->
+      <div class="contact-header">
+        <div class="contact-avatar">
+          <IconWrapper icon="user-circle" prefix="fa-solid" class="avatar-icon" />
+        </div>
+        <div class="contact-title">
+          <h1 class="contact-name">{{ contact.name }} {{ contact.lastName }}</h1>
+          <p v-if="contact.title" class="contact-position">{{ contact.title }}</p>
+        </div>
+        <div class="contact-actions">
+          <button
+            @click="editContact"
+            class="action-button edit"
+            :title="$t('contactDetail.actions.edit')"
+          >
+            <IconWrapper icon="edit" prefix="fa-solid" class="button-icon" />
+          </button>
+          <button
+            @click="shareContact"
+            class="action-button share"
+            :title="$t('contactDetail.actions.share')"
+          >
+            <IconWrapper icon="share-alt" prefix="fa-solid" class="button-icon" />
+          </button>
+          <button
+            @click="goBack"
+            class="action-button back"
+            :title="$t('contactDetail.actions.back')"
+          >
+            <IconWrapper icon="arrow-left" prefix="fa-solid" class="button-icon" />
+          </button>
+        </div>
       </div>
+
+      <!-- اطلاعات اصلی -->
+      <section class="info-card main-info" aria-labelledby="main-info-title">
+        <h2 id="main-info-title" class="section-title">
+          <IconWrapper icon="user" prefix="fa-solid" class="section-icon" />
+          {{ $t('contactDetail.mainInfoTitle') }}
+        </h2>
+
+        <div class="info-grid">
+          <!-- نام -->
+          <div class="info-item">
+            <label class="info-label">{{ $t('form.name') }}</label>
+            <span class="info-value">{{ contact.name }}</span>
+          </div>
+
+          <!-- نام خانوادگی -->
+          <div class="info-item">
+            <label class="info-label">{{ $t('form.lastName') }}</label>
+            <span class="info-value">{{ contact.lastName }}</span>
+          </div>
+
+          <!-- عنوان -->
+          <div class="info-item">
+            <label class="info-label">{{ $t('contactDetail.titleLabel') }}</label>
+            <span class="info-value">{{ contact.title }}</span>
+          </div>
+
+          <!-- جنسیت -->
+          <div class="info-item">
+            <label class="info-label">{{ $t('contactDetail.genderLabel') }}</label>
+            <span class="info-value">{{ displayGender(contact.gender) }}</span>
+          </div>
+
+          <!-- گروه -->
+          <div class="info-item">
+            <label class="info-label">{{ $t('contactDetail.groupLabel') }}</label>
+            <span class="info-value">{{ contact.group }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- اطلاعات تماس -->
+      <section class="info-card contact-info" aria-labelledby="contact-info-title">
+        <h2 id="contact-info-title" class="section-title">
+          <IconWrapper icon="address-book" prefix="fa-solid" class="section-icon" />
+          {{ $t('contactDetail.contactInfoTitle') }}
+        </h2>
+
+        <div class="contact-methods">
+          <!-- تلفن‌ها -->
+          <div v-if="contact.phones && contact.phones.length" class="contact-method-group">
+            <h3 class="method-group-title">
+              <IconWrapper icon="phone" prefix="fa-solid" class="method-icon" />
+              {{ $t('contactDetail.phonesTitle') }}
+            </h3>
+            <div class="method-list">
+              <div v-for="phone in contact.phones" :key="phone.id" class="method-item">
+                <span class="method-type">{{ displayPhoneType(phone.type) }}</span>
+                <a :href="'tel:' + cleanPhoneNumber(phone.number)" class="method-value">
+                  {{ phone.number }}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- ایمیل‌ها -->
+          <div v-if="contact.emails && contact.emails.length" class="contact-method-group">
+            <h3 class="method-group-title">
+              <IconWrapper icon="envelope" prefix="fa-solid" class="method-icon" />
+              {{ $t('contactDetail.emailsTitle') }}
+            </h3>
+            <div class="method-list">
+              <div v-for="email in contact.emails" :key="email.id" class="method-item">
+                <span class="method-type">{{ email.type }}</span>
+                <a :href="'mailto:' + email.address" class="method-value">
+                  {{ email.address }}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- آدرس‌ها -->
+          <div v-if="contact.addresses && contact.addresses.length" class="contact-method-group">
+            <h3 class="method-group-title">
+              <IconWrapper icon="map-marker-alt" prefix="fa-solid" class="method-icon" />
+              {{ $t('contactDetail.addressesTitle') }}
+            </h3>
+            <div class="method-list">
+              <div v-for="address in contact.addresses" :key="address.id" class="method-item">
+                <span class="method-type">{{ displayAddressType(address.type) }}</span>
+                <a :href="getMapUrl(address)" target="_blank" class="method-value">
+                  {{ formatAddress(address) }}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- فیلدهای سفارشی -->
+      <section
+        v-if="displayedCustomFields.length"
+        class="info-card custom-fields"
+        aria-labelledby="custom-fields-title"
+      >
+        <h2 id="custom-fields-title" class="section-title">
+          <IconWrapper icon="list" prefix="fa-solid" class="section-icon" />
+          {{ $t('contactDetail.customFieldsTitle') }}
+        </h2>
+
+        <div class="custom-fields-grid">
+          <div v-for="field in displayedCustomFields" :key="field.id" class="custom-field-item">
+            <label class="field-label">{{ field.label }}</label>
+            <span class="field-value" :class="getCustomFieldValueClass(field)">
+              {{ field.formattedValue }}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- یادداشت‌ها -->
+      <section v-if="contact.notes" class="info-card notes-section" aria-labelledby="notes-title">
+        <h2 id="notes-title" class="section-title">
+          <IconWrapper icon="sticky-note" prefix="fa-solid" class="section-icon" />
+          {{ $t('contactDetail.notesTitle') }}
+        </h2>
+        <div class="notes-content">{{ contact.notes }}</div>
+      </section>
+
+      <!-- اطلاعات سیستمی -->
+      <section class="info-card system-info" aria-labelledby="system-info-title">
+        <h2 id="system-info-title" class="section-title">
+          <IconWrapper icon="info-circle" prefix="fa-solid" class="section-icon" />
+          {{ $t('contactDetail.systemInfoTitle') }}
+        </h2>
+
+        <div class="info-grid">
+          <!-- تاریخ ایجاد -->
+          <div class="info-item">
+            <label class="info-label">{{ $t('contactDetail.createdAtLabel') }}</label>
+            <span class="info-value">{{
+              formatGregorianDateToShamsi(contact.createdAt, true)
+            }}</span>
+          </div>
+
+          <!-- تاریخ بروزرسانی -->
+          <div class="info-item">
+            <label class="info-label">{{ $t('contactDetail.updatedAtLabel') }}</label>
+            <span class="info-value">{{
+              formatGregorianDateToShamsi(contact.updatedAt, true)
+            }}</span>
+          </div>
+        </div>
+      </section>
     </div>
-    <div v-else class="no-contact-message">
+
+    <!-- پیام عدم وجود مخاطب -->
+    <div v-else class="no-contact-message" role="status" aria-live="polite">
+      <IconWrapper icon="exclamation-circle" prefix="fa-solid" class="message-icon" />
       {{ $t('contactDetail.noContactFound') }}
     </div>
   </div>
@@ -118,31 +218,73 @@
 import { ref, onMounted, computed, watch } from 'vue'
 // برای دسترسی به route و پارامترها و ناوبری
 import { useRoute, useRouter } from 'vue-router'
-import { useCustomFieldStore } from '@/store/customFields' // این رو اضافه کن
-import i18n from '@/plugins/i18n'; // برای استفاده از $t در اسکریپت
-
-// برای دسترسی به Store مخاطبین و لود اطلاعات
+import { useCustomFieldStore } from '../store/customFields' // این رو اضافه کن
+import i18n from '../plugins/i18n' // برای استفاده از $t در اسکریپت
+import { useI18n } from 'vue-i18n'
+import { storeToRefs } from 'pinia'
 import { useContactStore } from '../store/contacts'
+import { useGroupStore } from '../store/groups'
+import IconWrapper from '../components/common/IconWrapper.vue'
 import {
   formatGregorianDateToShamsi,
   formatCustomFieldValue,
   displayGender,
   displayPhoneType,
   displayAddressType,
-} from '@/utils/formatters'
-import { db } from '../db'
-import ContactDetailAddresses from '@/components/contact/ContactDetailAddresses.vue'
+} from '../utils/formatters/index'
+import { db } from '../db/index.js'
+import ContactDetailAddresses from '../components/contact/ContactDetailAddresses.vue'
 
 const route = useRoute() // دسترسی به اطلاعات route فعلی
 const router = useRouter() // برای ناوبری (مثلاً برگشت به صفحه قبل)
 const contactStore = useContactStore() // دسترسی به Store مخاطبین
 const customFieldStore = useCustomFieldStore() // استور فیلدهای سفارشی رو هم اضافه کن
+const groupStore = useGroupStore()
+
+// تنظیمات اولیه
+const { t } = useI18n()
+
+console.log('ContactDetail - Component mounted')
+console.log('ContactDetail - Initial route params:', route.params)
 
 const isLoading = ref(true)
-const contactId = ref(null) // متغیری برای نگهداری ID مخاطب فعلی
 const contact = ref(null) // متغیری برای نگهداری اطلاعات مخاطب لود شده
-const loading = ref(false) // وضعیت لودینگ این صفحه
 const error = ref(null) // پیام خطا در این صفحه
+
+// تابع برای لود کردن اطلاعات مخاطب
+const loadContactDetail = async () => {
+  console.log('ContactDetail - loadContactDetail called')
+  try {
+    isLoading.value = true
+    error.value = null
+
+    // دریافت id از route params
+    const id = route.params.id
+    console.log('ContactDetail - Route params:', route.params)
+    console.log('ContactDetail - ID:', id)
+    console.log('ContactDetail - ContactStore contacts:', contactStore.contacts)
+
+    if (!id) {
+      throw new Error('Contact ID is required')
+    }
+
+    // دریافت مخاطب از استور
+    const foundContact = contactStore.getContactById(id)
+    console.log('ContactDetail - Found contact:', foundContact)
+
+    if (!foundContact) {
+      throw new Error('مخاطب مورد نظر یافت نشد')
+    }
+
+    contact.value = foundContact
+  } catch (err) {
+    console.error('ContactDetail - Error loading contact:', err)
+    error.value = err.message
+  } finally {
+    isLoading.value = false
+  }
+}
+
 // تابع برای تمیز کردن شماره تلفن از کاراکترهای اضافی
 const cleanPhoneNumber = (number) => {
   if (!number) return ''
@@ -197,8 +339,14 @@ const displayedCustomFields = computed(() => {
 
         // اگر فیلد از نوع select است و مقدار ذخیره شده در گزینه‌های فعلی موجود نیست، پسوند اضافه کن
         if (fieldDef.type === 'select') {
-          const optionExists = fieldDef.options?.some(opt => opt.value === value)
-          if (!optionExists && value !== undefined && value !== null && String(value).trim() !== '') { // فقط اگر مقداری وجود داشته و نامعتبر شده
+          const optionExists = fieldDef.options?.some((opt) => opt.value === value)
+          if (
+            !optionExists &&
+            value !== undefined &&
+            value !== null &&
+            String(value).trim() !== ''
+          ) {
+            // فقط اگر مقداری وجود داشته و نامعتبر شده
             formattedDisplay += ` ${i18n.global.t('customFields.optionNoLongerValid')}`
           }
         }
@@ -216,30 +364,33 @@ const displayedCustomFields = computed(() => {
 
   return result
 })
+
 // --- Hook برای بارگذاری داده‌ها هنگام mount شدن کامپوننت ---
 onMounted(async () => {
-  isLoading.value = true
+  console.log('ContactDetail - Component mounted')
+  console.log('ContactDetail - Initial route params:', route.params)
 
-  await contactStore.loadContacts()
-  await customFieldStore.loadFieldDefinitions()
+  // اطمینان از بارگذاری مخاطبین و فیلدهای سفارشی
+  if (!contactStore.contacts.length) {
+    await contactStore.loadContacts()
+  }
+  if (!customFieldStore.fieldDefinitions.length) {
+    await customFieldStore.loadFieldDefinitions()
+  }
 
-  // اینجا contact.value توسط watch و loadContactDetail پر میشه
-  // صبر میکنیم تا contact.value مقدار بگیره (اگر هنوز نگرفته)
-  await new Promise((resolve) => {
-    if (contact.value) {
-      resolve()
-    } else {
-      const unwatch = watch(contact, (newContact) => {
-        if (newContact) {
-          unwatch() // Stop watching once loaded
-          resolve()
-        }
-      })
-    }
-  })
-
-  isLoading.value = false
+  loadContactDetail()
 })
+
+// تماشای تغییرات route params
+watch(
+  () => route.params.id,
+  (newId) => {
+    if (newId) {
+      loadContactDetail()
+    }
+  },
+  { immediate: true },
+)
 
 const editContact = () => {
   if (contact.value) {
@@ -248,247 +399,449 @@ const editContact = () => {
   }
 }
 
-// تابعی برای لود کردن اطلاعات مخاطب بر اساس ID
-const loadContactDetail = async (id) => {
-  loading.value = true
-  error.value = null
-  contact.value = null // اطلاعات قبلی رو پاک می‌کنیم
+const goBack = () => {
+  router.push({ name: 'contact-list' })
+}
 
-  // چون contactStore قابلیت جستجوی تک آیتم رو نداره،
-  // مستقیماً از Dexie استفاده می‌کنیم برای پیدا کردن مخاطب با ID
+// تابع برای فرمت کردن آدرس
+const formatAddress = (address) => {
+  const parts = []
+  if (address.street) parts.push(address.street)
+  if (address.city) parts.push(address.city)
+  if (address.province) parts.push(address.province)
+  if (address.country) parts.push(address.country)
+  if (address.postalCode) parts.push(address.postalCode)
+  return parts.join('، ')
+}
+
+// تابع برای دریافت کلاس مناسب برای مقدار فیلد سفارشی
+const getCustomFieldValueClass = (field) => {
+  if (field.type === 'boolean') {
+    return field.value ? 'value-true' : 'value-false'
+  }
+  return ''
+}
+
+// تابع برای اشتراک‌گذاری اطلاعات مخاطب
+const shareContact = async () => {
   try {
-    const loadedContact = await db.contacts.get(id) // <--- فرض بر اینه که 'db' در دسترس هست
-    if (loadedContact) {
-      contact.value = loadedContact
-    } else {
-      error.value = 'مخاطب مورد نظر یافت نشد.'
+    const contactInfo = {
+      name: `${contact.value.name} ${contact.value.lastName}`,
+      title: contact.value.title,
+      phones: contact.value.phones
+        ?.map((p) => `${displayPhoneType(p.type)}: ${p.number}`)
+        .join('\n'),
+      emails: contact.value.emails?.map((e) => `${e.type}: ${e.address}`).join('\n'),
+      addresses: contact.value.addresses
+        ?.map((a) => `${displayAddressType(a.type)}: ${formatAddress(a)}`)
+        .join('\n'),
     }
-  } catch (err) {
-    error.value = 'خطا در بارگذاری جزئیات مخاطب.'
-  } finally {
-    loading.value = false
+
+    const text = Object.entries(contactInfo)
+      .filter(([_, value]) => value)
+      .map(([key, value]) => `${t(`contactDetail.share.${key}`)}: ${value}`)
+      .join('\n\n')
+
+    if (navigator.share) {
+      await navigator.share({
+        title: t('contactDetail.share.title', { name: contactInfo.name }),
+        text,
+      })
+    } else {
+      await navigator.clipboard.writeText(text)
+      notificationService.showSuccess(t('contactDetail.share.copied'))
+    }
+  } catch (error) {
+    console.error('Error sharing contact:', error)
+    notificationService.showError(t('contactDetail.share.error'))
   }
 }
-
-// تابعی برای برگشت به صفحه قبل
-const goBack = () => {
-  router.back() // برمی‌گرده به صفحه قبلی (که لیست مخاطبین هست)
-}
-
-// وقتی کامپوننت mount میشه یا وقتی ID در route تغییر می‌کنه
-watch(
-  () => route.params.id, // مشاهده تغییرات پارامتر 'id' در route
-  (newId) => {
-    if (newId) {
-      contactId.value = newId // ID رو به‌روز می‌کنیم
-      // حالا اطلاعات مخاطب رو بر اساس ID جدید لود می‌کنیم
-      // توجه: ID مخاطب در دیتابیس Dexie به صورت Number هست، باید تبدیل کنیم
-      loadContactDetail(parseInt(newId))
-    } else {
-      // اگر ID در route نبود، یعنی وضعیت غیرمنتظره است
-      error.value = 'ID مخاطب مشخص نشده است.'
-      contactId.value = null
-      contact.value = null
-    }
-  },
-  { immediate: true }, // این باعث میشه Watcher بلافاصله بعد از mount هم اجرا بشه
-)
 </script>
 
 <style scoped>
-.contact-detail-container {
-  max-width: 700px;
-  margin: 20px auto;
-  padding: 25px;
-  border: 1px solid var(--color-border-medium); /* تغییر کرد */
-  border-radius: 10px;
-  background-color: var(--color-background-light); /* تغییر کرد */
-  box-shadow: 0 4px 12px var(--color-shadow-detail); /* تغییر کرد */
-  font-family: 'Vazirmatn', sans-serif;
+.contact-detail {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
 }
 
-.contact-detail-container h2 {
-  text-align: center;
-  color: var(--color-text-primary); /* تغییر کرد */
-  margin-bottom: 25px;
-  border-bottom: 2px solid var(--color-link-primary); /* تغییر کرد */
-  padding-bottom: 15px;
-  font-size: 1.8em;
+.contact-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.contact-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  z-index: 0;
+}
+
+.contact-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.contact-avatar:hover {
+  transform: scale(1.05);
+}
+
+.avatar-icon {
+  font-size: 2rem;
+  color: var(--color-primary);
+  opacity: 0.8;
+}
+
+.contact-title {
+  flex: 1;
+  min-width: 0;
+  padding-right: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.contact-name {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.contact-position {
+  margin: 0.5rem 0 0;
+  color: var(--color-text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+.contact-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.action-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.action-button:hover {
+  background: var(--color-primary);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.action-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.contact-info {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+.info-section {
+  margin-bottom: 2rem;
+}
+
+.info-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-label {
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  opacity: 0.8;
+}
+
+.info-value {
+  font-size: 1.1rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.notes-content {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-text);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.system-info {
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  opacity: 0.7;
+}
+
+.contact-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.contact-method-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.method-group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--color-heading);
+  font-size: 1.1rem;
+}
+
+.method-icon {
+  color: var(--color-primary);
+}
+
+.method-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.method-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  background: var(--color-background-mute);
+  border-radius: var(--border-radius);
+}
+
+.method-type {
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+  min-width: 80px;
+}
+
+.method-value {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.method-value:hover {
+  text-decoration: underline;
+}
+
+.custom-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.custom-field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.field-label {
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+}
+
+.field-value {
+  color: var(--color-text);
+}
+
+.value-true {
+  color: var(--color-success);
+}
+
+.value-false {
+  color: var(--color-danger);
 }
 
 .loading-message,
 .error-message,
 .no-contact-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
   text-align: center;
-  padding: 20px;
-  color: var(--color-text-tertiary); /* تغییر کرد */
-  font-size: 1.1em;
+  color: var(--color-text);
 }
 
-.error-message p {
-  color: var(--color-error-text); /* تغییر کرد */
-  margin-bottom: 15px;
+.error-message {
+  color: var(--color-danger);
 }
 
-.contact-info-wrapper {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.contact-header {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.contact-header h3 {
-  font-size: 1.6em;
-  color: var(--color-text-primary); /* تغییر کرد */
-  margin-bottom: 5px;
-}
-
-.title-text {
-  font-size: 1em;
-  color: var(--color-text-tertiary); /* تغییر کرد */
-  margin-top: 0;
-}
-
-.detail-section {
-  margin-bottom: 25px;
-  padding: 15px;
-  border: 1px solid var(--color-border-light); /* تغییر کرد */
-  border-radius: 8px;
-  background-color: var(--color-background-darker-light); /* تغییر کرد */
-}
-
-.detail-section h4 {
-  font-size: 1.2em;
-  color: var(--color-link-primary); /* تغییر کرد */
-  margin-top: 0;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--color-border-medium); /* تغییر کرد */
-}
-
-.detail-section p,
-.detail-section li {
-  font-size: 1em;
-  color: var(--color-text-secondary); /* تغییر کرد */
-  line-height: 1.7;
-  margin-bottom: 8px;
-}
-
-.detail-section p strong,
-.detail-section li strong {
-  color: var(--color-text-primary); /* تغییر کرد */
-  margin-left: 5px;
-}
-
-.detail-section ul {
-  list-style: none;
-  padding-right: 0;
-}
-
-.address-item {
-  padding: 10px;
-  border-bottom: 1px dashed var(--color-border-light); /* تغییر کرد */
-}
-.address-item:last-child {
-  border-bottom: none;
-}
-.address-item p {
-  margin-bottom: 4px;
-}
-.address-notes {
-  font-size: 0.9em;
-  color: var(--color-text-secondary); /* تغییر کرد */
-}
-.notes-text {
-  white-space: pre-wrap;
-  background-color: var(--color-background-light); /* تغییر کرد */
-  padding: 10px;
-  border-radius: 4px;
-  border: 1px solid var(--color-border-light); /* تغییر کرد */
-}
-
-.meta-info p {
-  font-size: 0.9em;
-  color: var(--color-text-tertiary); /* تغییر کرد */
-}
-
-.actions {
-  text-align: center;
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid var(--color-border-medium); /* تغییر کرد */
-}
-
-.actions button {
-  padding: 12px 25px;
+.retry-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--color-primary);
+  color: white;
   border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1em;
-  font-weight: bold;
-  transition:
-    background-color 0.2s ease,
-    transform 0.1s ease;
-  margin: 0 10px;
-}
-
-.actions button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 6px var(--color-shadow);
-}
-
-.back-button {
-  background-color: var(--color-text-tertiary);
-  color: white;
-}
-
-.back-button:hover {
-  background-color: var(--color-text-secondary);
-}
-
-.edit-button {
-  background-color: var(--color-warning);
-  color: white;
-}
-
-.edit-button:hover {
-  background-color: var(--color-warning-dark);
-}
-
-.error-message button {
-  background-color: var(--color-link-primary); /* تغییر کرد */
-  color: white;
-  padding: 8px 15px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-}
-.error-message button:hover {
-  background-color: var(--color-link-hover); /* تغییر کرد */
-}
-.phone-link,
-.address-link {
-  color: var(--color-link-primary); /* تغییر کرد */
-  text-decoration: none;
+  border-radius: var(--border-radius);
   cursor: pointer;
 }
 
-.phone-link:hover,
-.address-link:hover {
-  text-decoration: underline;
-  color: var(--color-link-hover); /* تغییر کرد */
+.retry-button:hover {
+  background: var(--color-primary-dark);
+}
+
+@media (max-width: 600px) {
+  .contact-header {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .contact-avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .avatar-icon {
+    font-size: 1.5rem;
+  }
+
+  .contact-name {
+    font-size: 1.4rem;
+  }
+
+  .contact-position {
+    font-size: 0.9rem;
+  }
+
+  .action-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .contact-info {
+    padding: 1rem;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .contact-header {
+    padding: 0.75rem;
+  }
+
+  .contact-avatar {
+    width: 50px;
+    height: 50px;
+  }
+
+  .avatar-icon {
+    font-size: 1.25rem;
+  }
+
+  .contact-name {
+    font-size: 1.2rem;
+  }
+
+  .contact-position {
+    font-size: 0.8rem;
+  }
+
+  .action-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .contact-info {
+    padding: 0.75rem;
+  }
 }
 </style>

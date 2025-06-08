@@ -5,103 +5,114 @@
     class="rule-control flat-select"
     :disabled="!field"
   >
-    <option value="" disabled>{{ $t('contactList.selectOperatorPlaceholder') }}</option>
+    <option value="" disabled>{{ t('contactList.selectOperatorPlaceholder') }}</option>
     <option v-for="op in availableOperators" :key="op.value" :value="op.value">
-      {{ op.label }}
+      {{ t(op.label) }}
     </option>
   </select>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+/**
+ * کامپوننت انتخاب اپراتور برای فیلترها
+ * @component
+ * @property {string} field - نام فیلد انتخاب شده
+ * @property {string} operator - اپراتور انتخاب شده فعلی
+ * @property {Array} filterableFields - لیست فیلدهای قابل فیلتر
+ * @emits {string} update:operator - رویداد ارسالی هنگام تغییر اپراتور
+ * @emits {string} change - رویداد ارسالی برای تغییرات
+ */
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { getOperatorsForFieldType } from '@/utils/filterOperators'
+
+const { t } = useI18n()
 
 const props = defineProps({
+  /**
+   * نام فیلد انتخاب شده
+   * @type {string}
+   */
   field: {
     type: String,
-    default: null
+    default: null,
   },
+
+  /**
+   * اپراتور انتخاب شده فعلی
+   * @type {string}
+   */
   operator: {
     type: String,
-    default: ''
+    default: '',
   },
+
+  /**
+   * لیست فیلدهای قابل فیلتر
+   * @type {Array<{value: string, label: string, type: string}>}
+   */
   filterableFields: {
     type: Array,
-    required: true
-  }
-});
+    required: true,
+    validator: (fields) => {
+      return fields.every(
+        (field) => field && typeof field === 'object' && 'value' in field && 'label' in field,
+      )
+    },
+  },
+})
 
-const emit = defineEmits(['update:operator']);
+const emit = defineEmits([
+  /**
+   * رویداد ارسالی هنگام تغییر اپراتور
+   * @property {string} operator - اپراتور جدید
+   */
+  'update:operator',
 
+  /**
+   * رویداد تغییر اپراتور
+   * @property {string} operator - اپراتور جدید
+   */
+  'change',
+])
+
+/**
+ * مقدار انتخاب شده اپراتور
+ * @type {import('vue').ComputedRef<string>}
+ */
 const selectedOperator = computed({
   get: () => props.operator,
-  set: (value) => emit('update:operator', value)
-});
+  set: (value) => emit('update:operator', value),
+})
 
+/**
+ * لیست اپراتورهای موجود بر اساس نوع فیلد
+ * @type {import('vue').ComputedRef<Array<{value: string, label: string}>>}
+ */
 const availableOperators = computed(() => {
-  if (!props.field) return [];
-  
-  const field = props.filterableFields.find(f => f.value === props.field);
-  if (!field) return [];
-  
-  const fieldType = field.type || 'text';
-  const operators = [];
+  if (!props.field) return []
 
-  // Text fields (generic text, text area)
-  if (['text', 'textarea'].includes(fieldType)) {
-    operators.push(
-      { value: 'contains', label: 'شامل' },
-      { value: 'notContains', label: 'شامل نباشد' },
-      { value: 'equals', label: 'برابر با' },
-      { value: 'notEquals', label: 'نابرابر با' },
-      { value: 'startsWith', label: 'شروع با' },
-      { value: 'endsWith', label: 'پایان با' }
-    );
-  }
-  // Numeric fields
-  else if (fieldType === 'number') {
-    operators.push(
-      { value: 'equals', label: 'برابر با' },
-      { value: 'notEquals', label: 'نابرابر با' },
-      { value: 'greaterThan', label: 'بزرگتر از' },
-      { value: 'lessThan', label: 'کوچکتر از' },
-      { value: 'greaterThanOrEqual', label: 'بزرگتر یا مساوی' },
-      { value: 'lessThanOrEqual', label: 'کوچکتر یا مساوی' }
-    );
-  }
-  // Date fields
-  else if (fieldType === 'date') {
-    operators.push(
-      { value: 'equals', label: 'برابر با' },
-      { value: 'notEquals', label: 'نابرابر با' },
-      { value: 'before', label: 'قبل از' },
-      { value: 'after', label: 'بعد از' }
-    );
-  }
-  // Select, boolean fields (like gender, group)
-  else if (['select', 'boolean', 'gender', 'group'].includes(fieldType)) {
-    operators.push(
-      { value: 'equals', label: 'برابر با' },
-      { value: 'notEquals', label: 'نابرابر با' }
-    );
-  } else {
-    // Default operators for unknown types
-    operators.push(
-      { value: 'contains', label: 'شامل' },
-      { value: 'equals', label: 'برابر با' },
-      { value: 'notEquals', label: 'نابرابر با' }
-    );
+  const field = props.filterableFields.find((f) => f.value === props.field)
+  if (!field) return []
+
+  const fieldType = field.type || 'text'
+  const operators = getOperatorsForFieldType(fieldType)
+
+  // اضافه کردن عملگرهای سفارشی اگر در تعریف فیلد وجود داشته باشند
+  if (field.customOperators && Array.isArray(field.customOperators)) {
+    return [...operators, ...field.customOperators]
   }
 
-  // Add isNull/isNotNull for all types
-  operators.push(
-    { value: 'isNull', label: 'خالی است' },
-    { value: 'isNotNull', label: 'خالی نیست' }
-  );
+  return operators
+})
 
-  return operators;
-});
-
-function onChange() {
-  emit('change', selectedOperator.value);
+/**
+ * مدیریت تغییر اپراتور
+ * @param {Event} event - رویداد تغییر
+ */
+function onChange(event) {
+  const newValue = event?.target?.value || ''
+  selectedOperator.value = newValue
+  emit('change', newValue)
 }
 </script>

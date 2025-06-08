@@ -68,7 +68,7 @@
 </template>
 <script setup>
 import IconWrapper from './icons/IconWrapper.vue'
-import { displayPhoneType, displayAddressType } from '@/utils/formatters'
+import { displayPhoneType, displayAddressType } from '@/utils/formatters/index'
 const props = defineProps({
   contact: Object,
   loading: Boolean,

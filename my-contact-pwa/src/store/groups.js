@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { db } from '../db'
-import { useContactStore } from './contacts' // Store مخاطبین رو وارد می‌کنیم
+import { db } from '../db/index.js'
+import { useContactStore } from './contacts.js' // Store مخاطبین رو وارد می‌کنیم
 
 export const useGroupStore = defineStore('groupStore', {
   state: () => ({

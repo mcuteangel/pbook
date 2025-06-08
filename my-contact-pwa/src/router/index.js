@@ -69,8 +69,27 @@ const router = createRouter({
       name: 'TestDatePicker',
       component: () => import('../views/TestDatePickerView.vue'),
     },
+    // مسیر تستی برای سرویس اعلان‌ها
+    {
+      path: '/test-notifications',
+      name: 'test-notifications',
+      component: () => import('@/components/test/NotificationTest.vue'),
+      meta: {
+        title: 'تست اعلان‌ها',
+        requiresAuth: false // در صورت نیاز به احراز هویت، این مقدار را به true تغییر دهید
+      }
+    },
     // می‌تونی Routes دیگه هم اینجا اضافه کنی
   ],
+  
+  // تنظیم عنوان صفحه بر اساس متادیتای مسیر
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition
+    } else {
+      return { top: 0 }
+    }
+  }
 })
 
 export default router
